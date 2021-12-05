@@ -34,10 +34,20 @@ func main() {
 		zap.String("go-version", runtime.Version()),
 	)
 
-	_ = server.NewServer(opts)
+	// start server
+	srv, err := server.NewServer(opts)
+	if err != nil {
+		opts.Log.Fatal("server.NewServer()", zap.Error(err))
+	}
 
 	// wait for termination signal and register database & http server clean-up operations
 	wait := gracefulShutdown(opts, defaultShutdownTimeout, map[string]operation{
+		"client": func(ctx context.Context) error {
+			return opts.Client.Close()
+		},
+		"server": func(ctx context.Context) error {
+			return srv.Close()
+		},
 		"logger": func(ctx context.Context) error {
 			return opts.Log.Sync()
 		},
