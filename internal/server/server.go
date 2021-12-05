@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -120,19 +122,24 @@ func NewServer(opts *common.Option) (*Server, error) {
 		log: opts.Log,
 	}
 
-	listener, err := srv.listenServer()
+	grpcPort := viper.GetInt("GRPC_PORT")
+	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost:%d", grpcPort))
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		return nil, fmt.Errorf("net.Listen(): %w", err)
 	}
 
+	svc := service.NewService(opts)
+
 	go func() {
-		if err = srv.createServer(listener); err != nil {
+		if err = srv.createServer(listener, svc); err != nil {
 			opts.Log.Fatal("createServer()", zap.Error(err))
 		}
 	}()
 
 	go func() {
-		if err = srv.listenClient(service.NewService(opts)); err != nil {
+		if err = srv.listenClient(listener); err != nil {
 			opts.Log.Fatal("listenClient()", zap.Error(err))
 		}
 	}()

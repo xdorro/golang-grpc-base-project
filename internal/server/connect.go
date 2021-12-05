@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 
@@ -17,10 +18,11 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/kucow/golang-grpc-base/internal/service"
+	"github.com/kucow/golang-grpc-base/pkg/proto/v1alpha1/helloworld"
 )
 
 // CreateServer create new server
-func (srv *Server) createServer(listener net.Listener) error {
+func (srv *Server) createServer(listener net.Listener, svc *service.Service) error {
 	// Log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
@@ -51,6 +53,8 @@ func (srv *Server) createServer(listener net.Listener) error {
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
+	helloworld.RegisterGreeterServer(srv.grpcServer, svc.HelloworldService)
+
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))
 		return err
@@ -59,21 +63,8 @@ func (srv *Server) createServer(listener net.Listener) error {
 	return nil
 }
 
-// listenServer listen gRPC server
-func (srv *Server) listenServer() (net.Listener, error) {
-	grpcPort := viper.GetInt("GRPC_PORT")
-	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost:%d", grpcPort))
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
-	if err != nil {
-		return nil, err
-	}
-
-	return listener, nil
-}
-
 // listenClient listen Gateway client
-func (srv *Server) listenClient(svc *service.Service) error {
+func (srv *Server) listenClient(listener net.Listener) error {
 	httpPort := viper.GetInt("HTTP_PORT")
 	if httpPort != 0 {
 		srv.log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost:%d", httpPort))
@@ -93,14 +84,29 @@ func (srv *Server) listenClient(svc *service.Service) error {
 			}),
 		}
 
+		conn, err := grpc.DialContext(
+			context.Background(),
+			listener.Addr().String(),
+			grpc.WithBlock(),
+			grpc.WithInsecure(),
+		)
+		if err != nil {
+			log.Fatalln("Failed to dial server:", err)
+		}
+
 		mux := runtime.NewServeMux(opts...)
+
+		// Register Greeter
+		if err = helloworld.RegisterGreeterHandler(context.Background(), mux, conn); err != nil {
+			return fmt.Errorf("helloworld.RegisterGreeterHandler(): %w", err)
+		}
 
 		srv.httpServer = &http.Server{
 			Addr:    fmt.Sprintf(":%d", httpPort),
 			Handler: mux,
 		}
 
-		if err := srv.httpServer.ListenAndServe(); err != nil {
+		if err = srv.httpServer.ListenAndServe(); err != nil {
 			return fmt.Errorf("http.ListenAndServe(): %w", err)
 		}
 	}
