@@ -15,6 +15,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
@@ -26,10 +27,10 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
+	golang.org/x/net v0.0.0-20211203184738-4852103109b8 // indirect
 	golang.org/x/sys v0.0.0-20211204120058-94396e421777 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20211129164237-f09f9a12af12 // indirect
+	google.golang.org/genproto v0.0.0-20211203200212-54befc351ae9 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
