@@ -13,6 +13,7 @@ func loadDefault() {
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("GRPC_PORT", "3100")
 	viper.SetDefault("REST_PORT", "3200")
+	viper.SetDefault("LOG_PAYLOAD", true)
 	viper.SetDefault("MACHINE_ID", "0")
 	viper.SetDefault("AUTH_SECRET_KEY", "your-256-bit-secret")
 	// DATABASE

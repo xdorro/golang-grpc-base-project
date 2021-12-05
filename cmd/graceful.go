@@ -28,8 +28,7 @@ func gracefulShutdown(opts *common.Option, timeout time.Duration, ops map[string
 
 		// set timeout for the ops to be done to prevent system hang
 		timeoutFunc := time.AfterFunc(timeout, func() {
-			opts.Log.Info(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
-			os.Exit(0)
+			opts.Log.Fatal(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
 		})
 
 		defer timeoutFunc.Stop()

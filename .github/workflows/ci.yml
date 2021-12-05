@@ -1,0 +1,87 @@
+name: CI Workflow
+on: [ push, pull_request ]
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    # Prevent duplicate builds on internal PRs.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golangci-lint-
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gobuild-
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Run Linter
+        uses: reviewdog/action-golangci-lint@v1
+        with:
+          golangci_lint_flags: "--exclude-use-default=false --skip-dirs-use-default"
+          reporter: github-pr-review
+          level: error
+
+#  test:
+#    runs-on: ubuntu-latest
+#    # Prevent duplicate builds on internal PRs.
+#    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+#      - name: Set up Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: 1.17.x
+#      - uses: actions/cache@v2
+#        with:
+#          path: ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-
+#      - name: Install dependencies
+#        run: go mod tidy
+#      - name: Run test with coverage
+#        run: |
+#          go test "./..." -coverprofile="coverage.out" -covermode=count -json > report.json || true
+#          go tool cover -html=coverage.out -o coverage.html || true
+#      - name: Upload test coverage to artifacts
+#        uses: actions/upload-artifact@v2
+#        with:
+#          path: ${{ github.workspace }}/coverage.html
+#          name: ${{ runner.os }}-${{ github.head_ref }}-coverage
+#      - name: SonarCloud Scan
+#        uses: sonarsource/sonarcloud-github-action@master
+#        with:
+#          args: >
+#            -Dsonar.projectKey=xdorro_golang-grpc-base-project
+#            -Dsonar.organization=xdorro
+#            -Dsonar.host.url=https://sonarcloud.io
+#            -Dsonar.language=go
+#            -Dsonar.sources=.
+#            -Dsonar.sourceEncoding=UTF-8
+#            -Dsonar.tests=.
+#            -Dsonar.exclusions=**/*_test.go,build/**,report.json,coverage.html,commitlint.config.js,tests/**,tests/util/**,**/proto/**,**/ent/**,**/main.go,**/service.go,**/database.go
+#            -Dsonar.test.inclusions=/**/*_test.go
+#            -Dsonar.go.tests.reportPaths=report.json
+#            -Dsonar.go.coverage.reportPaths=coverage.out
+#            -Dsonar.verbose=true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

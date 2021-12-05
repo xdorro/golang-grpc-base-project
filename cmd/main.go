@@ -10,6 +10,7 @@ import (
 
 	"github.com/kucow/golang-grpc-base/internal/common"
 	"github.com/kucow/golang-grpc-base/internal/config"
+	"github.com/kucow/golang-grpc-base/internal/server"
 )
 
 const (
@@ -32,6 +33,8 @@ func main() {
 		zap.String("app-version", viper.GetString("APP_VERSION")),
 		zap.String("go-version", runtime.Version()),
 	)
+
+	_ = server.NewServer(opts)
 
 	// wait for termination signal and register database & http server clean-up operations
 	wait := gracefulShutdown(opts, defaultShutdownTimeout, map[string]operation{
