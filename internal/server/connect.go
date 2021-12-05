@@ -23,9 +23,6 @@ import (
 
 // CreateServer create new server
 func (srv *Server) createServer(listener net.Listener, svc *service.Service) error {
-	// Log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
-
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_zap.StreamServerInterceptor(srv.log),
@@ -64,7 +61,7 @@ func (srv *Server) createServer(listener net.Listener, svc *service.Service) err
 }
 
 // listenClient listen Gateway client
-func (srv *Server) listenClient(listener net.Listener) error {
+func (srv *Server) listenClient(grpcPort string) error {
 	httpPort := viper.GetInt("HTTP_PORT")
 	if httpPort != 0 {
 		srv.log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost:%d", httpPort))
@@ -86,7 +83,7 @@ func (srv *Server) listenClient(listener net.Listener) error {
 
 		conn, err := grpc.DialContext(
 			context.Background(),
-			listener.Addr().String(),
+			grpcPort,
 			grpc.WithBlock(),
 			grpc.WithInsecure(),
 		)

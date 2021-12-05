@@ -122,10 +122,10 @@ func NewServer(opts *common.Option) (*Server, error) {
 		log: opts.Log,
 	}
 
-	grpcPort := viper.GetInt("GRPC_PORT")
-	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost:%d", grpcPort))
+	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
+	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	listener, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		return nil, fmt.Errorf("net.Listen(): %w", err)
 	}
@@ -139,7 +139,7 @@ func NewServer(opts *common.Option) (*Server, error) {
 	}()
 
 	go func() {
-		if err = srv.listenClient(listener); err != nil {
+		if err = srv.listenClient(grpcPort); err != nil {
 			opts.Log.Fatal("listenClient()", zap.Error(err))
 		}
 	}()
