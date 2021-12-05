@@ -11,6 +11,8 @@ import (
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -25,12 +27,16 @@ import (
 func (srv *Server) createServer(listener net.Listener, svc *service.Service) error {
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+		grpc_opentracing.StreamServerInterceptor(),
+		grpc_prometheus.StreamServerInterceptor,
 		grpc_zap.StreamServerInterceptor(srv.log),
 		grpc_recovery.StreamServerInterceptor(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+		grpc_opentracing.UnaryServerInterceptor(),
+		grpc_prometheus.UnaryServerInterceptor,
 		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
 	}
@@ -110,3 +116,40 @@ func (srv *Server) listenClient(grpcPort string) error {
 
 	return nil
 }
+
+//
+// func (srv *Server) registerServiceHandlers(ctx context.Context, mux *runtime.ServeMux) error {
+// 	opts := srv.grpcDialOptions()
+//
+// 	if err := pbv1.RegisterLoginServiceHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint, opts); err != nil {
+// 		return err
+// 	}
+//
+// 	if err := pbv1.RegisterUserServiceHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint, opts); err != nil {
+// 		return err
+// 	}
+//
+// 	return nil
+// }
+//
+// func (srv *Server) grpcDialOptions() []grpc.DialOption {
+// 	l := logrus.New()
+// 	l.SetFormatter(&logrus.JSONFormatter{})
+// 	decider := func(ctx context.Context, fullMethodName string) bool {
+// 		return true
+// 	}
+// 	startTimeFunc := func() time.Time {
+// 		return time.Now()
+// 	}
+// 	durationFunc := func(startTime time.Time) time.Duration {
+// 		return time.Now().Sub(startTime)
+// 	}
+//
+// 	opts := []grpc.DialOption{
+// 		grpc.WithInsecure(), // Ignore certificate errors
+// 		grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)), // gzip compression
+// 		grpc.WithUnaryInterceptor(interceptor.PayloadUnaryClientInterceptor(logrus.NewEntry(l), decider, startTimeFunc, durationFunc)),
+// 	}
+//
+// 	return opts
+// }
