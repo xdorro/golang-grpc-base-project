@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
 func (repo *Repo) FindAllUsers() []*ent.User {

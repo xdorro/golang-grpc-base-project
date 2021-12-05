@@ -1,8 +1,8 @@
-package userservice
+package common
 
 import (
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	userproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
 func UserProto(user *ent.User) *userproto.User {

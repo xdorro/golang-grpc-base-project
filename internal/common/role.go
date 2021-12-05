@@ -1,8 +1,8 @@
-package roleservice
+package common
 
 import (
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	roleproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
 )
 
 func RoleProto(role *ent.Role) *roleproto.Role {

@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"github.com/kucow/golang-grpc-base/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 )
 
 // Persist interface

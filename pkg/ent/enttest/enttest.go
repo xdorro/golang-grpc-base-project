@@ -5,9 +5,9 @@ package enttest
 import (
 	"context"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	// required by schema hooks.
-	_ "github.com/kucow/golang-grpc-base/pkg/ent/runtime"
+	_ "github.com/kucow/golang-grpc-base-project/pkg/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

@@ -8,25 +8,28 @@ import (
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/internal/repo"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	authproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/auth"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type AuthService struct {
 	authproto.UnimplementedAuthServiceServer
 
-	log     *zap.Logger
-	redis   redis.UniversalClient
-	persist repo.Persist
+	log       *zap.Logger
+	redis     redis.UniversalClient
+	persist   repo.Persist
+	validator *validator.Validator
 }
 
 func NewAuthService(opts *common.Option, persist repo.Persist) *AuthService {
 	svc := &AuthService{
-		log:     opts.Log,
-		redis:   opts.Redis,
-		persist: persist,
+		log:       opts.Log,
+		redis:     opts.Redis,
+		persist:   persist,
+		validator: opts.Validator,
 	}
 
 	return svc
@@ -37,7 +40,7 @@ func (svc *AuthService) Login(_ context.Context, in *authproto.LoginRequest) (
 	*authproto.TokenResponse, error,
 ) {
 	// Validate request
-	if err := svc.validateLoginRequest(in); err != nil {
+	if err := svc.validator.ValidateLoginRequest(in); err != nil {
 		svc.log.Error("svc.validateLoginRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (svc *AuthService) RevokeToken(_ context.Context, in *authproto.TokenReques
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateTokenRequest(in); err != nil {
+	if err := svc.validator.ValidateTokenRequest(in); err != nil {
 		svc.log.Error("svc.validateTokenRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -94,7 +97,7 @@ func (svc *AuthService) RefreshToken(_ context.Context, in *authproto.TokenReque
 	*authproto.TokenResponse, error,
 ) {
 	// Validate request
-	if err := svc.validateTokenRequest(in); err != nil {
+	if err := svc.validator.ValidateTokenRequest(in); err != nil {
 		svc.log.Error("svc.validateTokenRequest()", zap.Error(err))
 		return nil, err
 	}

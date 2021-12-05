@@ -5,8 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 )
 
 var _ Persist = (*Repo)(nil)
@@ -19,10 +18,10 @@ type Repo struct {
 }
 
 // NewRepo create new Persist
-func NewRepo(opts *common.Option) *Repo {
+func NewRepo(ctx context.Context, log *zap.Logger, client *ent.Client) *Repo {
 	return &Repo{
-		Ctx:    opts.Ctx,
-		Log:    opts.Log,
-		Client: opts.Client,
+		Ctx:    ctx,
+		Log:    log,
+		Client: client,
 	}
 }

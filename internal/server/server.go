@@ -15,8 +15,8 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/internal/service"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/service"
 )
 
 // Server struct

@@ -3,7 +3,7 @@ package interceptor
 import (
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
 )
 
 type Interceptor struct {

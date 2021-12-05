@@ -8,9 +8,9 @@ import (
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	_ "github.com/kucow/golang-grpc-base/pkg/ent/runtime"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	_ "github.com/kucow/golang-grpc-base-project/pkg/ent/runtime"
 )
 
 // NewClient database with config

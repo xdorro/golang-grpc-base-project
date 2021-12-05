@@ -1,14 +1,13 @@
-package authservice
+package validator
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	authproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/auth"
+	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
-func (svc *AuthService) validateLoginRequest(in *authproto.LoginRequest) error {
+func (val *Validator) ValidateLoginRequest(in *authproto.LoginRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate email
 		validation.Field(&in.Email,
@@ -23,10 +22,10 @@ func (svc *AuthService) validateLoginRequest(in *authproto.LoginRequest) error {
 		),
 	)
 
-	return common.ValidateError(err)
+	return ValidateError(err)
 }
 
-func (svc *AuthService) validateTokenRequest(in *authproto.TokenRequest) error {
+func (val *Validator) ValidateTokenRequest(in *authproto.TokenRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate token
 		validation.Field(&in.Token,
@@ -35,5 +34,5 @@ func (svc *AuthService) validateTokenRequest(in *authproto.TokenRequest) error {
 		),
 	)
 
-	return common.ValidateError(err)
+	return ValidateError(err)
 }

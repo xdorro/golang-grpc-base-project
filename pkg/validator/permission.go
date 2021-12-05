@@ -1,4 +1,4 @@
-package roleservice
+package validator
 
 import (
 	"fmt"
@@ -7,12 +7,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	roleproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
-func (svc *RoleService) validateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {
+func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -24,23 +23,18 @@ func (svc *RoleService) validateCreateRoleRequest(in *roleproto.CreateRoleReques
 			validation.Required,
 			validation.Length(3, 0),
 		),
-		// Validate permissions
-		validation.Field(&in.Permissions,
-			validation.Required.When(in.GetPermissions() != nil),
-			validation.Each(common.IsULID),
-		),
 	)
 
-	return common.ValidateError(err)
+	return ValidateError(err)
 }
 
-func (svc *RoleService) validateUpdateRoleRequest(in *roleproto.UpdateRoleRequest) error {
+func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.UpdatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
 			validation.Required,
 			validation.Length(5, 100),
-			common.IsULID,
+			IsULID,
 		),
 		// Validate name
 		validation.Field(&in.Name,
@@ -52,22 +46,17 @@ func (svc *RoleService) validateUpdateRoleRequest(in *roleproto.UpdateRoleReques
 			validation.Required,
 			validation.Length(3, 0),
 		),
-		// Validate permissions
-		validation.Field(&in.Permissions,
-			validation.Required.When(in.GetPermissions() != nil),
-			validation.Each(common.IsULID),
-		),
 	)
 
-	return common.ValidateError(err)
+	return ValidateError(err)
 }
 
-func (svc *RoleService) validateListPermissions(list []string) ([]*ent.Permission, error) {
+func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission, error) {
 	permissions := make([]*ent.Permission, 0)
 
 	if len(list) > 0 {
 		for _, id := range list {
-			p, err := svc.persist.FindPermissionByID(id)
+			p, err := val.persist.FindPermissionByID(id)
 			if err != nil {
 				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("Permission: %s doesn't exist", id)).Err()
 			}
