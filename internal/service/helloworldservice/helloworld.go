@@ -17,9 +17,11 @@ type HelloworldService struct {
 }
 
 func NewHelloworldService(opts *common.Option) *HelloworldService {
-	return &HelloworldService{
+	svc := &HelloworldService{
 		log: opts.Log,
 	}
+
+	return svc
 }
 
 func (svc *HelloworldService) SayHello(_ context.Context, in *helloworld.HelloRequest) (*helloworld.HelloReply, error) {

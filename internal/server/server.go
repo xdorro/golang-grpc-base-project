@@ -17,23 +17,7 @@ import (
 
 	"github.com/kucow/golang-grpc-base/internal/common"
 	"github.com/kucow/golang-grpc-base/internal/service"
-	"github.com/kucow/golang-grpc-base/pkg/proto/v1alpha1/helloworld"
 )
-
-// func buildDummyAuthFunction(expectedScheme string, expectedToken string) func(ctx context.Context) (
-// 	context.Context, error,
-// ) {
-// 	return func(ctx context.Context) (context.Context, error) {
-// 		token, err := grpc_auth.AuthFromMD(ctx, expectedScheme)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		if token != expectedToken {
-// 			return nil, status.Errorf(codes.PermissionDenied, "buildDummyAuthFunction bad token")
-// 		}
-// 		return context.WithValue(ctx, "some_context_marker", "marker_exists"), nil
-// 	}
-// }
 
 // Server struct
 type Server struct {
@@ -58,10 +42,8 @@ func NewServer(opts *common.Option) (*Server, error) {
 		return nil, fmt.Errorf("net.Listen(): %w", err)
 	}
 
-	svc := service.NewService(opts)
-
 	go func() {
-		if err = srv.createServer(listener, svc); err != nil {
+		if err = srv.createServer(opts, listener); err != nil {
 			opts.Log.Fatal("srv.createServer()", zap.Error(err))
 		}
 	}()
@@ -81,12 +63,11 @@ func (srv *Server) Close() error {
 	return nil
 }
 
-func (srv *Server) registerServiceServers(svc *service.Service) {
-	helloworld.RegisterGreeterServer(srv.grpcServer, svc.HelloworldService)
-}
-
 // CreateServer create new server
-func (srv *Server) createServer(listener net.Listener, svc *service.Service) error {
+func (srv *Server) createServer(opts *common.Option, listener net.Listener) error {
+	// Log gRPC library internals with log
+	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
+
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.StreamServerInterceptor(),
@@ -118,7 +99,7 @@ func (srv *Server) createServer(listener net.Listener, svc *service.Service) err
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
-	srv.registerServiceServers(svc)
+	service.NewService(opts, srv.grpcServer)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))
