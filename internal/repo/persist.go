@@ -18,8 +18,8 @@ type Persist interface {
 
 	FindAllRoles() []*ent.Role
 	FindRoleByID(id uint64) (*ent.Role, error)
-	FindRoleByIDAndPermissionID(id, permissionid uint64) (*ent.Role, error)
-	FindRoleByIDAndPermissionIDNot(id, permissionid uint64) (*ent.Role, error)
+	FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Role, error)
+	FindRoleByIDAndPermissionIDNot(id, permissionId uint64) (*ent.Role, error)
 	ExistRoleByID(id uint64) bool
 	ExistRoleBySlug(slug string) bool
 	CreateRole(role *ent.Role, permissions []*ent.Permission) error
@@ -28,7 +28,7 @@ type Persist interface {
 
 	FindAllPermissions() []*ent.Permission
 	FindPermissionByID(id uint64) (*ent.Permission, error)
-	FindPermissionByIDAndRoleIDNot(id uint64, roleid uint64) (*ent.Permission, error)
+	FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent.Permission, error)
 	ExistPermissionByID(id uint64) bool
 	ExistPermissionBySlug(slug string) bool
 	CreatePermission(role *ent.Permission) error
