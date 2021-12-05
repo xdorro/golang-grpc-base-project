@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -120,20 +122,25 @@ func NewServer(opts *common.Option) (*Server, error) {
 		log: opts.Log,
 	}
 
-	listener, err := srv.listenServer()
+	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
+	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
+
+	listener, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		return nil, fmt.Errorf("net.Listen(): %w", err)
 	}
 
+	svc := service.NewService(opts)
+
 	go func() {
-		if err = srv.createServer(listener); err != nil {
-			opts.Log.Fatal("createServer()", zap.Error(err))
+		if err = srv.createServer(listener, svc); err != nil {
+			opts.Log.Fatal("srv.createServer()", zap.Error(err))
 		}
 	}()
 
 	go func() {
-		if err = srv.listenClient(service.NewService(opts)); err != nil {
-			opts.Log.Fatal("listenClient()", zap.Error(err))
+		if err = srv.listenClient(grpcPort); err != nil {
+			opts.Log.Fatal("srv.listenClient()", zap.Error(err))
 		}
 	}()
 
@@ -144,7 +151,7 @@ func (srv *Server) Close() error {
 	srv.grpcServer.GracefulStop()
 
 	if err := srv.httpServer.Shutdown(srv.ctx); err != nil {
-		srv.log.Error("srv.restServer.Shutdown()", zap.Error(err))
+		srv.log.Error("srv.httpServer.Shutdown()", zap.Error(err))
 		return err
 	}
 
