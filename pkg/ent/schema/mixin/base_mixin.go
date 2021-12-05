@@ -4,13 +4,14 @@ package mixin
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
-	"github.com/oklog/ulid/v2"
+	"github.com/AmreeshTyagi/goldflake"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/hook"
 )
@@ -23,9 +24,7 @@ type BaseMixin struct {
 // Fields of the BaseMixin.
 func (BaseMixin) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").
-			MaxLen(35).
-			NotEmpty().
+		field.Uint64("id").
 			Unique(),
 	}
 }
@@ -39,8 +38,15 @@ func (BaseMixin) Hooks() []ent.Hook {
 
 // IDHook create a UUID
 func IDHook() ent.Hook {
+	gf := goldflake.NewGoldflake(goldflake.Settings{
+		StartTime: time.Date(2021, 12, 5, 0, 0, 0, 0, time.UTC),
+		MachineID: func() (uint16, error) {
+			return cast.ToUint16(viper.Get("MACHINE_ID")), nil
+		},
+	})
+
 	type IDSetter interface {
-		SetID(string)
+		SetID(uint64)
 	}
 
 	hk := func(next ent.Mutator) ent.Mutator {
@@ -50,11 +56,15 @@ func IDHook() ent.Hook {
 				return nil, fmt.Errorf("unexpected mutation %T", m)
 			}
 
-			t := time.Now().UTC()
-			entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
-			uuid := ulid.MustNew(ulid.Timestamp(t), entropy)
+			if gf == nil {
+				return nil, fmt.Errorf("goldflake not created")
+			}
 
-			is.SetID(uuid.String())
+			id, err := gf.NextID()
+			if err != nil {
+				return nil, fmt.Errorf("id not generated")
+			}
+			is.SetID(id)
 			return next.Mutate(ctx, m)
 		})
 	}

@@ -13,7 +13,7 @@ import (
 
 func TestValidateULID(t *testing.T) {
 	type args struct {
-		uuid string
+		uuid uint64
 	}
 	tests := []struct {
 		name string

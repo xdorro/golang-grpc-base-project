@@ -10,7 +10,7 @@ import (
 var (
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true, Size: 35},
+		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
@@ -30,15 +30,15 @@ var (
 				Columns: []*schema.Column{PermissionsColumns[1], PermissionsColumns[2], PermissionsColumns[3]},
 			},
 			{
-				Name:    "permission_name_slug_status",
+				Name:    "permission_slug_status",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[4], PermissionsColumns[5], PermissionsColumns[6]},
+				Columns: []*schema.Column{PermissionsColumns[5], PermissionsColumns[6]},
 			},
 		},
 	}
 	// RolesColumns holds the columns for the "roles" table.
 	RolesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true, Size: 35},
+		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
@@ -58,15 +58,15 @@ var (
 				Columns: []*schema.Column{RolesColumns[1], RolesColumns[2], RolesColumns[3]},
 			},
 			{
-				Name:    "role_name_slug_status",
+				Name:    "role_slug_status",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[4], RolesColumns[5], RolesColumns[6]},
+				Columns: []*schema.Column{RolesColumns[5], RolesColumns[6]},
 			},
 		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true, Size: 35},
+		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
@@ -95,8 +95,8 @@ var (
 	}
 	// PermissionRolesColumns holds the columns for the "permission_roles" table.
 	PermissionRolesColumns = []*schema.Column{
-		{Name: "permission_id", Type: field.TypeString, Size: 35},
-		{Name: "role_id", Type: field.TypeString, Size: 35},
+		{Name: "permission_id", Type: field.TypeUint64},
+		{Name: "role_id", Type: field.TypeUint64},
 	}
 	// PermissionRolesTable holds the schema information for the "permission_roles" table.
 	PermissionRolesTable = &schema.Table{
@@ -120,8 +120,8 @@ var (
 	}
 	// RoleUsersColumns holds the columns for the "role_users" table.
 	RoleUsersColumns = []*schema.Column{
-		{Name: "role_id", Type: field.TypeString, Size: 35},
-		{Name: "user_id", Type: field.TypeString, Size: 35},
+		{Name: "role_id", Type: field.TypeUint64},
+		{Name: "user_id", Type: field.TypeUint64},
 	}
 	// RoleUsersTable holds the schema information for the "role_users" table.
 	RoleUsersTable = &schema.Table{

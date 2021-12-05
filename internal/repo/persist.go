@@ -8,30 +8,31 @@ import (
 type Persist interface {
 	FindAllUsers() []*ent.User
 	FindUserByEmail(email string) (*ent.User, error)
-	FindUserByID(id string) (*ent.User, error)
-	ExistUserByID(id string) bool
+	FindUserByID(id uint64) (*ent.User, error)
+	ExistUserByID(id uint64) bool
 	ExistUserByEmail(email string) bool
 	CreateUser(user *ent.User, roles []*ent.Role) error
 	UpdateUser(user *ent.User, roles []*ent.Role) error
-	DeleteUser(id string) error
-	SoftDeleteUser(id string) error
+	DeleteUser(id uint64) error
+	SoftDeleteUser(id uint64) error
 
 	FindAllRoles() []*ent.Role
-	FindRoleByID(id string) (*ent.Role, error)
-	FindRoleByIDAndPermissionID(id, permissionId string) (*ent.Role, error)
-	FindRoleByIDAndPermissionIDNot(id, permissionId string) (*ent.Role, error)
-	ExistRoleByID(id string) bool
+	FindRoleByID(id uint64) (*ent.Role, error)
+	FindRoleByIDAndPermissionID(id, permissionid uint64) (*ent.Role, error)
+	FindRoleByIDAndPermissionIDNot(id, permissionid uint64) (*ent.Role, error)
+	ExistRoleByID(id uint64) bool
 	ExistRoleBySlug(slug string) bool
 	CreateRole(role *ent.Role, permissions []*ent.Permission) error
 	UpdateRole(role *ent.Role, permissions []*ent.Permission) error
-	SoftDeleteRole(id string) error
+	SoftDeleteRole(id uint64) error
 
 	FindAllPermissions() []*ent.Permission
-	FindPermissionByID(id string) (*ent.Permission, error)
-	FindPermissionByIDAndRoleIDNot(id string, roleId string) (*ent.Permission, error)
-	ExistPermissionByID(id string) bool
+	FindPermissionByID(id uint64) (*ent.Permission, error)
+	FindPermissionByIDAndRoleIDNot(id uint64, roleid uint64) (*ent.Permission, error)
+	ExistPermissionByID(id uint64) bool
 	ExistPermissionBySlug(slug string) bool
 	CreatePermission(role *ent.Permission) error
+	CreatePermissionBulk(roles []*ent.PermissionCreate) error
 	UpdatePermission(role *ent.Permission) error
-	SoftDeletePermission(id string) error
+	SoftDeletePermission(id uint64) error
 }

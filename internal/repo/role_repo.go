@@ -30,7 +30,7 @@ func (repo *Repo) FindAllRoles() []*ent.Role {
 	return roles
 }
 
-func (repo *Repo) FindRoleByID(id string) (*ent.Role, error) {
+func (repo *Repo) FindRoleByID(id uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
 		Where(role.ID(id), role.DeleteTimeIsNil()).
@@ -44,7 +44,7 @@ func (repo *Repo) FindRoleByID(id string) (*ent.Role, error) {
 	return r, nil
 }
 
-func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId string) (*ent.Role, error) {
+func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
 		Where(
@@ -62,7 +62,7 @@ func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId string) (*ent.Rol
 	return r, nil
 }
 
-func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId string) (*ent.Role, error) {
+func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
 		Where(
@@ -80,7 +80,7 @@ func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId string) (*ent.
 	return r, nil
 }
 
-func (repo *Repo) ExistRoleByID(id string) bool {
+func (repo *Repo) ExistRoleByID(id uint64) bool {
 	exist, err := repo.Client.Role.
 		Query().
 		Where(role.ID(id), role.DeleteTimeIsNil()).
@@ -144,7 +144,7 @@ func (repo *Repo) UpdateRole(r *ent.Role, p []*ent.Permission) error {
 	return nil
 }
 
-func (repo *Repo) SoftDeleteRole(id string) error {
+func (repo *Repo) SoftDeleteRole(id uint64) error {
 	_, err := repo.Client.Role.
 		Update().
 		Where(role.ID(id), role.DeleteTimeIsNil()).

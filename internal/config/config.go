@@ -16,6 +16,8 @@ func loadDefault() {
 	viper.SetDefault("HTTP_PORT", "3200")
 
 	viper.SetDefault("LOG_PAYLOAD", true)
+	viper.SetDefault("SEEDER_SERVICE", false)
+
 	viper.SetDefault("MACHINE_ID", "0")
 	viper.SetDefault("AUTH_SECRET_KEY", "your-256-bit-secret")
 	// DATABASE

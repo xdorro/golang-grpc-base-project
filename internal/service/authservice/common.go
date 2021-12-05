@@ -23,7 +23,7 @@ func ValidateToken(log *zap.Logger, persist repo.Persist, token string) (*ent.Us
 		return nil, err
 	}
 
-	userID := cast.ToString(verifiedToken.StandardClaims.Subject)
+	userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
 	u, err := persist.FindUserByID(userID)
 	if err != nil {
 		err = common.UserNotExist.Err()

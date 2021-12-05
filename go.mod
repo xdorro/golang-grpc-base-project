@@ -24,6 +24,7 @@ require (
 )
 
 require (
+	github.com/AmreeshTyagi/goldflake v0.0.0-20211029044753-b6a2a9356625 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/beorn7/perks v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

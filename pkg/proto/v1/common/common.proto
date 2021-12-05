@@ -8,5 +8,5 @@ option go_package = "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/comm
 
 message UUIDRequest {
   // The resource name of the book to be deleted, for example:
-  string id = 1;
+  uint64 id = 1;
 }

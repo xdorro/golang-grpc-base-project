@@ -61,7 +61,7 @@ func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest)
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateListRoles(list []string) ([]*ent.Role, error) {
+func (val *Validator) ValidateListRoles(list []uint64) ([]*ent.Role, error) {
 	roles := make([]*ent.Role, 0)
 
 	if len(list) > 0 {

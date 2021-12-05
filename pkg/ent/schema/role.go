@@ -41,7 +41,7 @@ func (Role) Mixin() []ent.Mixin {
 func (Role) Indexes() []ent.Index {
 	return []ent.Index{
 		// non-unique index.
-		index.Fields("name", "slug", "status"),
+		index.Fields("slug", "status"),
 	}
 }
 

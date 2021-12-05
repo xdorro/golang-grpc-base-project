@@ -51,7 +51,7 @@ func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.Update
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission, error) {
+func (val *Validator) ValidateListPermissions(list []uint64) ([]*ent.Permission, error) {
 	permissions := make([]*ent.Permission, 0)
 
 	if len(list) > 0 {

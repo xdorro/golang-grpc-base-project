@@ -3,8 +3,9 @@ package validator
 import (
 	"fmt"
 
+	"github.com/AmreeshTyagi/goldflake"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oklog/ulid/v2"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +19,7 @@ const (
 )
 
 var (
-	IsULID = validation.NewStringRule(ValidateULID, "must be a valid id")
+	IsULID = validation.NewStringRule(ValidateUUID, "must be a valid id")
 )
 
 type Validator struct {
@@ -50,9 +51,9 @@ func ValidateError(err error) error {
 	return nil
 }
 
-func ValidateULID(id string) bool {
-	_, err := ulid.ParseStrict(id)
-	return err == nil
+func ValidateUUID(id string) bool {
+	decompose := goldflake.Decompose(cast.ToUint64(id))
+	return len(decompose) > 0
 }
 
 func (val *Validator) ValidateCommonID(in *commonproto.UUIDRequest) error {
