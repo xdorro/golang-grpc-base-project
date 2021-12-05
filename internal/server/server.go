@@ -134,13 +134,13 @@ func NewServer(opts *common.Option) (*Server, error) {
 
 	go func() {
 		if err = srv.createServer(listener, svc); err != nil {
-			opts.Log.Fatal("createServer()", zap.Error(err))
+			opts.Log.Fatal("srv.createServer()", zap.Error(err))
 		}
 	}()
 
 	go func() {
 		if err = srv.listenClient(grpcPort); err != nil {
-			opts.Log.Fatal("listenClient()", zap.Error(err))
+			opts.Log.Fatal("srv.listenClient()", zap.Error(err))
 		}
 	}()
 
@@ -151,7 +151,7 @@ func (srv *Server) Close() error {
 	srv.grpcServer.GracefulStop()
 
 	if err := srv.httpServer.Shutdown(srv.ctx); err != nil {
-		srv.log.Error("srv.restServer.Shutdown()", zap.Error(err))
+		srv.log.Error("srv.httpServer.Shutdown()", zap.Error(err))
 		return err
 	}
 
