@@ -10,7 +10,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/kucow/golang-grpc-base/pkg/proto/v1alpha1/helloworld"
+	authproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/auth"
+	permissionproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/permission"
+	roleproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/role"
+	userproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/user"
 )
 
 func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {
@@ -24,9 +27,24 @@ func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMu
 		log.Fatalln("Failed to dial server:", err)
 	}
 
-	// Register Greeter
-	if err = helloworld.RegisterGreeterHandler(srv.ctx, mux, conn); err != nil {
-		return fmt.Errorf("helloworld.RegisterGreeterHandler(): %w", err)
+	// Register AuthService Handler
+	if err = authproto.RegisterAuthServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterAuthServiceHandler(): %w", err)
+	}
+
+	// Register UserService Handler
+	if err = userproto.RegisterUserServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterUserServiceHandler(): %w", err)
+	}
+
+	// Register RoleService Handler
+	if err = roleproto.RegisterRoleServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterRoleServiceHandler(): %w", err)
+	}
+
+	// Register PermissionService Handler
+	if err = permissionproto.RegisterPermissionServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterPermissionServiceHandler(): %w", err)
 	}
 
 	return nil
