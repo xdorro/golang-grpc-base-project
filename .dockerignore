@@ -1,0 +1,12 @@
+.run/
+build/
+.github/
+.idea/
+*.md
+.env
+.env.example
+Makefile
+.golangci.yml
+buf.gen.yaml
+buf.yaml
+buf.lock
