@@ -12,6 +12,7 @@ import (
 	"github.com/kucow/golang-grpc-base/internal/config"
 	"github.com/kucow/golang-grpc-base/internal/server"
 	"github.com/kucow/golang-grpc-base/pkg/client"
+	"github.com/kucow/golang-grpc-base/pkg/redis"
 )
 
 const (
@@ -29,18 +30,17 @@ func main() {
 
 	// declare new option
 	opts := common.NewOption(ctx)
-
 	opts.Log.Info(viper.GetString("APP_NAME"),
 		zap.String("app-version", viper.GetString("APP_VERSION")),
 		zap.String("go-version", runtime.Version()),
 	)
 
-	// declare client
+	// declare new client
 	client.NewClient(opts)
-	// // declare redis
-	// redis.NewRedis(opts)
+	// declare new redis
+	redis.NewRedis(opts)
 
-	// start server
+	// create new server
 	srv, err := server.NewServer(opts)
 	if err != nil {
 		opts.Log.Fatal("server.NewServer()", zap.Error(err))
@@ -48,11 +48,14 @@ func main() {
 
 	// wait for termination signal and register database & http server clean-up operations
 	wait := gracefulShutdown(opts, defaultShutdownTimeout, map[string]operation{
+		"server": func(ctx context.Context) error {
+			return srv.Close()
+		},
 		"client": func(ctx context.Context) error {
 			return opts.Client.Close()
 		},
-		"server": func(ctx context.Context) error {
-			return srv.Close()
+		"redis": func(ctx context.Context) error {
+			return opts.Redis.Close()
 		},
 		"logger": func(ctx context.Context) error {
 			return opts.Log.Sync()

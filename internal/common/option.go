@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 
 	"github.com/kucow/golang-grpc-base/pkg/ent"
@@ -14,7 +15,7 @@ type Option struct {
 
 	Log    *zap.Logger
 	Client *ent.Client
-	// Redis  redis.UniversalClient
+	Redis  redis.UniversalClient
 }
 
 func NewOption(ctx context.Context) *Option {

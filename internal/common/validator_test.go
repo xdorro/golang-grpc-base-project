@@ -1,0 +1,125 @@
+package common
+
+import (
+	"testing"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+func TestValidateULID(t *testing.T) {
+	type args struct {
+		uuid string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "success",
+			args: args{
+				uuid: "0000XSNJG0MQJHBF4QX1EFD6Y3",
+			},
+			want: true,
+		},
+		{
+			name: "failure",
+			args: args{
+				uuid: "123456789",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ValidateULID(tt.args.uuid); got != tt.want {
+				t.Errorf("ValidateULID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestValidateError(t *testing.T) {
+	type Customer struct {
+		Email string
+	}
+
+	c := Customer{
+		Email: "Qiang Xue",
+	}
+
+	c2 := Customer{
+		Email: "admin@example.com",
+	}
+
+	err := validation.ValidateStruct(c,
+		// Validate email
+		validation.Field(&c.Email,
+			validation.Required,
+			is.Email,
+			validation.Length(5, 0),
+		),
+	)
+
+	err2 := validation.ValidateStruct(&c,
+		// Validate email
+		validation.Field(&c.Email,
+			validation.Required,
+			is.Email,
+			validation.Length(5, 0),
+		),
+	)
+
+	err3 := validation.ValidateStruct(&c2,
+		// Validate email
+		validation.Field(&c2.Email,
+			validation.Required,
+			is.Email,
+			validation.Length(5, 0),
+		),
+	)
+
+	type args struct {
+		err error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr error
+	}{
+		{
+			name: "empty args",
+			args: args{},
+		},
+		{
+			name: "error pointer",
+			args: args{
+				err: err,
+			},
+			wantErr: status.New(codes.InvalidArgument, "only a pointer to a struct can be validated").Err(),
+		},
+		{
+			name: "error email",
+			args: args{
+				err: err2,
+			},
+			wantErr: status.New(codes.InvalidArgument, "Email: must be a valid email address").Err(),
+		},
+		{
+			name: "success",
+			args: args{
+				err: err3,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err = ValidateError(tt.args.err); !CompareError(err, tt.wantErr) {
+				t.Errorf("ValidateError() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
