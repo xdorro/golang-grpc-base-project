@@ -5,14 +5,15 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/kucow/golang-grpc-base/pkg/ent"
 	"github.com/kucow/golang-grpc-base/pkg/logger"
 )
 
 type Option struct {
 	Ctx context.Context
 
-	Log *zap.Logger
-	// Client *ent.Client
+	Log    *zap.Logger
+	Client *ent.Client
 	// Redis  redis.UniversalClient
 }
 
