@@ -1,4 +1,4 @@
-package roleservice
+package common
 
 import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"

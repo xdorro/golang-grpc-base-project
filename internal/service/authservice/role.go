@@ -1,4 +1,4 @@
-package roleservice
+package authservice
 
 import (
 	"context"
@@ -11,19 +11,22 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type RoleService struct {
 	roleproto.UnimplementedRoleServiceServer
 
-	log     *zap.Logger
-	persist repo.Persist
+	log       *zap.Logger
+	persist   repo.Persist
+	validator *validator.Validator
 }
 
 func NewRoleService(opts *common.Option, persist repo.Persist) *RoleService {
 	return &RoleService{
-		log:     opts.Log,
-		persist: persist,
+		log:       opts.Log,
+		persist:   persist,
+		validator: opts.Validator,
 	}
 }
 
@@ -32,14 +35,14 @@ func (svc *RoleService) FindAllRoles(context.Context, *roleproto.FindAllRolesReq
 ) {
 	roles := svc.persist.FindAllRoles()
 
-	return &roleproto.ListRolesResponse{Data: RolesProto(roles)}, nil
+	return &roleproto.ListRolesResponse{Data: common.RolesProto(roles)}, nil
 }
 
 func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest) (
 	*roleproto.Role, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
@@ -49,14 +52,14 @@ func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, common.RoleNotExist.Err()
 	}
 
-	return RoleProto(u), nil
+	return common.RoleProto(u), nil
 }
 
 func (svc *RoleService) CreateRole(_ context.Context, in *roleproto.CreateRoleRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateCreateRoleRequest(in); err != nil {
+	if err := svc.validator.ValidateCreateRoleRequest(in); err != nil {
 		svc.log.Error("svc.validateCreateRoleRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -65,7 +68,7 @@ func (svc *RoleService) CreateRole(_ context.Context, in *roleproto.CreateRoleRe
 		return nil, common.RoleAlreadyExist.Err()
 	}
 
-	permissions, err := svc.validateListPermissions(in.GetPermissions())
+	permissions, err := svc.validator.ValidateListPermissions(in.GetPermissions())
 	if err != nil {
 		svc.log.Error("svc.validateCreateRolePermissions()", zap.Error(err))
 		return nil, err
@@ -88,7 +91,7 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRe
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateUpdateRoleRequest(in); err != nil {
+	if err := svc.validator.ValidateUpdateRoleRequest(in); err != nil {
 		svc.log.Error("svc.validateUpdateRoleRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -98,7 +101,7 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRe
 		return nil, common.RoleNotExist.Err()
 	}
 
-	permissions, err := svc.validateListPermissions(in.GetPermissions())
+	permissions, err := svc.validator.ValidateListPermissions(in.GetPermissions())
 	if err != nil {
 		svc.log.Error("svc.validateUpdateRolePermissions()", zap.Error(err))
 		return nil, err
@@ -119,7 +122,7 @@ func (svc *RoleService) DeleteRole(_ context.Context, in *commonproto.UUIDReques
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}

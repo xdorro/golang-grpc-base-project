@@ -11,19 +11,22 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type UserService struct {
 	userproto.UnimplementedUserServiceServer
 
-	log     *zap.Logger
-	persist repo.Persist
+	log       *zap.Logger
+	persist   repo.Persist
+	validator *validator.Validator
 }
 
 func NewUserService(opts *common.Option, persist repo.Persist) *UserService {
 	return &UserService{
-		log:     opts.Log,
-		persist: persist,
+		log:       opts.Log,
+		persist:   persist,
+		validator: opts.Validator,
 	}
 }
 
@@ -33,7 +36,7 @@ func (svc *UserService) FindAllUsers(context.Context, *userproto.FindAllUsersReq
 ) {
 	users := svc.persist.FindAllUsers()
 
-	return &userproto.ListUsersResponse{Data: UsersProto(users)}, nil
+	return &userproto.ListUsersResponse{Data: common.UsersProto(users)}, nil
 }
 
 // FindUserByID find user by id
@@ -41,7 +44,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 	*userproto.User, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
@@ -51,7 +54,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, common.UserNotExist.Err()
 	}
 
-	return UserProto(u), nil
+	return common.UserProto(u), nil
 }
 
 // CreateUser handler CreateUser function
@@ -59,7 +62,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto.CreateUserRe
 	*status.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateCreateUserRequest(in); err != nil {
+	if err := svc.validator.ValidateCreateUserRequest(in); err != nil {
 		svc.log.Error("svc.validateCreateUserRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -81,7 +84,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto.CreateUserRe
 		Password: hashPassword,
 	}
 
-	roles, err := svc.validateListRoles(in.GetRoles())
+	roles, err := svc.validator.ValidateListRoles(in.GetRoles())
 	if err != nil {
 		svc.log.Error("svc.validateListRoles()", zap.Error(err))
 		return nil, err
@@ -99,7 +102,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto.UpdateUserRe
 	*status.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateUpdateUserRequest(in); err != nil {
+	if err := svc.validator.ValidateUpdateUserRequest(in); err != nil {
 		svc.log.Error("svc.validateUpdateUserRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -109,7 +112,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto.UpdateUserRe
 		return nil, common.UserNotExist.Err()
 	}
 
-	roles, err := svc.validateListRoles(in.GetRoles())
+	roles, err := svc.validator.ValidateListRoles(in.GetRoles())
 	if err != nil {
 		svc.log.Error("svc.validateListRoles()", zap.Error(err))
 		return nil, err
@@ -131,7 +134,7 @@ func (svc *UserService) DeleteUser(_ context.Context, in *commonproto.UUIDReques
 	*status.Status, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}

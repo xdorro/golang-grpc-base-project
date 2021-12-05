@@ -1,4 +1,4 @@
-package common
+package validator
 
 import (
 	"testing"
@@ -7,6 +7,8 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/kucow/golang-grpc-base-project/internal/common"
 )
 
 func TestValidateULID(t *testing.T) {
@@ -117,7 +119,7 @@ func TestValidateError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err = ValidateError(tt.args.err); !CompareError(err, tt.wantErr) {
+			if err = ValidateError(tt.args.err); !common.CompareError(err, tt.wantErr) {
 				t.Errorf("ValidateError() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

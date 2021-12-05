@@ -1,4 +1,4 @@
-package permissionservice
+package authservice
 
 import (
 	"context"
@@ -11,20 +11,25 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type PermissionService struct {
 	permissionproto.UnimplementedPermissionServiceServer
 
-	log     *zap.Logger
-	persist repo.Persist
+	log       *zap.Logger
+	persist   repo.Persist
+	validator *validator.Validator
 }
 
 func NewPermissionService(opts *common.Option, persist repo.Persist) *PermissionService {
-	return &PermissionService{
-		log:     opts.Log,
-		persist: persist,
+	svc := &PermissionService{
+		log:       opts.Log,
+		persist:   persist,
+		validator: opts.Validator,
 	}
+
+	return svc
 }
 
 func (svc *PermissionService) FindAllPermissions(context.Context, *permissionproto.FindAllPermissionsRequest) (
@@ -32,14 +37,14 @@ func (svc *PermissionService) FindAllPermissions(context.Context, *permissionpro
 ) {
 	permissions := svc.persist.FindAllPermissions()
 
-	return &permissionproto.ListPermissionsResponse{Data: PermissionsProto(permissions)}, nil
+	return &permissionproto.ListPermissionsResponse{Data: common.PermissionsProto(permissions)}, nil
 }
 
 func (svc *PermissionService) FindPermissionByID(_ context.Context, in *commonproto.UUIDRequest) (
 	*permissionproto.Permission, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
@@ -49,14 +54,14 @@ func (svc *PermissionService) FindPermissionByID(_ context.Context, in *commonpr
 		return nil, common.PermissionNotExist.Err()
 	}
 
-	return PermissionProto(u), nil
+	return common.PermissionProto(u), nil
 }
 
 func (svc *PermissionService) CreatePermission(_ context.Context, in *permissionproto.CreatePermissionRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateCreatePermissionRequest(in); err != nil {
+	if err := svc.validator.ValidateCreatePermissionRequest(in); err != nil {
 		svc.log.Error("svc.validateCreatePermissionRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -82,7 +87,7 @@ func (svc *PermissionService) UpdatePermission(_ context.Context, in *permission
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := svc.validateUpdatePermissionRequest(in); err != nil {
+	if err := svc.validator.ValidateUpdatePermissionRequest(in); err != nil {
 		svc.log.Error("svc.validateUpdatePermissionRequest()", zap.Error(err))
 		return nil, err
 	}
@@ -107,7 +112,7 @@ func (svc *PermissionService) DeletePermission(_ context.Context, in *commonprot
 	*statusproto.Status, error,
 ) {
 	// Validate request
-	if err := common.ValidateCommonID(in); err != nil {
+	if err := svc.validator.ValidateCommonID(in); err != nil {
 		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
