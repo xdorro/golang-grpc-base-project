@@ -13,7 +13,7 @@ import (
 
 func TestValidateULID(t *testing.T) {
 	type args struct {
-		uuid uint64
+		uuid string
 	}
 	tests := []struct {
 		name string
@@ -37,8 +37,8 @@ func TestValidateULID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ValidateULID(tt.args.uuid); got != tt.want {
-				t.Errorf("ValidateULID() = %v, want %v", got, tt.want)
+			if got := ValidateUUID(tt.args.uuid); got != tt.want {
+				t.Errorf("ValidateUUID() = %v, want %v", got, tt.want)
 			}
 		})
 	}

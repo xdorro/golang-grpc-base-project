@@ -4,14 +4,16 @@ import (
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/spf13/cast"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
+	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
-func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {
+func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -23,23 +25,17 @@ func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest)
 			validation.Required,
 			validation.Length(3, 0),
 		),
-		// Validate permissions
-		validation.Field(&in.Permissions,
-			validation.Required.When(in.GetPermissions() != nil),
-			validation.Each(IsULID),
-		),
 	)
 
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest) error {
+func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.UpdatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
 			validation.Required,
-			validation.Length(5, 100),
-			IsULID,
+			is.Int,
 		),
 		// Validate name
 		validation.Field(&in.Name,
@@ -51,29 +47,24 @@ func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest)
 			validation.Required,
 			validation.Length(3, 0),
 		),
-		// Validate permissions
-		validation.Field(&in.Permissions,
-			validation.Required.When(in.GetPermissions() != nil),
-			validation.Each(IsULID),
-		),
 	)
 
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateListRoles(list []uint64) ([]*ent.Role, error) {
-	roles := make([]*ent.Role, 0)
+func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission, error) {
+	permissions := make([]*ent.Permission, 0)
 
 	if len(list) > 0 {
 		for _, id := range list {
-			r, err := val.persist.FindRoleByID(id)
+			p, err := val.persist.FindPermissionByID(cast.ToUint64(id))
 			if err != nil {
-				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("role: %s doesn't exist", id)).Err()
+				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("Permission: %s doesn't exist", id)).Err()
 			}
 
-			roles = append(roles, r)
+			permissions = append(permissions, p)
 		}
 	}
 
-	return roles, nil
+	return permissions, nil
 }

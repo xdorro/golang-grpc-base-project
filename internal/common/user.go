@@ -1,13 +1,15 @@
 package common
 
 import (
+	"github.com/spf13/cast"
+
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
 func UserProto(user *ent.User) *userproto.User {
 	return &userproto.User{
-		Id:     user.ID,
+		Id:     cast.ToString(user.ID),
 		Name:   user.Name,
 		Email:  user.Email,
 		Status: user.Status,

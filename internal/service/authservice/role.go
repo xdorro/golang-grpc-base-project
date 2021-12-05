@@ -3,15 +3,16 @@ package authservice
 import (
 	"context"
 
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type RoleService struct {
@@ -47,7 +48,7 @@ func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, err
 	}
 
-	u, err := svc.persist.FindRoleByID(in.Id)
+	u, err := svc.persist.FindRoleByID(cast.ToUint64(in.Id))
 	if err != nil {
 		return nil, common.RoleNotExist.Err()
 	}
@@ -96,7 +97,7 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRe
 		return nil, err
 	}
 
-	r, err := svc.persist.FindRoleByID(in.GetId())
+	r, err := svc.persist.FindRoleByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.RoleNotExist.Err()
 	}
@@ -127,11 +128,12 @@ func (svc *RoleService) DeleteRole(_ context.Context, in *commonproto.UUIDReques
 		return nil, err
 	}
 
-	if exist := svc.persist.ExistRoleByID(in.GetId()); !exist {
+	id := cast.ToUint64(in.GetId())
+	if exist := svc.persist.ExistRoleByID(id); !exist {
 		return nil, common.RoleNotExist.Err()
 	}
 
-	if err := svc.persist.SoftDeleteRole(in.GetId()); err != nil {
+	if err := svc.persist.SoftDeleteRole(id); err != nil {
 		return nil, err
 	}
 

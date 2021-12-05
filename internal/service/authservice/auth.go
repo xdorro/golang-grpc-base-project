@@ -10,9 +10,9 @@ import (
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type AuthService struct {

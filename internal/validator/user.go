@@ -28,7 +28,7 @@ func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest)
 		// Validate roles
 		validation.Field(&in.Roles,
 			validation.Required,
-			validation.Each(IsULID),
+			validation.Each(is.Int),
 		),
 	)
 
@@ -40,8 +40,7 @@ func (val *Validator) ValidateUpdateUserRequest(in *userproto.UpdateUserRequest)
 		// Validate id
 		validation.Field(&in.Id,
 			validation.Required,
-			validation.Length(5, 100),
-			IsULID,
+			is.Int,
 		),
 		// Validate name
 		validation.Field(&in.Name,
@@ -57,7 +56,7 @@ func (val *Validator) ValidateUpdateUserRequest(in *userproto.UpdateUserRequest)
 		// Validate roles
 		validation.Field(&in.Roles,
 			validation.Required,
-			validation.Each(IsULID),
+			validation.Each(is.Int),
 		),
 	)
 

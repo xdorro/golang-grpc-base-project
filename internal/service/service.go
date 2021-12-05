@@ -11,12 +11,12 @@ import (
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
 	"github.com/kucow/golang-grpc-base-project/internal/service/authservice"
 	"github.com/kucow/golang-grpc-base-project/internal/service/userservice"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
 	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
 	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 func NewService(opts *common.Option, srv *grpc.Server) {
