@@ -1,8 +1,8 @@
 package permissionservice
 
 import (
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	permissionproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
 func PermissionProto(permission *ent.Permission) *permissionproto.Permission {

@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	roleproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/role"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
 )
 
 func (svc *RoleService) validateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {

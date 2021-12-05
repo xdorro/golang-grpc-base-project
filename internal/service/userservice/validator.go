@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	userproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/user"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
 func (svc *UserService) validateCreateUserRequest(in *userproto.CreateUserRequest) error {

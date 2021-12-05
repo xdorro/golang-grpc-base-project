@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/mixin"
 	"github.com/oklog/ulid/v2"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent/hook"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/hook"
 )
 
 // BaseMixin struct.

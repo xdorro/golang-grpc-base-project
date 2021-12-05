@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/predicate"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/predicate"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
 // PermissionUpdate is the builder for updating Permission entities.

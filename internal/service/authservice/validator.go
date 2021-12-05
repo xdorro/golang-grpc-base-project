@@ -4,8 +4,8 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	authproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/auth"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 func (svc *AuthService) validateLoginRequest(in *authproto.LoginRequest) error {

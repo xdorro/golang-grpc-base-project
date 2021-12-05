@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
 // User is the model entity for the User schema.

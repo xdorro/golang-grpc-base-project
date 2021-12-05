@@ -8,9 +8,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
 // ent aliases to avoid import conflicts in user's code.

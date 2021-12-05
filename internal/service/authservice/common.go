@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	"github.com/kucow/golang-grpc-base/internal/repo"
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	authproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/auth"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 // ValidateToken validate token

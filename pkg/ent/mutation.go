@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/predicate"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/predicate"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 
 	"entgo.io/ent"
 )

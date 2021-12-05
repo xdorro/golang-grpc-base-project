@@ -2,4 +2,4 @@
 
 package ent
 
-// The schema-stitching logic is generated in github.com/kucow/golang-grpc-base/pkg/ent/runtime/runtime.go
+// The schema-stitching logic is generated in github.com/kucow/golang-grpc-base-project/pkg/ent/runtime/runtime.go

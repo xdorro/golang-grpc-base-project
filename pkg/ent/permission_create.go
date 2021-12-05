@@ -10,8 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
 // PermissionCreate is the builder for creating a Permission entity.

@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent/migrate"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/migrate"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"

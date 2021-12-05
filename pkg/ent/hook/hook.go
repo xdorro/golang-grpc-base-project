@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 )
 
 // The PermissionFunc type is an adapter to allow the use of ordinary

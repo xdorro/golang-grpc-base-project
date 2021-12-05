@@ -6,8 +6,8 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	"github.com/kucow/golang-grpc-base/pkg/logger"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/logger"
 )
 
 type Option struct {

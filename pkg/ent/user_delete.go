@@ -9,8 +9,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kucow/golang-grpc-base/pkg/ent/predicate"
-	"github.com/kucow/golang-grpc-base/pkg/ent/user"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/predicate"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
 // UserDelete is the builder for deleting a User entity.

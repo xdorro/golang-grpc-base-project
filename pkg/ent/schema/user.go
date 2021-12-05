@@ -7,7 +7,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent/schema/mixin"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/schema/mixin"
 )
 
 // User holds the schema definition for the User entity.

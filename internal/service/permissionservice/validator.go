@@ -3,8 +3,8 @@ package permissionservice
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 
-	"github.com/kucow/golang-grpc-base/internal/common"
-	permissionproto "github.com/kucow/golang-grpc-base/pkg/proto/v1/permission"
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
 func (svc *PermissionService) validateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {

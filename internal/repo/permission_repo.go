@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base/pkg/ent"
-	"github.com/kucow/golang-grpc-base/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base/pkg/ent/role"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
 func (repo *Repo) FindAllPermissions() []*ent.Permission {

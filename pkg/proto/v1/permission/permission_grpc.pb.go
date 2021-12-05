@@ -4,7 +4,7 @@ package permissionproto
 
 import (
 	context "context"
-	common "github.com/kucow/golang-grpc-base/pkg/proto/v1/common"
+	common "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
