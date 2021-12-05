@@ -40,7 +40,7 @@ func main() {
 	// // declare redis
 	// redis.NewRedis(opts)
 
-	// start server
+	// create new server
 	srv, err := server.NewServer(opts)
 	if err != nil {
 		opts.Log.Fatal("server.NewServer()", zap.Error(err))
