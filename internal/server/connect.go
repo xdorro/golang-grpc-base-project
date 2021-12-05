@@ -24,23 +24,31 @@ func (srv *Server) createServer(listener net.Listener) error {
 	// Log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
-	chain := []grpc.UnaryServerInterceptor{
+	streamChain := []grpc.StreamServerInterceptor{
+		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+		grpc_zap.StreamServerInterceptor(srv.log),
+		grpc_recovery.StreamServerInterceptor(),
+	}
+
+	unaryChain := []grpc.UnaryServerInterceptor{
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
 	}
 
 	if viper.GetBool("LOG_PAYLOAD") {
-		decider := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
+		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
 			return true
 		}
 
-		chain = append(chain, grpc_zap.PayloadUnaryServerInterceptor(srv.log, decider))
+		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(srv.log, alwaysLoggingDeciderServer))
+		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(srv.log, alwaysLoggingDeciderServer))
 	}
 
 	// register grpc service server
 	srv.grpcServer = grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(chain...),
+		grpc_middleware.WithStreamServerChain(streamChain...),
+		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {

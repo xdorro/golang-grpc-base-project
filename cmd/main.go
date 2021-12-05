@@ -11,6 +11,7 @@ import (
 	"github.com/kucow/golang-grpc-base/internal/common"
 	"github.com/kucow/golang-grpc-base/internal/config"
 	"github.com/kucow/golang-grpc-base/internal/server"
+	"github.com/kucow/golang-grpc-base/pkg/client"
 )
 
 const (
@@ -33,6 +34,11 @@ func main() {
 		zap.String("app-version", viper.GetString("APP_VERSION")),
 		zap.String("go-version", runtime.Version()),
 	)
+
+	// declare client
+	client.NewClient(opts)
+	// // declare redis
+	// redis.NewRedis(opts)
 
 	// start server
 	srv, err := server.NewServer(opts)

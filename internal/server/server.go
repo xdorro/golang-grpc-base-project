@@ -10,7 +10,6 @@ import (
 
 	"github.com/kucow/golang-grpc-base/internal/common"
 	"github.com/kucow/golang-grpc-base/internal/service"
-	"github.com/kucow/golang-grpc-base/pkg/client"
 )
 
 // func buildDummyAuthFunction(expectedScheme string, expectedToken string) func(ctx context.Context) (
@@ -131,11 +130,6 @@ func NewServer(opts *common.Option) (*Server, error) {
 			opts.Log.Fatal("createServer()", zap.Error(err))
 		}
 	}()
-
-	// declare client
-	client.NewClient(opts)
-	// // declare redis
-	// redis.NewRedis(opts)
 
 	go func() {
 		if err = srv.listenClient(service.NewService(opts)); err != nil {
