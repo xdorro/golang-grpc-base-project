@@ -88,14 +88,13 @@ func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		authorize := inter.getInfoAuthorization(ctx)
-		inter.log.Info("Permission", zap.Any("authorize", authorize))
 
-		if authorize == nil || len(authorize) == 0 {
+		if len(authorize) == 0 {
 			return ctx, nil
 		}
 
 		if roles, ok := authorize[fullMethod]; ok {
-			if roles == nil || len(roles) == 0 {
+			if len(roles) == 0 {
 				return ctx, nil
 			}
 
@@ -110,7 +109,6 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 			}
 
 			claims := verifiedToken.StandardClaims
-
 			user, err := inter.persist.FindUserByID(cast.ToUint64(claims.Subject))
 			if err != nil {
 				return nil, common.UserNotExist.Err()
@@ -118,10 +116,8 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 
 			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
 
-			if len(roles) > 0 {
-				if inter.hasAccessTo(roles, userRoles) {
-					return context.WithValue(ctx, ctxUserID, user.ID), nil
-				}
+			if inter.hasAccessTo(roles, userRoles) {
+				return context.WithValue(ctx, ctxUserID, user.ID), nil
 			}
 		}
 
@@ -131,7 +127,7 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 
 // getInfoAuthorization get info authorization
 func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
-	authorize := make(map[string][]string, 0)
+	authorize := make(map[string][]string)
 
 	val := inter.redis.Get(inter.redis.Context(), common.ServiceRoles).Val()
 	if val != "" {
