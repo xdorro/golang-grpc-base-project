@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
@@ -56,14 +58,22 @@ func VerifyToken(log *zap.Logger, token string) (*jwt.VerifiedToken, error) {
 }
 
 // GenerateAccessToken generate access token
-func GenerateAccessToken(log *zap.Logger, user *ent.User, result *authproto.TokenResponse) error {
+func GenerateAccessToken(ctx context.Context, log *zap.Logger, user *ent.User, result *authproto.TokenResponse) error {
 	now := time.Now()
 	expire := now.Add(AccessExpire).Unix()
 	result.AccessExpire = expire
+
+	var roles []string
+	perRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
+	for _, perRole := range perRoles {
+		roles = append(roles, perRole.Slug)
+	}
+
 	token, err := jwt.Sign(jwt.HS256, SecretKey, jwt.Claims{
 		IssuedAt: now.Unix(),
 		Expiry:   expire,
 		Subject:  cast.ToString(user.ID),
+		Audience: roles,
 	})
 
 	if err != nil {

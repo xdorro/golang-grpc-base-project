@@ -18,6 +18,7 @@ import (
 type AuthService struct {
 	authproto.UnimplementedAuthServiceServer
 
+	ctx       context.Context
 	log       *zap.Logger
 	redis     redis.UniversalClient
 	persist   repo.Persist
@@ -26,6 +27,7 @@ type AuthService struct {
 
 func NewAuthService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *AuthService {
 	svc := &AuthService{
+		ctx:       opts.Ctx,
 		log:       opts.Log,
 		redis:     opts.Redis,
 		persist:   persist,
@@ -131,7 +133,7 @@ func (svc *AuthService) generateToken(user *ent.User) (*authproto.TokenResponse,
 		TokenType: common.TokenType,
 	}
 
-	if err := common.GenerateAccessToken(svc.log, user, result); err != nil {
+	if err := common.GenerateAccessToken(svc.ctx, svc.log, user, result); err != nil {
 		return nil, err
 	}
 

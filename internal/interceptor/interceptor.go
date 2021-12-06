@@ -2,10 +2,11 @@ package interceptor
 
 import (
 	"context"
-	"sort"
+	"strings"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -21,6 +22,8 @@ type Interceptor struct {
 	log     *zap.Logger
 	persist repo.Persist
 }
+
+var ctxUserID = "userID"
 
 func NewInterceptor(log *zap.Logger, persist *repo.Repo) *Interceptor {
 	return &Interceptor{
@@ -77,24 +80,20 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 				return ctx, nil
 			}
 
-			_, err := grpc_auth.AuthFromMD(ctx, common.TokenType)
+			token, err := grpc_auth.AuthFromMD(ctx, common.TokenType)
 			if err != nil {
 				return nil, err
 			}
 
-			// _, err = common.VerifyToken(inter.log, token)
-			// if err != nil {
-			// 	return nil, err
-			// }
+			verifiedToken, err := common.VerifyToken(inter.log, token)
+			if err != nil {
+				return nil, err
+			}
 
-			// // userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
-			// // if token != "123456789" {
-			// // 	return nil, status.Errorf(codes.PermissionDenied, "bad token")
-			// // }
-
-			userRole := "admin"
-			if inter.searchRoles(roles, userRole) {
-				return ctx, nil
+			claims := verifiedToken.StandardClaims
+			if inter.hasAccessTo(roles, claims.Audience) {
+				userID := cast.ToUint64(claims.Subject)
+				return context.WithValue(ctx, ctxUserID, userID), nil
 			}
 		}
 
@@ -126,11 +125,17 @@ func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permi
 	return roles
 }
 
-func (inter *Interceptor) searchRoles(roles []string, userRole string) bool {
-	sort.Strings(roles)
-	i := sort.Search(len(roles), func(i int) bool { return roles[i] >= userRole })
-	if i < len(roles) && roles[i] == userRole {
-		return true
+func (inter *Interceptor) hasAccessTo(roles, userRoles []string) bool {
+	for _, ur := range userRoles {
+		if strings.EqualFold(ur, "admin") {
+			return true
+		}
+
+		for _, r := range roles {
+			if strings.EqualFold(ur, r) {
+				return true
+			}
+		}
 	}
 
 	return false
