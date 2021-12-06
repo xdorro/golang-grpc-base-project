@@ -425,7 +425,7 @@ func RegisterPermissionServiceHandlerFromEndpoint(ctx context.Context, mux *runt
 
 // RegisterPermissionServiceHandler registers the http handlers for service PermissionService to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterPermissionServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn grpc.ClientConnInterface) error {
+func RegisterPermissionServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return RegisterPermissionServiceHandlerClient(ctx, mux, NewPermissionServiceClient(conn))
 }
 

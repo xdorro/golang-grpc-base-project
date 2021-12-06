@@ -41,7 +41,9 @@ func NewInterceptor(log *zap.Logger, redis redis.UniversalClient, persist *repo.
 }
 
 func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
-	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(
+		srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
+	) error {
 		var newCtx context.Context
 		var err error
 		if overrideSrv, ok := srv.(grpc_auth.ServiceAuthFuncOverride); ok {
@@ -60,7 +62,9 @@ func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
 }
 
 func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(
+		ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+	) (interface{}, error) {
 		var newCtx context.Context
 		var err error
 		if overrideSrv, ok := info.Server.(grpc_auth.ServiceAuthFuncOverride); ok {
@@ -81,12 +85,12 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 		authorize := inter.getInfoAuthorization(ctx)
 		inter.log.Info("Permission", zap.Any("authorize", authorize))
 
-		if len(authorize) == 0 {
+		if authorize == nil || len(authorize) == 0 {
 			return ctx, nil
 		}
 
 		if roles, ok := authorize[fullMethod]; ok {
-			if len(roles) == 0 {
+			if roles == nil || len(roles) == 0 {
 				return ctx, nil
 			}
 
@@ -108,8 +112,11 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 			}
 
 			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
-			if inter.hasAccessTo(roles, userRoles) {
-				return context.WithValue(ctx, ctxUserID, user.ID), nil
+
+			if len(roles) > 0 {
+				if inter.hasAccessTo(roles, userRoles) {
+					return context.WithValue(ctx, ctxUserID, user.ID), nil
+				}
 			}
 		}
 
@@ -118,7 +125,8 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 }
 
 func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
-	authorize := map[string][]string{}
+	authorize := make(map[string][]string, 0)
+
 	val := inter.redis.Get(inter.redis.Context(), common.ServiceRoles).Val()
 	if val != "" {
 		authorize = cast.ToStringMapStringSlice(val)
@@ -139,7 +147,9 @@ func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][
 	return authorize
 }
 
-func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permission) (roles []string) {
+func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
+	roles := make([]string, 0)
+
 	perRoles, _ := per.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
 	for _, perRole := range perRoles {
 		roles = append(roles, perRole.Slug)

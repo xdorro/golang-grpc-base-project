@@ -128,6 +128,7 @@ func (repo *Repo) CreateRole(r *ent.Role, p []*ent.Permission) error {
 		SetName(r.Name).
 		SetSlug(r.Slug).
 		SetStatus(r.Status).
+		SetFullAccess(r.FullAccess).
 		AddPermissions(p...).
 		Save(repo.Ctx)
 
@@ -146,6 +147,7 @@ func (repo *Repo) UpdateRole(r *ent.Role, p []*ent.Permission) error {
 		SetName(r.Name).
 		SetSlug(r.Slug).
 		SetStatus(r.Status).
+		SetFullAccess(r.FullAccess).
 		ClearPermissions().
 		AddPermissions(p...).
 		Save(repo.Ctx)

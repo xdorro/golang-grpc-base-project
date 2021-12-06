@@ -76,9 +76,10 @@ func (svc *RoleService) CreateRole(_ context.Context, in *roleproto.CreateRoleRe
 	}
 
 	roleIn := &ent.Role{
-		Name:   in.GetName(),
-		Slug:   in.GetSlug(),
-		Status: in.GetStatus(),
+		Name:       in.GetName(),
+		Slug:       in.GetSlug(),
+		Status:     in.GetStatus(),
+		FullAccess: in.GetFullAccess(),
 	}
 
 	if err = svc.persist.CreateRole(roleIn, permissions); err != nil {
@@ -111,6 +112,7 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRe
 	r.Name = in.GetName()
 	r.Slug = in.GetSlug()
 	r.Status = in.GetStatus()
+	r.FullAccess = in.GetFullAccess()
 
 	if err = svc.persist.UpdateRole(r, permissions); err != nil {
 		return nil, err
