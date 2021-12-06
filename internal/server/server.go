@@ -6,6 +6,7 @@ import (
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/interceptor"
 	"github.com/kucow/golang-grpc-base-project/internal/service"
 )
 
@@ -68,11 +70,15 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 	// Log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
+	// Create new Interceptor
+	inter := interceptor.NewInterceptor(opts)
+
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.StreamServerInterceptor(),
 		grpc_prometheus.StreamServerInterceptor,
 		grpc_zap.StreamServerInterceptor(srv.log),
+		grpc_auth.StreamServerInterceptor(inter.AuthInterceptor()),
 		grpc_recovery.StreamServerInterceptor(),
 	}
 
@@ -81,9 +87,11 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_opentracing.UnaryServerInterceptor(),
 		grpc_prometheus.UnaryServerInterceptor,
 		grpc_zap.UnaryServerInterceptor(srv.log),
+		grpc_auth.UnaryServerInterceptor(inter.AuthInterceptor()),
 		grpc_recovery.UnaryServerInterceptor(),
 	}
 
+	// Log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
 		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
 			return true
