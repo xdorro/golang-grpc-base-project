@@ -44,6 +44,20 @@ func (repo *Repo) FindRoleByID(id uint64) (*ent.Role, error) {
 	return r, nil
 }
 
+func (repo *Repo) FindRoleBySlug(slug string) (*ent.Role, error) {
+	r, err := repo.Client.Role.
+		Query().
+		Where(role.SlugEqualFold(slug), role.DeleteTimeIsNil()).
+		First(repo.Ctx)
+
+	if err != nil {
+		repo.Log.Error("persist.FindRoleBySlug()", zap.Error(err))
+		return nil, err
+	}
+
+	return r, nil
+}
+
 func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().

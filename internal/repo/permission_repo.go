@@ -44,6 +44,20 @@ func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 	return r, nil
 }
 
+func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
+	r, err := repo.Client.Permission.
+		Query().
+		Where(permission.SlugEqualFold(slug), permission.DeleteTimeIsNil()).
+		First(repo.Ctx)
+
+	if err != nil {
+		repo.Log.Error("persist.FindPermissionBySlug()", zap.Error(err))
+		return nil, err
+	}
+
+	return r, nil
+}
+
 func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent.Permission, error) {
 	p, err := repo.Client.Permission.
 		Query().

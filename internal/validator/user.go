@@ -27,8 +27,7 @@ func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest)
 		),
 		// Validate roles
 		validation.Field(&in.Roles,
-			validation.Required,
-			validation.Each(is.Int),
+			validation.Required.When(in.GetRoles() != nil),
 		),
 	)
 
@@ -55,8 +54,7 @@ func (val *Validator) ValidateUpdateUserRequest(in *userproto.UpdateUserRequest)
 		),
 		// Validate roles
 		validation.Field(&in.Roles,
-			validation.Required,
-			validation.Each(is.Int),
+			validation.Required.When(in.GetRoles() != nil),
 		),
 	)
 
