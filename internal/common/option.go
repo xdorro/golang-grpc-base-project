@@ -8,16 +8,14 @@ import (
 
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	"github.com/kucow/golang-grpc-base-project/pkg/logger"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type Option struct {
 	Ctx context.Context
 
-	Log       *zap.Logger
-	Client    *ent.Client
-	Redis     redis.UniversalClient
-	Validator *validator.Validator
+	Log    *zap.Logger
+	Client *ent.Client
+	Redis  redis.UniversalClient
 }
 
 func NewOption(ctx context.Context) *Option {

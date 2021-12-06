@@ -11,39 +11,6 @@ import (
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 )
 
-func TestValidateULID(t *testing.T) {
-	type args struct {
-		uuid string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "success",
-			args: args{
-				uuid: "0000XSNJG0MQJHBF4QX1EFD6Y3",
-			},
-			want: true,
-		},
-		{
-			name: "failure",
-			args: args{
-				uuid: "123456789",
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := ValidateULID(tt.args.uuid); got != tt.want {
-				t.Errorf("ValidateULID() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestValidateError(t *testing.T) {
 	type Customer struct {
 		Email string

@@ -9,6 +9,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
+// FindAllUsers find all users
 func (repo *Repo) FindAllUsers() []*ent.User {
 	users, err := repo.Client.User.
 		Query().
@@ -85,7 +86,7 @@ func (repo *Repo) FindUserByEmail(email string) (*ent.User, error) {
 }
 
 // FindUserByID handler FindUserByID persist
-func (repo *Repo) FindUserByID(id string) (*ent.User, error) {
+func (repo *Repo) FindUserByID(id uint64) (*ent.User, error) {
 	obj, err := repo.Client.User.
 		Query().
 		Where(user.ID(id), user.DeleteTimeIsNil()).
@@ -115,7 +116,7 @@ func (repo *Repo) ExistUserByEmail(email string) bool {
 }
 
 // ExistUserByID return true if ID existed
-func (repo *Repo) ExistUserByID(id string) bool {
+func (repo *Repo) ExistUserByID(id uint64) bool {
 	check, err := repo.Client.User.
 		Query().
 		Where(user.ID(id), user.DeleteTimeIsNil()).
@@ -130,7 +131,7 @@ func (repo *Repo) ExistUserByID(id string) bool {
 }
 
 // DeleteUser delete user by ID
-func (repo *Repo) DeleteUser(id string) error {
+func (repo *Repo) DeleteUser(id uint64) error {
 	if _, err := repo.Client.User.
 		Delete().
 		Where(user.ID(id)).
@@ -143,7 +144,7 @@ func (repo *Repo) DeleteUser(id string) error {
 }
 
 // SoftDeleteUser update user delete time by ID
-func (repo *Repo) SoftDeleteUser(id string) error {
+func (repo *Repo) SoftDeleteUser(id uint64) error {
 	if _, err := repo.Client.User.
 		Update().
 		Where(user.ID(id), user.DeleteTimeIsNil()).

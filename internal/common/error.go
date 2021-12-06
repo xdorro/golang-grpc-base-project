@@ -14,7 +14,7 @@ var (
 	EmailAlreadyExist = status.New(codes.InvalidArgument, "user email already exist")
 	EmailNotExist     = status.New(codes.InvalidArgument, "user email doesn't exist")
 
-	TokenInvalid      = status.New(codes.InvalidArgument, "token is invalid")
+	TokenInvalid      = status.New(codes.Unauthenticated, "token is invalid")
 	PasswordIncorrect = status.New(codes.InvalidArgument, "password is incorrect")
 
 	RoleAlreadyExist = status.New(codes.InvalidArgument, "role slug already exist")

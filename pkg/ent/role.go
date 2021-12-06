@@ -15,7 +15,7 @@ import (
 type Role struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uint64 `json:"id,omitempty"`
 	// CreateTime holds the value of the "create_time" field.
 	CreateTime time.Time `json:"create_time,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
@@ -26,6 +26,8 @@ type Role struct {
 	Name string `json:"name,omitempty"`
 	// Slug holds the value of the "slug" field.
 	Slug string `json:"slug,omitempty"`
+	// FullAccess holds the value of the "full_access" field.
+	FullAccess bool `json:"full_access,omitempty"`
 	// Status holds the value of the "status" field.
 	Status int32 `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -67,9 +69,11 @@ func (*Role) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case role.FieldStatus:
+		case role.FieldFullAccess:
+			values[i] = new(sql.NullBool)
+		case role.FieldID, role.FieldStatus:
 			values[i] = new(sql.NullInt64)
-		case role.FieldID, role.FieldName, role.FieldSlug:
+		case role.FieldName, role.FieldSlug:
 			values[i] = new(sql.NullString)
 		case role.FieldCreateTime, role.FieldUpdateTime, role.FieldDeleteTime:
 			values[i] = new(sql.NullTime)
@@ -89,11 +93,11 @@ func (r *Role) assignValues(columns []string, values []interface{}) error {
 	for i := range columns {
 		switch columns[i] {
 		case role.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				r.ID = value.String
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			r.ID = uint64(value.Int64)
 		case role.FieldCreateTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field create_time", values[i])
@@ -123,6 +127,12 @@ func (r *Role) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field slug", values[i])
 			} else if value.Valid {
 				r.Slug = value.String
+			}
+		case role.FieldFullAccess:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field full_access", values[i])
+			} else if value.Valid {
+				r.FullAccess = value.Bool
 			}
 		case role.FieldStatus:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -178,6 +188,8 @@ func (r *Role) String() string {
 	builder.WriteString(r.Name)
 	builder.WriteString(", slug=")
 	builder.WriteString(r.Slug)
+	builder.WriteString(", full_access=")
+	builder.WriteString(fmt.Sprintf("%v", r.FullAccess))
 	builder.WriteString(", status=")
 	builder.WriteString(fmt.Sprintf("%v", r.Status))
 	builder.WriteByte(')')

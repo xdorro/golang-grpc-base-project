@@ -309,7 +309,7 @@ func RegisterRoleServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/FindRoleByID", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/FindRoleByID", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -355,7 +355,7 @@ func RegisterRoleServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/UpdateRole", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/UpdateRole", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -378,7 +378,7 @@ func RegisterRoleServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/DeleteRole", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/roleproto.RoleService/DeleteRole", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -460,7 +460,7 @@ func RegisterRoleServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/FindRoleByID", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/FindRoleByID", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -500,7 +500,7 @@ func RegisterRoleServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/UpdateRole", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/UpdateRole", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -520,7 +520,7 @@ func RegisterRoleServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/DeleteRole", runtime.WithHTTPPathPattern("/v1/roles/{id=*}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/roleproto.RoleService/DeleteRole", runtime.WithHTTPPathPattern("/v1/roles/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

@@ -110,8 +110,8 @@ func (uq *UserQuery) FirstX(ctx context.Context) *User {
 
 // FirstID returns the first User ID from the query.
 // Returns a *NotFoundError when no User ID was found.
-func (uq *UserQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (uq *UserQuery) FirstID(ctx context.Context) (id uint64, err error) {
+	var ids []uint64
 	if ids, err = uq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ func (uq *UserQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (uq *UserQuery) FirstIDX(ctx context.Context) string {
+func (uq *UserQuery) FirstIDX(ctx context.Context) uint64 {
 	id, err := uq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -161,8 +161,8 @@ func (uq *UserQuery) OnlyX(ctx context.Context) *User {
 // OnlyID is like Only, but returns the only User ID in the query.
 // Returns a *NotSingularError when exactly one User ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (uq *UserQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (uq *UserQuery) OnlyID(ctx context.Context) (id uint64, err error) {
+	var ids []uint64
 	if ids, err = uq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ func (uq *UserQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (uq *UserQuery) OnlyIDX(ctx context.Context) string {
+func (uq *UserQuery) OnlyIDX(ctx context.Context) uint64 {
 	id, err := uq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -204,8 +204,8 @@ func (uq *UserQuery) AllX(ctx context.Context) []*User {
 }
 
 // IDs executes the query and returns a list of User IDs.
-func (uq *UserQuery) IDs(ctx context.Context) ([]string, error) {
-	var ids []string
+func (uq *UserQuery) IDs(ctx context.Context) ([]uint64, error) {
+	var ids []uint64
 	if err := uq.Select(user.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (uq *UserQuery) IDs(ctx context.Context) ([]string, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (uq *UserQuery) IDsX(ctx context.Context) []string {
+func (uq *UserQuery) IDsX(ctx context.Context) []uint64 {
 	ids, err := uq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -376,15 +376,15 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 
 	if query := uq.withRoles; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		ids := make(map[string]*User, len(nodes))
+		ids := make(map[uint64]*User, len(nodes))
 		for _, node := range nodes {
 			ids[node.ID] = node
 			fks = append(fks, node.ID)
 			node.Edges.Roles = []*Role{}
 		}
 		var (
-			edgeids []string
-			edges   = make(map[string][]*User)
+			edgeids []uint64
+			edges   = make(map[uint64][]*User)
 		)
 		_spec := &sqlgraph.EdgeQuerySpec{
 			Edge: &sqlgraph.EdgeSpec{
@@ -396,19 +396,19 @@ func (uq *UserQuery) sqlAll(ctx context.Context) ([]*User, error) {
 				s.Where(sql.InValues(user.RolesPrimaryKey[1], fks...))
 			},
 			ScanValues: func() [2]interface{} {
-				return [2]interface{}{new(sql.NullString), new(sql.NullString)}
+				return [2]interface{}{new(sql.NullInt64), new(sql.NullInt64)}
 			},
 			Assign: func(out, in interface{}) error {
-				eout, ok := out.(*sql.NullString)
+				eout, ok := out.(*sql.NullInt64)
 				if !ok || eout == nil {
 					return fmt.Errorf("unexpected id value for edge-out")
 				}
-				ein, ok := in.(*sql.NullString)
+				ein, ok := in.(*sql.NullInt64)
 				if !ok || ein == nil {
 					return fmt.Errorf("unexpected id value for edge-in")
 				}
-				outValue := eout.String
-				inValue := ein.String
+				outValue := uint64(eout.Int64)
+				inValue := uint64(ein.Int64)
 				node, ok := ids[outValue]
 				if !ok {
 					return fmt.Errorf("unexpected node id in edges: %v", outValue)
@@ -461,7 +461,7 @@ func (uq *UserQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   user.Table,
 			Columns: user.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: user.FieldID,
 			},
 		},

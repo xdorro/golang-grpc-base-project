@@ -4,21 +4,15 @@ import (
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/oklog/ulid/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 )
 
 const (
 	FmtValidate = "%v: %v"
-)
-
-var (
-	IsULID = validation.NewStringRule(ValidateULID, "must be a valid id")
 )
 
 type Validator struct {
@@ -48,22 +42,4 @@ func ValidateError(err error) error {
 	}
 
 	return nil
-}
-
-func ValidateULID(id string) bool {
-	_, err := ulid.ParseStrict(id)
-	return err == nil
-}
-
-func (val *Validator) ValidateCommonID(in *commonproto.UUIDRequest) error {
-	err := validation.ValidateStruct(in,
-		// Validate id
-		validation.Field(&in.Id,
-			validation.Required,
-			validation.Length(5, 100),
-			IsULID,
-		),
-	)
-
-	return ValidateError(err)
 }

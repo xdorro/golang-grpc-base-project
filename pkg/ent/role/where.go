@@ -11,28 +11,28 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Role {
+func ID(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Role {
+func IDEQ(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Role {
+func IDNEQ(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Role {
+func IDIn(ids ...uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -49,7 +49,7 @@ func IDIn(ids ...string) predicate.Role {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Role {
+func IDNotIn(ids ...uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -66,28 +66,28 @@ func IDNotIn(ids ...string) predicate.Role {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Role {
+func IDGT(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Role {
+func IDGTE(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Role {
+func IDLT(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Role {
+func IDLTE(id uint64) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
 	})
@@ -125,6 +125,13 @@ func Name(v string) predicate.Role {
 func Slug(v string) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldSlug), v))
+	})
+}
+
+// FullAccess applies equality check predicate on the "full_access" field. It's identical to FullAccessEQ.
+func FullAccess(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFullAccess), v))
 	})
 }
 
@@ -596,6 +603,20 @@ func SlugEqualFold(v string) predicate.Role {
 func SlugContainsFold(v string) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldSlug), v))
+	})
+}
+
+// FullAccessEQ applies the EQ predicate on the "full_access" field.
+func FullAccessEQ(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFullAccess), v))
+	})
+}
+
+// FullAccessNEQ applies the NEQ predicate on the "full_access" field.
+func FullAccessNEQ(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldFullAccess), v))
 	})
 }
 

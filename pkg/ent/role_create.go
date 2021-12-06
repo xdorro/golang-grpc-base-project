@@ -76,6 +76,20 @@ func (rc *RoleCreate) SetSlug(s string) *RoleCreate {
 	return rc
 }
 
+// SetFullAccess sets the "full_access" field.
+func (rc *RoleCreate) SetFullAccess(b bool) *RoleCreate {
+	rc.mutation.SetFullAccess(b)
+	return rc
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableFullAccess(b *bool) *RoleCreate {
+	if b != nil {
+		rc.SetFullAccess(*b)
+	}
+	return rc
+}
+
 // SetStatus sets the "status" field.
 func (rc *RoleCreate) SetStatus(i int32) *RoleCreate {
 	rc.mutation.SetStatus(i)
@@ -91,20 +105,20 @@ func (rc *RoleCreate) SetNillableStatus(i *int32) *RoleCreate {
 }
 
 // SetID sets the "id" field.
-func (rc *RoleCreate) SetID(s string) *RoleCreate {
-	rc.mutation.SetID(s)
+func (rc *RoleCreate) SetID(u uint64) *RoleCreate {
+	rc.mutation.SetID(u)
 	return rc
 }
 
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (rc *RoleCreate) AddPermissionIDs(ids ...string) *RoleCreate {
+func (rc *RoleCreate) AddPermissionIDs(ids ...uint64) *RoleCreate {
 	rc.mutation.AddPermissionIDs(ids...)
 	return rc
 }
 
 // AddPermissions adds the "permissions" edges to the Permission entity.
 func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
-	ids := make([]string, len(p))
+	ids := make([]uint64, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
 	}
@@ -112,14 +126,14 @@ func (rc *RoleCreate) AddPermissions(p ...*Permission) *RoleCreate {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (rc *RoleCreate) AddUserIDs(ids ...string) *RoleCreate {
+func (rc *RoleCreate) AddUserIDs(ids ...uint64) *RoleCreate {
 	rc.mutation.AddUserIDs(ids...)
 	return rc
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (rc *RoleCreate) AddUsers(u ...*User) *RoleCreate {
-	ids := make([]string, len(u))
+	ids := make([]uint64, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -213,6 +227,10 @@ func (rc *RoleCreate) defaults() error {
 		v := role.DefaultUpdateTime()
 		rc.mutation.SetUpdateTime(v)
 	}
+	if _, ok := rc.mutation.FullAccess(); !ok {
+		v := role.DefaultFullAccess
+		rc.mutation.SetFullAccess(v)
+	}
 	if _, ok := rc.mutation.Status(); !ok {
 		v := role.DefaultStatus
 		rc.mutation.SetStatus(v)
@@ -244,13 +262,11 @@ func (rc *RoleCreate) check() error {
 			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "slug": %w`, err)}
 		}
 	}
+	if _, ok := rc.mutation.FullAccess(); !ok {
+		return &ValidationError{Name: "full_access", err: errors.New(`ent: missing required field "full_access"`)}
+	}
 	if _, ok := rc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
-	}
-	if v, ok := rc.mutation.ID(); ok {
-		if err := role.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "id": %w`, err)}
-		}
 	}
 	return nil
 }
@@ -263,8 +279,9 @@ func (rc *RoleCreate) sqlSave(ctx context.Context) (*Role, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = uint64(id)
 	}
 	return _node, nil
 }
@@ -275,7 +292,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: role.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: role.FieldID,
 			},
 		}
@@ -324,6 +341,14 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 		})
 		_node.Slug = value
 	}
+	if value, ok := rc.mutation.FullAccess(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
+		})
+		_node.FullAccess = value
+	}
 	if value, ok := rc.mutation.Status(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt32,
@@ -341,7 +366,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -360,7 +385,7 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -415,6 +440,10 @@ func (rcb *RoleCreateBulk) Save(ctx context.Context) ([]*Role, error) {
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = uint64(id)
+				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

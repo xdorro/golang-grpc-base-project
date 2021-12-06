@@ -72,7 +72,7 @@ func (pd *PermissionDelete) sqlExec(ctx context.Context) (int, error) {
 		Node: &sqlgraph.NodeSpec{
 			Table: permission.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: permission.FieldID,
 			},
 		},

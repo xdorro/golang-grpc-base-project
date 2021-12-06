@@ -61,6 +61,20 @@ func (ru *RoleUpdate) SetSlug(s string) *RoleUpdate {
 	return ru
 }
 
+// SetFullAccess sets the "full_access" field.
+func (ru *RoleUpdate) SetFullAccess(b bool) *RoleUpdate {
+	ru.mutation.SetFullAccess(b)
+	return ru
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableFullAccess(b *bool) *RoleUpdate {
+	if b != nil {
+		ru.SetFullAccess(*b)
+	}
+	return ru
+}
+
 // SetStatus sets the "status" field.
 func (ru *RoleUpdate) SetStatus(i int32) *RoleUpdate {
 	ru.mutation.ResetStatus()
@@ -83,14 +97,14 @@ func (ru *RoleUpdate) AddStatus(i int32) *RoleUpdate {
 }
 
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (ru *RoleUpdate) AddPermissionIDs(ids ...string) *RoleUpdate {
+func (ru *RoleUpdate) AddPermissionIDs(ids ...uint64) *RoleUpdate {
 	ru.mutation.AddPermissionIDs(ids...)
 	return ru
 }
 
 // AddPermissions adds the "permissions" edges to the Permission entity.
 func (ru *RoleUpdate) AddPermissions(p ...*Permission) *RoleUpdate {
-	ids := make([]string, len(p))
+	ids := make([]uint64, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
 	}
@@ -98,14 +112,14 @@ func (ru *RoleUpdate) AddPermissions(p ...*Permission) *RoleUpdate {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (ru *RoleUpdate) AddUserIDs(ids ...string) *RoleUpdate {
+func (ru *RoleUpdate) AddUserIDs(ids ...uint64) *RoleUpdate {
 	ru.mutation.AddUserIDs(ids...)
 	return ru
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (ru *RoleUpdate) AddUsers(u ...*User) *RoleUpdate {
-	ids := make([]string, len(u))
+	ids := make([]uint64, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -124,14 +138,14 @@ func (ru *RoleUpdate) ClearPermissions() *RoleUpdate {
 }
 
 // RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (ru *RoleUpdate) RemovePermissionIDs(ids ...string) *RoleUpdate {
+func (ru *RoleUpdate) RemovePermissionIDs(ids ...uint64) *RoleUpdate {
 	ru.mutation.RemovePermissionIDs(ids...)
 	return ru
 }
 
 // RemovePermissions removes "permissions" edges to Permission entities.
 func (ru *RoleUpdate) RemovePermissions(p ...*Permission) *RoleUpdate {
-	ids := make([]string, len(p))
+	ids := make([]uint64, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
 	}
@@ -145,14 +159,14 @@ func (ru *RoleUpdate) ClearUsers() *RoleUpdate {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (ru *RoleUpdate) RemoveUserIDs(ids ...string) *RoleUpdate {
+func (ru *RoleUpdate) RemoveUserIDs(ids ...uint64) *RoleUpdate {
 	ru.mutation.RemoveUserIDs(ids...)
 	return ru
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (ru *RoleUpdate) RemoveUsers(u ...*User) *RoleUpdate {
-	ids := make([]string, len(u))
+	ids := make([]uint64, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -255,7 +269,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Table:   role.Table,
 			Columns: role.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: role.FieldID,
 			},
 		},
@@ -301,6 +315,13 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: role.FieldSlug,
 		})
 	}
+	if value, ok := ru.mutation.FullAccess(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
+		})
+	}
 	if value, ok := ru.mutation.Status(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt32,
@@ -324,7 +345,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -340,7 +361,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -359,7 +380,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -378,7 +399,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -394,7 +415,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -413,7 +434,7 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -474,6 +495,20 @@ func (ruo *RoleUpdateOne) SetSlug(s string) *RoleUpdateOne {
 	return ruo
 }
 
+// SetFullAccess sets the "full_access" field.
+func (ruo *RoleUpdateOne) SetFullAccess(b bool) *RoleUpdateOne {
+	ruo.mutation.SetFullAccess(b)
+	return ruo
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableFullAccess(b *bool) *RoleUpdateOne {
+	if b != nil {
+		ruo.SetFullAccess(*b)
+	}
+	return ruo
+}
+
 // SetStatus sets the "status" field.
 func (ruo *RoleUpdateOne) SetStatus(i int32) *RoleUpdateOne {
 	ruo.mutation.ResetStatus()
@@ -496,14 +531,14 @@ func (ruo *RoleUpdateOne) AddStatus(i int32) *RoleUpdateOne {
 }
 
 // AddPermissionIDs adds the "permissions" edge to the Permission entity by IDs.
-func (ruo *RoleUpdateOne) AddPermissionIDs(ids ...string) *RoleUpdateOne {
+func (ruo *RoleUpdateOne) AddPermissionIDs(ids ...uint64) *RoleUpdateOne {
 	ruo.mutation.AddPermissionIDs(ids...)
 	return ruo
 }
 
 // AddPermissions adds the "permissions" edges to the Permission entity.
 func (ruo *RoleUpdateOne) AddPermissions(p ...*Permission) *RoleUpdateOne {
-	ids := make([]string, len(p))
+	ids := make([]uint64, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
 	}
@@ -511,14 +546,14 @@ func (ruo *RoleUpdateOne) AddPermissions(p ...*Permission) *RoleUpdateOne {
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (ruo *RoleUpdateOne) AddUserIDs(ids ...string) *RoleUpdateOne {
+func (ruo *RoleUpdateOne) AddUserIDs(ids ...uint64) *RoleUpdateOne {
 	ruo.mutation.AddUserIDs(ids...)
 	return ruo
 }
 
 // AddUsers adds the "users" edges to the User entity.
 func (ruo *RoleUpdateOne) AddUsers(u ...*User) *RoleUpdateOne {
-	ids := make([]string, len(u))
+	ids := make([]uint64, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -537,14 +572,14 @@ func (ruo *RoleUpdateOne) ClearPermissions() *RoleUpdateOne {
 }
 
 // RemovePermissionIDs removes the "permissions" edge to Permission entities by IDs.
-func (ruo *RoleUpdateOne) RemovePermissionIDs(ids ...string) *RoleUpdateOne {
+func (ruo *RoleUpdateOne) RemovePermissionIDs(ids ...uint64) *RoleUpdateOne {
 	ruo.mutation.RemovePermissionIDs(ids...)
 	return ruo
 }
 
 // RemovePermissions removes "permissions" edges to Permission entities.
 func (ruo *RoleUpdateOne) RemovePermissions(p ...*Permission) *RoleUpdateOne {
-	ids := make([]string, len(p))
+	ids := make([]uint64, len(p))
 	for i := range p {
 		ids[i] = p[i].ID
 	}
@@ -558,14 +593,14 @@ func (ruo *RoleUpdateOne) ClearUsers() *RoleUpdateOne {
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (ruo *RoleUpdateOne) RemoveUserIDs(ids ...string) *RoleUpdateOne {
+func (ruo *RoleUpdateOne) RemoveUserIDs(ids ...uint64) *RoleUpdateOne {
 	ruo.mutation.RemoveUserIDs(ids...)
 	return ruo
 }
 
 // RemoveUsers removes "users" edges to User entities.
 func (ruo *RoleUpdateOne) RemoveUsers(u ...*User) *RoleUpdateOne {
-	ids := make([]string, len(u))
+	ids := make([]uint64, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -675,7 +710,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Table:   role.Table,
 			Columns: role.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: role.FieldID,
 			},
 		},
@@ -738,6 +773,13 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Column: role.FieldSlug,
 		})
 	}
+	if value, ok := ruo.mutation.FullAccess(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
+		})
+	}
 	if value, ok := ruo.mutation.Status(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt32,
@@ -761,7 +803,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -777,7 +819,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -796,7 +838,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: permission.FieldID,
 				},
 			},
@@ -815,7 +857,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -831,7 +873,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},
@@ -850,7 +892,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: user.FieldID,
 				},
 			},

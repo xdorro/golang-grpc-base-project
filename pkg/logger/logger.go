@@ -11,11 +11,15 @@ import (
 
 // NewLogger is a wrapper for zap.Logger
 func NewLogger() *zap.Logger {
+	encodeCfg := zap.NewProductionEncoderConfig()
+	encodeCfg.EncodeCaller = zapcore.ShortCallerEncoder // Lấy dòng code bắt đầu log
+	encodeCfg.EncodeLevel = CustomLevelEncoder          // Format cách hiển thị level log
+	encodeCfg.EncodeTime = SyslogTimeEncoder            // Format hiển thị thời điểm log
+	encodeCfg.StacktraceKey = ""                        // sẽ không có stacktracekey
+
 	cfg := zap.NewProductionConfig()
-	cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)             // chọn InfoLevel có thể log ở cả 3 level
-	cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder // Lấy dòng code bắt đầu log
-	cfg.EncoderConfig.EncodeLevel = CustomLevelEncoder          // Format cách hiển thị level log
-	cfg.EncoderConfig.EncodeTime = SyslogTimeEncoder            // Format hiển thị thời điểm log
+	cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel) // chọn InfoLevel có thể log ở cả 3 level
+	cfg.EncoderConfig = encodeCfg
 
 	if viper.GetBool("APP_DEBUG") {
 		cfg.Encoding = "console"
