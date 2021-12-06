@@ -22,7 +22,8 @@ func (Role) Fields() []ent.Field {
 			NotEmpty(),
 
 		field.String("slug").
-			NotEmpty(),
+			NotEmpty().
+			Unique(),
 
 		field.Int32("status").
 			Default(1),
@@ -41,7 +42,7 @@ func (Role) Mixin() []ent.Mixin {
 func (Role) Indexes() []ent.Index {
 	return []ent.Index{
 		// non-unique index.
-		index.Fields("slug", "status"),
+		index.Fields("status"),
 	}
 }
 

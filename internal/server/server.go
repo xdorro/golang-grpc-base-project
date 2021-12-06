@@ -6,7 +6,6 @@ import (
 	"net"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
@@ -82,8 +81,9 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_opentracing.StreamServerInterceptor(),
 		grpc_prometheus.StreamServerInterceptor,
 		grpc_zap.StreamServerInterceptor(srv.log),
-		grpc_auth.StreamServerInterceptor(inter.AuthInterceptor()),
 		grpc_recovery.StreamServerInterceptor(),
+		// Customer Interceptor
+		inter.AuthInterceptorStream(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
@@ -91,8 +91,9 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_opentracing.UnaryServerInterceptor(),
 		grpc_prometheus.UnaryServerInterceptor,
 		grpc_zap.UnaryServerInterceptor(srv.log),
-		grpc_auth.UnaryServerInterceptor(inter.AuthInterceptor()),
 		grpc_recovery.UnaryServerInterceptor(),
+		// Customer Interceptor
+		inter.AuthInterceptorUnary(),
 	}
 
 	// Log payload if enabled

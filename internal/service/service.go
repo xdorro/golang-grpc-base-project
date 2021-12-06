@@ -65,7 +65,7 @@ func (svc *Service) getServiceInfo(srv *grpc.Server) {
 			}
 
 			for _, info := range val.Methods {
-				slug := fmt.Sprintf("%s/%s", name, info.Name)
+				slug := fmt.Sprintf("/%s/%s", name, info.Name)
 
 				if !svc.persist.ExistPermissionBySlug(slug) {
 					svc.log.Info("GetServiceInfo",
