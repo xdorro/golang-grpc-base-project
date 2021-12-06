@@ -27,7 +27,6 @@ type Service struct {
 }
 
 func NewService(opts *common.Option, srv *grpc.Server, validator *validator.Validator, persist *repo.Repo) {
-
 	svc := &Service{
 		log:       opts.Log,
 		client:    opts.Client,

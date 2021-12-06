@@ -20,6 +20,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
+// Interceptor struct
 type Interceptor struct {
 	log     *zap.Logger
 	persist repo.Persist
@@ -32,6 +33,7 @@ const (
 	ctxUserID contextKey = "userID"
 )
 
+// NewInterceptor create new interceptor
 func NewInterceptor(log *zap.Logger, redis redis.UniversalClient, persist *repo.Repo) *Interceptor {
 	return &Interceptor{
 		log:     log,
@@ -40,6 +42,7 @@ func NewInterceptor(log *zap.Logger, redis redis.UniversalClient, persist *repo.
 	}
 }
 
+// AuthInterceptorStream create auth Interceptor stream
 func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
 	return func(
 		srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
@@ -61,6 +64,7 @@ func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
 	}
 }
 
+// AuthInterceptorUnary create auth Interceptor unary
 func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
@@ -80,6 +84,7 @@ func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 	}
 }
 
+// authInterceptor handler interceptor
 func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		authorize := inter.getInfoAuthorization(ctx)
@@ -124,6 +129,7 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 	}
 }
 
+// getInfoAuthorization get info authorization
 func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string, 0)
 
@@ -147,6 +153,7 @@ func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][
 	return authorize
 }
 
+// getPermissionRoles get permission roles
 func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
 	roles := make([]string, 0)
 
@@ -158,6 +165,7 @@ func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permi
 	return roles
 }
 
+// hasAccessTo check has access
 func (inter *Interceptor) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
 	for _, ur := range userRoles {
 		if ur.FullAccess {
