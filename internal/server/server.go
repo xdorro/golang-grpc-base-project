@@ -19,6 +19,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/internal/interceptor"
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
 	"github.com/kucow/golang-grpc-base-project/internal/service"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 )
 
 // Server struct
@@ -69,7 +70,6 @@ func (srv *Server) Close() error {
 func (srv *Server) createServer(opts *common.Option, listener net.Listener) error {
 	// Create new persist
 	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
-
 	// Create new Interceptor
 	inter := interceptor.NewInterceptor(opts.Log, opts.Redis, persist)
 
@@ -112,7 +112,10 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
-	service.NewService(opts, srv.grpcServer, persist)
+	// Create new validator
+	valid := validator.NewValidator(opts.Log, persist)
+	// Create new validator
+	service.NewService(opts, srv.grpcServer, valid, persist)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

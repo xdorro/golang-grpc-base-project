@@ -69,8 +69,12 @@ func init() {
 	roleDescSlug := roleFields[1].Descriptor()
 	// role.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
 	role.SlugValidator = roleDescSlug.Validators[0].(func(string) error)
+	// roleDescFullAccess is the schema descriptor for full_access field.
+	roleDescFullAccess := roleFields[2].Descriptor()
+	// role.DefaultFullAccess holds the default value on creation for the full_access field.
+	role.DefaultFullAccess = roleDescFullAccess.Default.(bool)
 	// roleDescStatus is the schema descriptor for status field.
-	roleDescStatus := roleFields[2].Descriptor()
+	roleDescStatus := roleFields[3].Descriptor()
 	// role.DefaultStatus holds the default value on creation for the status field.
 	role.DefaultStatus = roleDescStatus.Default.(int32)
 	userMixin := schema.User{}.Mixin()

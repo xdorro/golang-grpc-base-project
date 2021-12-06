@@ -23,6 +23,8 @@ const (
 	FieldName = "name"
 	// FieldSlug holds the string denoting the slug field in the database.
 	FieldSlug = "slug"
+	// FieldFullAccess holds the string denoting the full_access field in the database.
+	FieldFullAccess = "full_access"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgePermissions holds the string denoting the permissions edge name in mutations.
@@ -51,6 +53,7 @@ var Columns = []string{
 	FieldDeleteTime,
 	FieldName,
 	FieldSlug,
+	FieldFullAccess,
 	FieldStatus,
 }
 
@@ -91,6 +94,8 @@ var (
 	NameValidator func(string) error
 	// SlugValidator is a validator for the "slug" field. It is called by the builders before save.
 	SlugValidator func(string) error
+	// DefaultFullAccess holds the default value on creation for the "full_access" field.
+	DefaultFullAccess bool
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus int32
 )

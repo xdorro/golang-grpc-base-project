@@ -26,6 +26,8 @@ type Role struct {
 	Name string `json:"name,omitempty"`
 	// Slug holds the value of the "slug" field.
 	Slug string `json:"slug,omitempty"`
+	// FullAccess holds the value of the "full_access" field.
+	FullAccess bool `json:"full_access,omitempty"`
 	// Status holds the value of the "status" field.
 	Status int32 `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -67,6 +69,8 @@ func (*Role) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case role.FieldFullAccess:
+			values[i] = new(sql.NullBool)
 		case role.FieldID, role.FieldStatus:
 			values[i] = new(sql.NullInt64)
 		case role.FieldName, role.FieldSlug:
@@ -124,6 +128,12 @@ func (r *Role) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				r.Slug = value.String
 			}
+		case role.FieldFullAccess:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field full_access", values[i])
+			} else if value.Valid {
+				r.FullAccess = value.Bool
+			}
 		case role.FieldStatus:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -178,6 +188,8 @@ func (r *Role) String() string {
 	builder.WriteString(r.Name)
 	builder.WriteString(", slug=")
 	builder.WriteString(r.Slug)
+	builder.WriteString(", full_access=")
+	builder.WriteString(fmt.Sprintf("%v", r.FullAccess))
 	builder.WriteString(", status=")
 	builder.WriteString(fmt.Sprintf("%v", r.Status))
 	builder.WriteByte(')')

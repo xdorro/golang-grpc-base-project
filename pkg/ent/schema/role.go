@@ -25,6 +25,9 @@ func (Role) Fields() []ent.Field {
 			NotEmpty().
 			Unique(),
 
+		field.Bool("full_access").
+			Default(false),
+
 		field.Int32("status").
 			Default(1),
 	}

@@ -760,6 +760,7 @@ type RoleMutation struct {
 	delete_time        *time.Time
 	name               *string
 	slug               *string
+	full_access        *bool
 	status             *int32
 	addstatus          *int32
 	clearedFields      map[string]struct{}
@@ -1052,6 +1053,42 @@ func (m *RoleMutation) ResetSlug() {
 	m.slug = nil
 }
 
+// SetFullAccess sets the "full_access" field.
+func (m *RoleMutation) SetFullAccess(b bool) {
+	m.full_access = &b
+}
+
+// FullAccess returns the value of the "full_access" field in the mutation.
+func (m *RoleMutation) FullAccess() (r bool, exists bool) {
+	v := m.full_access
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFullAccess returns the old "full_access" field's value of the Role entity.
+// If the Role object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RoleMutation) OldFullAccess(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldFullAccess is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldFullAccess requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFullAccess: %w", err)
+	}
+	return oldValue.FullAccess, nil
+}
+
+// ResetFullAccess resets all changes to the "full_access" field.
+func (m *RoleMutation) ResetFullAccess() {
+	m.full_access = nil
+}
+
 // SetStatus sets the "status" field.
 func (m *RoleMutation) SetStatus(i int32) {
 	m.status = &i
@@ -1235,7 +1272,7 @@ func (m *RoleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RoleMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.create_time != nil {
 		fields = append(fields, role.FieldCreateTime)
 	}
@@ -1250,6 +1287,9 @@ func (m *RoleMutation) Fields() []string {
 	}
 	if m.slug != nil {
 		fields = append(fields, role.FieldSlug)
+	}
+	if m.full_access != nil {
+		fields = append(fields, role.FieldFullAccess)
 	}
 	if m.status != nil {
 		fields = append(fields, role.FieldStatus)
@@ -1272,6 +1312,8 @@ func (m *RoleMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case role.FieldSlug:
 		return m.Slug()
+	case role.FieldFullAccess:
+		return m.FullAccess()
 	case role.FieldStatus:
 		return m.Status()
 	}
@@ -1293,6 +1335,8 @@ func (m *RoleMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case role.FieldSlug:
 		return m.OldSlug(ctx)
+	case role.FieldFullAccess:
+		return m.OldFullAccess(ctx)
 	case role.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -1338,6 +1382,13 @@ func (m *RoleMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSlug(v)
+		return nil
+	case role.FieldFullAccess:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFullAccess(v)
 		return nil
 	case role.FieldStatus:
 		v, ok := value.(int32)
@@ -1433,6 +1484,9 @@ func (m *RoleMutation) ResetField(name string) error {
 		return nil
 	case role.FieldSlug:
 		m.ResetSlug()
+		return nil
+	case role.FieldFullAccess:
+		m.ResetFullAccess()
 		return nil
 	case role.FieldStatus:
 		m.ResetStatus()

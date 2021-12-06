@@ -26,15 +26,13 @@ type Service struct {
 	validator *validator.Validator
 }
 
-func NewService(opts *common.Option, srv *grpc.Server, persist *repo.Repo) {
-	// Create new validator
-	valid := validator.NewValidator(opts.Log, persist)
+func NewService(opts *common.Option, srv *grpc.Server, validator *validator.Validator, persist *repo.Repo) {
 
 	svc := &Service{
 		log:       opts.Log,
 		client:    opts.Client,
 		persist:   persist,
-		validator: valid,
+		validator: validator,
 	}
 
 	// register Service Servers

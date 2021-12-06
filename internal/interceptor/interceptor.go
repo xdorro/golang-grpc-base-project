@@ -101,9 +101,15 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 			}
 
 			claims := verifiedToken.StandardClaims
-			if inter.hasAccessTo(roles, claims.Audience) {
-				userID := cast.ToUint64(claims.Subject)
-				return context.WithValue(ctx, ctxUserID, userID), nil
+
+			user, err := inter.persist.FindUserByID(cast.ToUint64(claims.Subject))
+			if err != nil {
+				return nil, common.UserNotExist.Err()
+			}
+
+			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
+			if inter.hasAccessTo(roles, userRoles) {
+				return context.WithValue(ctx, ctxUserID, user.ID), nil
 			}
 		}
 
@@ -142,14 +148,14 @@ func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permi
 	return roles
 }
 
-func (inter *Interceptor) hasAccessTo(roles, userRoles []string) bool {
+func (inter *Interceptor) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
 	for _, ur := range userRoles {
-		if strings.EqualFold(ur, "admin") {
+		if ur.FullAccess {
 			return true
 		}
 
 		for _, r := range roles {
-			if strings.EqualFold(ur, r) {
+			if strings.EqualFold(ur.Slug, r) {
 				return true
 			}
 		}

@@ -44,6 +44,7 @@ var (
 		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "slug", Type: field.TypeString, Unique: true},
+		{Name: "full_access", Type: field.TypeBool, Default: false},
 		{Name: "status", Type: field.TypeInt32, Default: 1},
 	}
 	// RolesTable holds the schema information for the "roles" table.
@@ -60,7 +61,7 @@ var (
 			{
 				Name:    "role_status",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[6]},
+				Columns: []*schema.Column{RolesColumns[7]},
 			},
 		},
 	}

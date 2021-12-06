@@ -128,6 +128,13 @@ func Slug(v string) predicate.Role {
 	})
 }
 
+// FullAccess applies equality check predicate on the "full_access" field. It's identical to FullAccessEQ.
+func FullAccess(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFullAccess), v))
+	})
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v int32) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
@@ -596,6 +603,20 @@ func SlugEqualFold(v string) predicate.Role {
 func SlugContainsFold(v string) predicate.Role {
 	return predicate.Role(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldSlug), v))
+	})
+}
+
+// FullAccessEQ applies the EQ predicate on the "full_access" field.
+func FullAccessEQ(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFullAccess), v))
+	})
+}
+
+// FullAccessNEQ applies the NEQ predicate on the "full_access" field.
+func FullAccessNEQ(v bool) predicate.Role {
+	return predicate.Role(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldFullAccess), v))
 	})
 }
 

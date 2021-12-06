@@ -61,6 +61,20 @@ func (ru *RoleUpdate) SetSlug(s string) *RoleUpdate {
 	return ru
 }
 
+// SetFullAccess sets the "full_access" field.
+func (ru *RoleUpdate) SetFullAccess(b bool) *RoleUpdate {
+	ru.mutation.SetFullAccess(b)
+	return ru
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableFullAccess(b *bool) *RoleUpdate {
+	if b != nil {
+		ru.SetFullAccess(*b)
+	}
+	return ru
+}
+
 // SetStatus sets the "status" field.
 func (ru *RoleUpdate) SetStatus(i int32) *RoleUpdate {
 	ru.mutation.ResetStatus()
@@ -301,6 +315,13 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: role.FieldSlug,
 		})
 	}
+	if value, ok := ru.mutation.FullAccess(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
+		})
+	}
 	if value, ok := ru.mutation.Status(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt32,
@@ -471,6 +492,20 @@ func (ruo *RoleUpdateOne) SetName(s string) *RoleUpdateOne {
 // SetSlug sets the "slug" field.
 func (ruo *RoleUpdateOne) SetSlug(s string) *RoleUpdateOne {
 	ruo.mutation.SetSlug(s)
+	return ruo
+}
+
+// SetFullAccess sets the "full_access" field.
+func (ruo *RoleUpdateOne) SetFullAccess(b bool) *RoleUpdateOne {
+	ruo.mutation.SetFullAccess(b)
+	return ruo
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableFullAccess(b *bool) *RoleUpdateOne {
+	if b != nil {
+		ruo.SetFullAccess(*b)
+	}
 	return ruo
 }
 
@@ -736,6 +771,13 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 			Type:   field.TypeString,
 			Value:  value,
 			Column: role.FieldSlug,
+		})
+	}
+	if value, ok := ruo.mutation.FullAccess(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
 		})
 	}
 	if value, ok := ruo.mutation.Status(); ok {

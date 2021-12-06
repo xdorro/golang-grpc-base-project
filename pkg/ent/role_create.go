@@ -76,6 +76,20 @@ func (rc *RoleCreate) SetSlug(s string) *RoleCreate {
 	return rc
 }
 
+// SetFullAccess sets the "full_access" field.
+func (rc *RoleCreate) SetFullAccess(b bool) *RoleCreate {
+	rc.mutation.SetFullAccess(b)
+	return rc
+}
+
+// SetNillableFullAccess sets the "full_access" field if the given value is not nil.
+func (rc *RoleCreate) SetNillableFullAccess(b *bool) *RoleCreate {
+	if b != nil {
+		rc.SetFullAccess(*b)
+	}
+	return rc
+}
+
 // SetStatus sets the "status" field.
 func (rc *RoleCreate) SetStatus(i int32) *RoleCreate {
 	rc.mutation.SetStatus(i)
@@ -213,6 +227,10 @@ func (rc *RoleCreate) defaults() error {
 		v := role.DefaultUpdateTime()
 		rc.mutation.SetUpdateTime(v)
 	}
+	if _, ok := rc.mutation.FullAccess(); !ok {
+		v := role.DefaultFullAccess
+		rc.mutation.SetFullAccess(v)
+	}
 	if _, ok := rc.mutation.Status(); !ok {
 		v := role.DefaultStatus
 		rc.mutation.SetStatus(v)
@@ -243,6 +261,9 @@ func (rc *RoleCreate) check() error {
 		if err := role.SlugValidator(v); err != nil {
 			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "slug": %w`, err)}
 		}
+	}
+	if _, ok := rc.mutation.FullAccess(); !ok {
+		return &ValidationError{Name: "full_access", err: errors.New(`ent: missing required field "full_access"`)}
 	}
 	if _, ok := rc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
@@ -319,6 +340,14 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			Column: role.FieldSlug,
 		})
 		_node.Slug = value
+	}
+	if value, ok := rc.mutation.FullAccess(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: role.FieldFullAccess,
+		})
+		_node.FullAccess = value
 	}
 	if value, ok := rc.mutation.Status(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
