@@ -19,6 +19,12 @@ import (
 	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
+type Service struct {
+	log     *zap.Logger
+	client  *ent.Client
+	persist *repo.Repo
+}
+
 func NewService(opts *common.Option, srv *grpc.Server) {
 	// Create new persist
 	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
@@ -26,25 +32,31 @@ func NewService(opts *common.Option, srv *grpc.Server) {
 	// Create new validator
 	opts.Validator = validator.NewValidator(opts.Log, persist)
 
+	svc := &Service{
+		log:     opts.Log,
+		client:  opts.Client,
+		persist: persist,
+	}
+
 	// register Service Servers
-	registerServiceServers(opts, srv, persist)
+	svc.registerServiceServers(opts, srv)
 
 	// get Service Info
-	getServiceInfo(opts, srv, persist)
+	svc.getServiceInfo(srv)
 }
 
-func registerServiceServers(opts *common.Option, srv *grpc.Server, persist repo.Persist) {
+func (svc *Service) registerServiceServers(opts *common.Option, srv *grpc.Server) {
 	// Register AuthService Server
-	authproto.RegisterAuthServiceServer(srv, authservice.NewAuthService(opts, persist))
+	authproto.RegisterAuthServiceServer(srv, authservice.NewAuthService(opts, svc.persist))
 	// Register UserService Server
-	userproto.RegisterUserServiceServer(srv, userservice.NewUserService(opts, persist))
+	userproto.RegisterUserServiceServer(srv, userservice.NewUserService(opts, svc.persist))
 	// Register RoleService Server
-	roleproto.RegisterRoleServiceServer(srv, authservice.NewRoleService(opts, persist))
+	roleproto.RegisterRoleServiceServer(srv, authservice.NewRoleService(opts, svc.persist))
 	// Register PermissionService Server
-	permissionproto.RegisterPermissionServiceServer(srv, authservice.NewPermissionService(opts, persist))
+	permissionproto.RegisterPermissionServiceServer(srv, authservice.NewPermissionService(opts, svc.persist))
 }
 
-func getServiceInfo(opts *common.Option, srv *grpc.Server, persist repo.Persist) {
+func (svc *Service) getServiceInfo(srv *grpc.Server) {
 	if viper.GetBool("SEEDER_SERVICE") {
 		bulk := make([]*ent.PermissionCreate, 0)
 
@@ -55,13 +67,14 @@ func getServiceInfo(opts *common.Option, srv *grpc.Server, persist repo.Persist)
 
 			for _, info := range val.Methods {
 				slug := fmt.Sprintf("%s/%s", name, info.Name)
-				if !persist.ExistPermissionBySlug(slug) {
-					opts.Log.Info("GetServiceInfo",
+
+				if !svc.persist.ExistPermissionBySlug(slug) {
+					svc.log.Info("GetServiceInfo",
 						zap.Any("Name", info.Name),
 						zap.Any("Slug", slug),
 					)
 
-					bulk = append(bulk, opts.Client.Permission.
+					bulk = append(bulk, svc.client.Permission.
 						Create().
 						SetName(info.Name).
 						SetSlug(slug).
@@ -72,8 +85,8 @@ func getServiceInfo(opts *common.Option, srv *grpc.Server, persist repo.Persist)
 		}
 
 		if len(bulk) > 0 {
-			if err := persist.CreatePermissionBulk(bulk); err != nil {
-				opts.Log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+			if err := svc.persist.CreatePermissionBulk(bulk); err != nil {
+				svc.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
 			}
 		}
 	}
