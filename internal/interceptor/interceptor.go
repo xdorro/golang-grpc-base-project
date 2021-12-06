@@ -2,8 +2,10 @@ package interceptor
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
+	"github.com/go-redis/redis/v8"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"github.com/spf13/cast"
@@ -21,14 +23,20 @@ import (
 type Interceptor struct {
 	log     *zap.Logger
 	persist repo.Persist
+	redis   redis.UniversalClient
 }
 
-var ctxUserID = "userID"
+type contextKey string
 
-func NewInterceptor(log *zap.Logger, persist *repo.Repo) *Interceptor {
+const (
+	ctxUserID contextKey = "userID"
+)
+
+func NewInterceptor(log *zap.Logger, redis redis.UniversalClient, persist *repo.Repo) *Interceptor {
 	return &Interceptor{
 		log:     log,
 		persist: persist,
+		redis:   redis,
 	}
 }
 
@@ -70,12 +78,14 @@ func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 
 func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
-		authors := inter.getInfoAuthorization(ctx)
-		if len(authors) == 0 {
+		authorize := inter.getInfoAuthorization(ctx)
+		inter.log.Info("Permission", zap.Any("authorize", authorize))
+
+		if len(authorize) == 0 {
 			return ctx, nil
 		}
 
-		if roles, ok := authors[fullMethod]; ok {
+		if roles, ok := authorize[fullMethod]; ok {
 			if len(roles) == 0 {
 				return ctx, nil
 			}
@@ -103,15 +113,22 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 
 func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := map[string][]string{}
+	val := inter.redis.Get(inter.redis.Context(), common.ServiceRoles).Val()
+	if val != "" {
+		authorize = cast.ToStringMapStringSlice(val)
+		return authorize
+	}
 
 	permissions := inter.persist.FindAllPermissions()
 	for _, per := range permissions {
 		authorize[per.Slug] = inter.getPermissionRoles(ctx, per)
 	}
 
-	inter.log.Info("Permission",
-		zap.Any("authorize", authorize),
-	)
+	data, _ := json.Marshal(authorize)
+	err := inter.redis.Set(inter.redis.Context(), common.ServiceRoles, data, -1).Err()
+	if err != nil {
+		inter.log.Error("redis.Set()", zap.Error(err))
+	}
 
 	return authorize
 }

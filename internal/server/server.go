@@ -71,7 +71,7 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
 
 	// Create new Interceptor
-	inter := interceptor.NewInterceptor(opts.Log, persist)
+	inter := interceptor.NewInterceptor(opts.Log, opts.Redis, persist)
 
 	// Log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent/migrate"
 	_ "github.com/kucow/golang-grpc-base-project/pkg/ent/runtime"
 )
 
@@ -37,7 +38,7 @@ func NewClient(opts *common.Option) {
 		// Run migration.
 		if err = opts.Client.Schema.Create(
 			opts.Ctx,
-			// migrate.WithGlobalUniqueID(true),
+			migrate.WithGlobalUniqueID(true),
 		); err != nil {
 			_ = opts.Client.Close()
 			opts.Log.Fatal("failed creating schema resources", zap.Error(err))
