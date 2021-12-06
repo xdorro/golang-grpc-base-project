@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/config"
-	"github.com/kucow/golang-grpc-base-project/internal/server"
-	"github.com/kucow/golang-grpc-base-project/pkg/client"
-	"github.com/kucow/golang-grpc-base-project/pkg/redis"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/config"
+	"github.com/xdorro/golang-grpc-base-project/internal/server"
+	"github.com/xdorro/golang-grpc-base-project/pkg/client"
+	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 )
 
 const (

@@ -13,9 +13,9 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
-	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
+	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 const (

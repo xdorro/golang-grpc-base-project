@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
 )
 
 func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {

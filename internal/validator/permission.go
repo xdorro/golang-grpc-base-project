@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
 func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {

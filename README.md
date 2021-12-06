@@ -1,1 +1,1 @@
-# golang-grpc-base
+# golang-grpc-base-project

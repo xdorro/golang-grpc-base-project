@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 func (val *Validator) ValidateLoginRequest(in *authproto.LoginRequest) error {

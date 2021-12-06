@@ -15,11 +15,11 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/interceptor"
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	"github.com/kucow/golang-grpc-base-project/internal/service"
-	"github.com/kucow/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/interceptor"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 )
 
 // Server struct

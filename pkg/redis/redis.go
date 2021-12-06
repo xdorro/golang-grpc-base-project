@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
 )
 
 func NewRedis(opts *common.Option) {

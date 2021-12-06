@@ -7,7 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/predicate"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

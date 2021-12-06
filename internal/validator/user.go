@@ -4,7 +4,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
+	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
 func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest) error {

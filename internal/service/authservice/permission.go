@@ -7,12 +7,12 @@ import (
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	"github.com/kucow/golang-grpc-base-project/internal/validator"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
-	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
+	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
 )
 
 type PermissionService struct {
@@ -23,7 +23,9 @@ type PermissionService struct {
 	validator *validator.Validator
 }
 
-func NewPermissionService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *PermissionService {
+func NewPermissionService(
+	opts *common.Option, validator *validator.Validator, persist repo.Persist,
+) *PermissionService {
 	svc := &PermissionService{
 		log:       opts.Log,
 		persist:   persist,

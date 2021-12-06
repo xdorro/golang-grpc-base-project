@@ -80,7 +80,7 @@ func ValidColumn(column string) bool {
 // package on the initialization of the application. Therefore,
 // it should be imported in the main as follows:
 //
-//	import _ "github.com/kucow/golang-grpc-base-project/pkg/ent/runtime"
+//	import _ "github.com/xdorro/golang-grpc-base-project/pkg/ent/runtime"
 //
 var (
 	Hooks [1]ent.Hook
