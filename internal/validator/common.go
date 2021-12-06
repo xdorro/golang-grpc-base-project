@@ -4,7 +4,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
+	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
 )
 
 func (val *Validator) ValidateCommonID(in *commonproto.UUIDRequest) error {

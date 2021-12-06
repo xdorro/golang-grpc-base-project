@@ -7,12 +7,12 @@ import (
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	"github.com/kucow/golang-grpc-base-project/internal/validator"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
-	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
+	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
 )
 
 type RoleService struct {

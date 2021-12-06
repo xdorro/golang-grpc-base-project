@@ -1,4 +1,4 @@
-module github.com/kucow/golang-grpc-base-project
+module github.com/xdorro/golang-grpc-base-project
 
 go 1.17
 

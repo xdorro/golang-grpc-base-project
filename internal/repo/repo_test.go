@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
 )
 
 func TestNewRepo(t *testing.T) {
