@@ -18,6 +18,7 @@ import (
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/internal/interceptor"
+	"github.com/kucow/golang-grpc-base-project/internal/repo"
 	"github.com/kucow/golang-grpc-base-project/internal/service"
 )
 
@@ -67,11 +68,14 @@ func (srv *Server) Close() error {
 
 // CreateServer create new server
 func (srv *Server) createServer(opts *common.Option, listener net.Listener) error {
-	// Log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
+	// Create new persist
+	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
 
 	// Create new Interceptor
-	inter := interceptor.NewInterceptor(opts.Log)
+	inter := interceptor.NewInterceptor(opts.Log, persist)
+
+	// Log gRPC library internals with log
+	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
@@ -107,7 +111,7 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
-	service.NewService(opts, srv.grpcServer)
+	service.NewService(opts, srv.grpcServer, persist)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

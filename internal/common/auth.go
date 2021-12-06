@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
@@ -50,9 +48,8 @@ func GenerateFromPassword(password string) (string, error) {
 func VerifyToken(log *zap.Logger, token string) (*jwt.VerifiedToken, error) {
 	verifiedToken, err := jwt.Verify(jwt.HS256, SecretKey, []byte(token))
 	if err != nil {
-		err = status.Error(codes.Unauthenticated, "Token is invalid")
 		log.Error("jwt.Verify()", zap.Error(err))
-		return nil, err
+		return nil, TokenInvalid.Err()
 	}
 
 	return verifiedToken, nil

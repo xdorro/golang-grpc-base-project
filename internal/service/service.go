@@ -26,10 +26,7 @@ type Service struct {
 	validator *validator.Validator
 }
 
-func NewService(opts *common.Option, srv *grpc.Server) {
-	// Create new persist
-	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
-
+func NewService(opts *common.Option, srv *grpc.Server, persist *repo.Repo) {
 	// Create new validator
 	valid := validator.NewValidator(opts.Log, persist)
 
