@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/predicate"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/predicate"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
 )
 
 // PermissionQuery is the builder for querying Permission entities.

@@ -10,11 +10,6 @@ docker.build:
 docker.push:
 	docker push $(DOCKER_LOCAL)/$(APP_NAME):$(APP_VERSION)
 
-docker.run:
-	docker run --name $(APP_NAME) -d -p 8000:8000 $(DOCKER_LOCAL)/$(APP_NAME):$(APP_VERSION) -e SERVER.PORT=8000
-
-docker.deploy: docker.build docker.run
-
 docker.dev: docker.build docker.push
 
 grpc.install:

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/hook"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/hook"
 )
 
 // BaseMixin struct.

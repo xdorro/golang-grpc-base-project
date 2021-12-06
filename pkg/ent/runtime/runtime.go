@@ -5,10 +5,10 @@ package runtime
 import (
 	"time"
 
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/schema"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/schema"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/user"
 )
 
 // The init function reads all schema descriptors with runtime code

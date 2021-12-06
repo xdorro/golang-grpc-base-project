@@ -8,11 +8,11 @@ import (
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	"github.com/kucow/golang-grpc-base-project/internal/validator"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 type AuthService struct {

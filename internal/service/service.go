@@ -7,16 +7,16 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/kucow/golang-grpc-base-project/internal/common"
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
-	"github.com/kucow/golang-grpc-base-project/internal/service/authservice"
-	"github.com/kucow/golang-grpc-base-project/internal/service/userservice"
-	"github.com/kucow/golang-grpc-base-project/internal/validator"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
-	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
-	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
-	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/authservice"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/userservice"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
+	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
+	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
+	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
 )
 
 type Service struct {

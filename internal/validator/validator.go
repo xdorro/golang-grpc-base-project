@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
 
 const (

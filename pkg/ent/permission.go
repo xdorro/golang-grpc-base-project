@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/kucow/golang-grpc-base-project/pkg/ent/permission"
+	"github.com/xdorro/golang-grpc-base-project/pkg/ent/permission"
 )
 
 // Permission is the model entity for the Permission schema.
