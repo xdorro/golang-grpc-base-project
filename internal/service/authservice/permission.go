@@ -23,11 +23,11 @@ type PermissionService struct {
 	validator *validator.Validator
 }
 
-func NewPermissionService(opts *common.Option, persist repo.Persist) *PermissionService {
+func NewPermissionService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *PermissionService {
 	svc := &PermissionService{
 		log:       opts.Log,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 
 	return svc

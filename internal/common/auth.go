@@ -1,14 +1,21 @@
 package common
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/kataras/jwt"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
+	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
 const (
@@ -43,10 +50,107 @@ func GenerateFromPassword(password string) (string, error) {
 func VerifyToken(log *zap.Logger, token string) (*jwt.VerifiedToken, error) {
 	verifiedToken, err := jwt.Verify(jwt.HS256, SecretKey, []byte(token))
 	if err != nil {
-		err = status.Error(codes.InvalidArgument, "Token is invalid")
+		err = status.Error(codes.Unauthenticated, "Token is invalid")
 		log.Error("jwt.Verify()", zap.Error(err))
 		return nil, err
 	}
 
 	return verifiedToken, nil
+}
+
+// GenerateAccessToken generate access token
+func GenerateAccessToken(log *zap.Logger, user *ent.User, result *authproto.TokenResponse) error {
+	now := time.Now()
+	expire := now.Add(AccessExpire).Unix()
+	result.AccessExpire = expire
+	token, err := jwt.Sign(jwt.HS256, SecretKey, jwt.Claims{
+		IssuedAt: now.Unix(),
+		Expiry:   expire,
+		Subject:  cast.ToString(user.ID),
+	})
+
+	if err != nil {
+		log.Error("jwt.Sign()", zap.Error(err))
+		return err
+	}
+
+	result.AccessToken = string(token)
+	return nil
+}
+
+// GenerateRefreshToken generate refresh token
+func GenerateRefreshToken(
+	log *zap.Logger, rdb redis.UniversalClient, user *ent.User, result *authproto.TokenResponse,
+) error {
+	now := time.Now()
+	expire := now.Add(RefreshExpire).Unix()
+	result.RefreshExpire = expire
+	token, err := jwt.Sign(jwt.HS256, SecretKey, jwt.Claims{
+		IssuedAt: now.Unix(),
+		Expiry:   expire,
+		Subject:  cast.ToString(user.ID),
+	})
+
+	if err != nil {
+		log.Error("jwt.Sign()", zap.Error(err))
+		return err
+	}
+
+	result.RefreshToken = uuid.New().String()
+
+	tokenKey := fmt.Sprintf(UserTokenKey, user.ID, result.RefreshToken)
+	err = SetRefreshToken(log, rdb, tokenKey, string(token))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetRefreshToken set refresh token
+func SetRefreshToken(log *zap.Logger, redis redis.UniversalClient, tokenKey, value string) error {
+	err := redis.Set(redis.Context(), tokenKey, value, RefreshExpire).Err()
+	if err != nil {
+		log.Error("redis.Set()", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// FindRefreshToken find refresh token
+func FindRefreshToken(log *zap.Logger, rdb redis.UniversalClient, tokenKey string) (string, error) {
+	keys, _, err := rdb.Scan(rdb.Context(), 0, tokenKey, 0).Result()
+	if err != nil {
+		log.Error("redis.Keys()", zap.Error(err))
+		return "", err
+	}
+
+	if len(keys) > 0 {
+		return keys[0], nil
+	}
+
+	return "", nil
+}
+
+// GetRefreshToken get refresh token
+func GetRefreshToken(log *zap.Logger, rdb redis.UniversalClient, tokenKey string) (string, error) {
+	val, err := rdb.Get(rdb.Context(), tokenKey).Result()
+	if err != nil {
+		log.Error("redis.Get()", zap.Error(err))
+		return "", err
+	}
+
+	return val, nil
+}
+
+// RevokeRefreshToken revoke refresh token
+func RevokeRefreshToken(log *zap.Logger, rdb redis.UniversalClient, tokenKey string) error {
+	err := rdb.Del(rdb.Context(), tokenKey).Err()
+	if err != nil {
+		log.Error("rdb.Del()", zap.Error(err))
+		return err
+	}
+
+	return nil
 }

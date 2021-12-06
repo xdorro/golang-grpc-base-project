@@ -23,11 +23,11 @@ type RoleService struct {
 	validator *validator.Validator
 }
 
-func NewRoleService(opts *common.Option, persist repo.Persist) *RoleService {
+func NewRoleService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *RoleService {
 	return &RoleService{
 		log:       opts.Log,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 }
 

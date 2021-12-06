@@ -24,12 +24,12 @@ type AuthService struct {
 	validator *validator.Validator
 }
 
-func NewAuthService(opts *common.Option, persist repo.Persist) *AuthService {
+func NewAuthService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *AuthService {
 	svc := &AuthService{
 		log:       opts.Log,
 		redis:     opts.Redis,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 
 	return svc
@@ -70,22 +70,22 @@ func (svc *AuthService) RevokeToken(_ context.Context, in *authproto.TokenReques
 	}
 
 	tokenKey := fmt.Sprintf(common.UserTokenKey, "*", in.Token)
-	key, err := FindRefreshToken(svc.log, svc.redis, tokenKey)
+	key, err := common.FindRefreshToken(svc.log, svc.redis, tokenKey)
 	if key == "" || err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	token, err := GetRefreshToken(svc.log, svc.redis, key)
+	token, err := common.GetRefreshToken(svc.log, svc.redis, key)
 	if token == "" || err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	_, err = ValidateToken(svc.log, svc.persist, token)
+	_, err = svc.validator.ValidateToken(token)
 	if err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	if err = RevokeRefreshToken(svc.log, svc.redis, key); err != nil {
+	if err = common.RevokeRefreshToken(svc.log, svc.redis, key); err != nil {
 		return nil, err
 	}
 
@@ -103,22 +103,22 @@ func (svc *AuthService) RefreshToken(_ context.Context, in *authproto.TokenReque
 	}
 
 	tokenKey := fmt.Sprintf(common.UserTokenKey, "*", in.Token)
-	key, err := FindRefreshToken(svc.log, svc.redis, tokenKey)
+	key, err := common.FindRefreshToken(svc.log, svc.redis, tokenKey)
 	if key == "" || err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	token, err := GetRefreshToken(svc.log, svc.redis, key)
+	token, err := common.GetRefreshToken(svc.log, svc.redis, key)
 	if token == "" || err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	u, err := ValidateToken(svc.log, svc.persist, token)
+	u, err := svc.validator.ValidateToken(token)
 	if err != nil {
 		return nil, common.TokenInvalid.Err()
 	}
 
-	if err = RevokeRefreshToken(svc.log, svc.redis, key); err != nil {
+	if err = common.RevokeRefreshToken(svc.log, svc.redis, key); err != nil {
 		return nil, err
 	}
 
@@ -131,11 +131,11 @@ func (svc *AuthService) generateToken(user *ent.User) (*authproto.TokenResponse,
 		TokenType: common.TokenType,
 	}
 
-	if err := GenerateAccessToken(svc.log, user, result); err != nil {
+	if err := common.GenerateAccessToken(svc.log, user, result); err != nil {
 		return nil, err
 	}
 
-	if err := GenerateRefreshToken(svc.log, svc.redis, user, result); err != nil {
+	if err := common.GenerateRefreshToken(svc.log, svc.redis, user, result); err != nil {
 		return nil, err
 	}
 

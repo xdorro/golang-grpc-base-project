@@ -20,9 +20,10 @@ import (
 )
 
 type Service struct {
-	log     *zap.Logger
-	client  *ent.Client
-	persist *repo.Repo
+	log       *zap.Logger
+	client    *ent.Client
+	persist   *repo.Repo
+	validator *validator.Validator
 }
 
 func NewService(opts *common.Option, srv *grpc.Server) {
@@ -30,12 +31,13 @@ func NewService(opts *common.Option, srv *grpc.Server) {
 	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
 
 	// Create new validator
-	opts.Validator = validator.NewValidator(opts.Log, persist)
+	valid := validator.NewValidator(opts.Log, persist)
 
 	svc := &Service{
-		log:     opts.Log,
-		client:  opts.Client,
-		persist: persist,
+		log:       opts.Log,
+		client:    opts.Client,
+		persist:   persist,
+		validator: valid,
 	}
 
 	// register Service Servers
@@ -47,13 +49,13 @@ func NewService(opts *common.Option, srv *grpc.Server) {
 
 func (svc *Service) registerServiceServers(opts *common.Option, srv *grpc.Server) {
 	// Register AuthService Server
-	authproto.RegisterAuthServiceServer(srv, authservice.NewAuthService(opts, svc.persist))
+	authproto.RegisterAuthServiceServer(srv, authservice.NewAuthService(opts, svc.validator, svc.persist))
 	// Register UserService Server
-	userproto.RegisterUserServiceServer(srv, userservice.NewUserService(opts, svc.persist))
+	userproto.RegisterUserServiceServer(srv, userservice.NewUserService(opts, svc.validator, svc.persist))
 	// Register RoleService Server
-	roleproto.RegisterRoleServiceServer(srv, authservice.NewRoleService(opts, svc.persist))
+	roleproto.RegisterRoleServiceServer(srv, authservice.NewRoleService(opts, svc.validator, svc.persist))
 	// Register PermissionService Server
-	permissionproto.RegisterPermissionServiceServer(srv, authservice.NewPermissionService(opts, svc.persist))
+	permissionproto.RegisterPermissionServiceServer(srv, authservice.NewPermissionService(opts, svc.validator, svc.persist))
 }
 
 func (svc *Service) getServiceInfo(srv *grpc.Server) {

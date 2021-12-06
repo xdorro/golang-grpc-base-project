@@ -71,7 +71,7 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
 	// Create new Interceptor
-	inter := interceptor.NewInterceptor(opts)
+	inter := interceptor.NewInterceptor(opts.Log)
 
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),

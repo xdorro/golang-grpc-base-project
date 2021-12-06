@@ -23,11 +23,11 @@ type UserService struct {
 	validator *validator.Validator
 }
 
-func NewUserService(opts *common.Option, persist repo.Persist) *UserService {
+func NewUserService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *UserService {
 	return &UserService{
 		log:       opts.Log,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 }
 
