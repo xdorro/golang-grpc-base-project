@@ -9,6 +9,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/user"
 )
 
+// FindAllUsers find all users
 func (repo *Repo) FindAllUsers() []*ent.User {
 	users, err := repo.Client.User.
 		Query().

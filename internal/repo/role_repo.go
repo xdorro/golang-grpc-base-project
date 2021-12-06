@@ -10,6 +10,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
+// FindAllRoles find all roles
 func (repo *Repo) FindAllRoles() []*ent.Role {
 	roles, err := repo.Client.Role.
 		Query().
@@ -30,6 +31,7 @@ func (repo *Repo) FindAllRoles() []*ent.Role {
 	return roles
 }
 
+// FindRoleByID find role by ID
 func (repo *Repo) FindRoleByID(id uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
@@ -44,6 +46,7 @@ func (repo *Repo) FindRoleByID(id uint64) (*ent.Role, error) {
 	return r, nil
 }
 
+// FindRoleBySlug find role by slug
 func (repo *Repo) FindRoleBySlug(slug string) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
@@ -58,6 +61,7 @@ func (repo *Repo) FindRoleBySlug(slug string) (*ent.Role, error) {
 	return r, nil
 }
 
+// FindRoleByIDAndPermissionID find role by ID and permissionID
 func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
@@ -76,6 +80,7 @@ func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Rol
 	return r, nil
 }
 
+// FindRoleByIDAndPermissionIDNot find role by ID and permissionID not
 func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId uint64) (*ent.Role, error) {
 	r, err := repo.Client.Role.
 		Query().
@@ -94,6 +99,7 @@ func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId uint64) (*ent.
 	return r, nil
 }
 
+// ExistRoleByID exist role by ID
 func (repo *Repo) ExistRoleByID(id uint64) bool {
 	exist, err := repo.Client.Role.
 		Query().
@@ -108,6 +114,7 @@ func (repo *Repo) ExistRoleByID(id uint64) bool {
 	return exist
 }
 
+// ExistRoleBySlug exist role by slug
 func (repo *Repo) ExistRoleBySlug(slug string) bool {
 	exist, err := repo.Client.Role.
 		Query().
@@ -122,6 +129,7 @@ func (repo *Repo) ExistRoleBySlug(slug string) bool {
 	return exist
 }
 
+// CreateRole create role
 func (repo *Repo) CreateRole(r *ent.Role, p []*ent.Permission) error {
 	r, err := repo.Client.Role.
 		Create().
@@ -140,6 +148,7 @@ func (repo *Repo) CreateRole(r *ent.Role, p []*ent.Permission) error {
 	return nil
 }
 
+// UpdateRole update role
 func (repo *Repo) UpdateRole(r *ent.Role, p []*ent.Permission) error {
 	_, err := repo.Client.Role.
 		Update().
@@ -160,6 +169,7 @@ func (repo *Repo) UpdateRole(r *ent.Role, p []*ent.Permission) error {
 	return nil
 }
 
+// SoftDeleteRole soft deletes role
 func (repo *Repo) SoftDeleteRole(id uint64) error {
 	_, err := repo.Client.Role.
 		Update().

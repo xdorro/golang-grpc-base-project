@@ -63,7 +63,7 @@ func GenerateAccessToken(ctx context.Context, log *zap.Logger, user *ent.User, r
 	expire := now.Add(AccessExpire).Unix()
 	result.AccessExpire = expire
 
-	var roles []string
+	roles := make([]string, 0)
 	perRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
 	for _, perRole := range perRoles {
 		roles = append(roles, perRole.Slug)

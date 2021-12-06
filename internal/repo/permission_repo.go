@@ -10,6 +10,7 @@ import (
 	"github.com/kucow/golang-grpc-base-project/pkg/ent/role"
 )
 
+// FindAllPermissions find all permissions
 func (repo *Repo) FindAllPermissions() []*ent.Permission {
 	permissions, err := repo.Client.Permission.
 		Query().
@@ -30,6 +31,7 @@ func (repo *Repo) FindAllPermissions() []*ent.Permission {
 	return permissions
 }
 
+// FindPermissionByID find permission by ID
 func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 	r, err := repo.Client.Permission.
 		Query().
@@ -44,6 +46,7 @@ func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 	return r, nil
 }
 
+// FindPermissionBySlug find permission by slug
 func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
 	r, err := repo.Client.Permission.
 		Query().
@@ -58,6 +61,7 @@ func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
 	return r, nil
 }
 
+// FindPermissionByIDAndRoleIDNot find permission by ID and roleID not
 func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent.Permission, error) {
 	p, err := repo.Client.Permission.
 		Query().
@@ -76,6 +80,7 @@ func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent
 	return p, nil
 }
 
+// ExistPermissionByID exists a permission by ID
 func (repo *Repo) ExistPermissionByID(id uint64) bool {
 	exist, err := repo.Client.Permission.
 		Query().
@@ -90,6 +95,7 @@ func (repo *Repo) ExistPermissionByID(id uint64) bool {
 	return exist
 }
 
+// ExistPermissionBySlug exist permission by slug
 func (repo *Repo) ExistPermissionBySlug(slug string) bool {
 	exist, err := repo.Client.Permission.
 		Query().
@@ -104,6 +110,7 @@ func (repo *Repo) ExistPermissionBySlug(slug string) bool {
 	return exist
 }
 
+// CreatePermission create permission
 func (repo *Repo) CreatePermission(r *ent.Permission) error {
 	r, err := repo.Client.Permission.
 		Create().
@@ -120,6 +127,7 @@ func (repo *Repo) CreatePermission(r *ent.Permission) error {
 	return nil
 }
 
+// CreatePermissionBulk create permission bulk
 func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
 	_, err := repo.Client.Permission.
 		CreateBulk(r...).
@@ -133,6 +141,7 @@ func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
 	return nil
 }
 
+// UpdatePermission update permission
 func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 	_, err := repo.Client.Permission.
 		Update().
@@ -150,6 +159,7 @@ func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 	return nil
 }
 
+// SoftDeletePermission soft delete permission
 func (repo *Repo) SoftDeletePermission(id uint64) error {
 	if _, err := repo.Client.Permission.
 		Update().
