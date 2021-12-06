@@ -30,7 +30,7 @@ func (repo *Repo) FindAllPermissions() []*ent.Permission {
 	return permissions
 }
 
-func (repo *Repo) FindPermissionByID(id string) (*ent.Permission, error) {
+func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 	r, err := repo.Client.Permission.
 		Query().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).
@@ -44,7 +44,21 @@ func (repo *Repo) FindPermissionByID(id string) (*ent.Permission, error) {
 	return r, nil
 }
 
-func (repo *Repo) FindPermissionByIDAndRoleIDNot(id string, roleId string) (*ent.Permission, error) {
+func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
+	r, err := repo.Client.Permission.
+		Query().
+		Where(permission.SlugEqualFold(slug), permission.DeleteTimeIsNil()).
+		First(repo.Ctx)
+
+	if err != nil {
+		repo.Log.Error("persist.FindPermissionBySlug()", zap.Error(err))
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent.Permission, error) {
 	p, err := repo.Client.Permission.
 		Query().
 		Where(
@@ -62,7 +76,7 @@ func (repo *Repo) FindPermissionByIDAndRoleIDNot(id string, roleId string) (*ent
 	return p, nil
 }
 
-func (repo *Repo) ExistPermissionByID(id string) bool {
+func (repo *Repo) ExistPermissionByID(id uint64) bool {
 	exist, err := repo.Client.Permission.
 		Query().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).
@@ -106,6 +120,19 @@ func (repo *Repo) CreatePermission(r *ent.Permission) error {
 	return nil
 }
 
+func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
+	_, err := repo.Client.Permission.
+		CreateBulk(r...).
+		Save(repo.Ctx)
+
+	if err != nil {
+		repo.Log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
 func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 	_, err := repo.Client.Permission.
 		Update().
@@ -123,7 +150,7 @@ func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 	return nil
 }
 
-func (repo *Repo) SoftDeletePermission(id string) error {
+func (repo *Repo) SoftDeletePermission(id uint64) error {
 	if _, err := repo.Client.Permission.
 		Update().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).

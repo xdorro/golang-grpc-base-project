@@ -90,20 +90,20 @@ func (pc *PermissionCreate) SetNillableStatus(i *int32) *PermissionCreate {
 }
 
 // SetID sets the "id" field.
-func (pc *PermissionCreate) SetID(s string) *PermissionCreate {
-	pc.mutation.SetID(s)
+func (pc *PermissionCreate) SetID(u uint64) *PermissionCreate {
+	pc.mutation.SetID(u)
 	return pc
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (pc *PermissionCreate) AddRoleIDs(ids ...string) *PermissionCreate {
+func (pc *PermissionCreate) AddRoleIDs(ids ...uint64) *PermissionCreate {
 	pc.mutation.AddRoleIDs(ids...)
 	return pc
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
 func (pc *PermissionCreate) AddRoles(r ...*Role) *PermissionCreate {
-	ids := make([]string, len(r))
+	ids := make([]uint64, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -231,11 +231,6 @@ func (pc *PermissionCreate) check() error {
 	if _, ok := pc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
 	}
-	if v, ok := pc.mutation.ID(); ok {
-		if err := permission.IDValidator(v); err != nil {
-			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "id": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -247,8 +242,9 @@ func (pc *PermissionCreate) sqlSave(ctx context.Context) (*Permission, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		_node.ID = _spec.ID.Value.(string)
+	if _spec.ID.Value != _node.ID {
+		id := _spec.ID.Value.(int64)
+		_node.ID = uint64(id)
 	}
 	return _node, nil
 }
@@ -259,7 +255,7 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: permission.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeString,
+				Type:   field.TypeUint64,
 				Column: permission.FieldID,
 			},
 		}
@@ -325,7 +321,7 @@ func (pc *PermissionCreate) createSpec() (*Permission, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeString,
+					Type:   field.TypeUint64,
 					Column: role.FieldID,
 				},
 			},
@@ -380,6 +376,10 @@ func (pcb *PermissionCreateBulk) Save(ctx context.Context) ([]*Permission, error
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
+				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = uint64(id)
+				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

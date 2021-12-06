@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -33,8 +34,7 @@ func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.Update
 		// Validate id
 		validation.Field(&in.Id,
 			validation.Required,
-			validation.Length(5, 100),
-			IsULID,
+			is.Int,
 		),
 		// Validate name
 		validation.Field(&in.Name,
@@ -55,10 +55,10 @@ func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission,
 	permissions := make([]*ent.Permission, 0)
 
 	if len(list) > 0 {
-		for _, id := range list {
-			p, err := val.persist.FindPermissionByID(id)
+		for _, slug := range list {
+			p, err := val.persist.FindPermissionBySlug(slug)
 			if err != nil {
-				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("Permission: %s doesn't exist", id)).Err()
+				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("permission: %s doesn't exist", slug)).Err()
 			}
 
 			permissions = append(permissions, p)

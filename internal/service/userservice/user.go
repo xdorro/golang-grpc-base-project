@@ -3,15 +3,16 @@ package userservice
 import (
 	"context"
 
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	userproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/user"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type UserService struct {
@@ -22,11 +23,11 @@ type UserService struct {
 	validator *validator.Validator
 }
 
-func NewUserService(opts *common.Option, persist repo.Persist) *UserService {
+func NewUserService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *UserService {
 	return &UserService{
 		log:       opts.Log,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 }
 
@@ -49,7 +50,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, err
 	}
 
-	u, err := svc.persist.FindUserByID(in.GetId())
+	u, err := svc.persist.FindUserByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.UserNotExist.Err()
 	}
@@ -107,7 +108,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto.UpdateUserRe
 		return nil, err
 	}
 
-	u, err := svc.persist.FindUserByID(in.GetId())
+	u, err := svc.persist.FindUserByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.UserNotExist.Err()
 	}
@@ -139,11 +140,13 @@ func (svc *UserService) DeleteUser(_ context.Context, in *commonproto.UUIDReques
 		return nil, err
 	}
 
-	if exist := svc.persist.ExistUserByID(in.GetId()); !exist {
+	id := cast.ToUint64(in.GetId())
+
+	if exist := svc.persist.ExistUserByID(id); !exist {
 		return nil, common.UserNotExist.Err()
 	}
 
-	if err := svc.persist.SoftDeleteUser(in.GetId()); err != nil {
+	if err := svc.persist.SoftDeleteUser(id); err != nil {
 		return nil, err
 	}
 

@@ -3,7 +3,11 @@ package validator
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/spf13/cast"
+	"go.uber.org/zap"
 
+	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	authproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/auth"
 )
 
@@ -35,4 +39,28 @@ func (val *Validator) ValidateTokenRequest(in *authproto.TokenRequest) error {
 	)
 
 	return ValidateError(err)
+}
+
+// ValidateToken validate token
+func (val *Validator) ValidateToken(token string) (*ent.User, error) {
+	verifiedToken, err := common.VerifyToken(val.log, token)
+	if err != nil {
+		return nil, err
+	}
+
+	userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
+	u, err := val.persist.FindUserByID(userID)
+	if err != nil {
+		err = common.UserNotExist.Err()
+		val.log.Error("persist.FindUserByID()", zap.Error(err))
+		return nil, err
+	}
+
+	// tokenKey := fmt.Sprintf(common.UserTokenKey, userID, token)
+	// if _, err = FindRefreshToken(log, rdb, tokenKey); err != nil {
+	// 	err = status.Error(codes.InvalidArgument, "Token is invalid")
+	// 	return nil, err
+	// }
+
+	return u, nil
 }

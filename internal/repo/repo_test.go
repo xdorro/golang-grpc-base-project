@@ -35,7 +35,7 @@ func TestNewRepo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewRepo(tt.args.opts); !reflect.DeepEqual(got, tt.want) {
+			if got := NewRepo(tt.args.opts.Ctx, tt.args.opts.Log, tt.args.opts.Client); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewRepo() = %v, want %v", got, tt.want)
 			}
 		})

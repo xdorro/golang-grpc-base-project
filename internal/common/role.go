@@ -1,13 +1,15 @@
 package common
 
 import (
+	"github.com/spf13/cast"
+
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	roleproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/role"
 )
 
 func RoleProto(role *ent.Role) *roleproto.Role {
 	return &roleproto.Role{
-		Id:     role.ID,
+		Id:     cast.ToString(role.ID),
 		Name:   role.Name,
 		Slug:   role.Slug,
 		Status: role.Status,

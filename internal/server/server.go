@@ -16,7 +16,10 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
+	"github.com/kucow/golang-grpc-base-project/internal/interceptor"
+	"github.com/kucow/golang-grpc-base-project/internal/repo"
 	"github.com/kucow/golang-grpc-base-project/internal/service"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 )
 
 // Server struct
@@ -65,6 +68,11 @@ func (srv *Server) Close() error {
 
 // CreateServer create new server
 func (srv *Server) createServer(opts *common.Option, listener net.Listener) error {
+	// Create new persist
+	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
+	// Create new Interceptor
+	inter := interceptor.NewInterceptor(opts.Log, opts.Redis, persist)
+
 	// Log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
@@ -74,6 +82,8 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_prometheus.StreamServerInterceptor,
 		grpc_zap.StreamServerInterceptor(srv.log),
 		grpc_recovery.StreamServerInterceptor(),
+		// Customer Interceptor
+		inter.AuthInterceptorStream(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
@@ -82,8 +92,11 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_prometheus.UnaryServerInterceptor,
 		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
+		// Customer Interceptor
+		inter.AuthInterceptorUnary(),
 	}
 
+	// Log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
 		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
 			return true
@@ -99,7 +112,10 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
-	service.NewService(opts, srv.grpcServer)
+	// Create new validator
+	valid := validator.NewValidator(opts.Log, persist)
+	// Create new validator
+	service.NewService(opts, srv.grpcServer, valid, persist)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

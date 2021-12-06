@@ -3,15 +3,16 @@ package authservice
 import (
 	"context"
 
+	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
 	"github.com/kucow/golang-grpc-base-project/internal/common"
 	"github.com/kucow/golang-grpc-base-project/internal/repo"
+	"github.com/kucow/golang-grpc-base-project/internal/validator"
 	"github.com/kucow/golang-grpc-base-project/pkg/ent"
 	commonproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/common"
 	permissionproto "github.com/kucow/golang-grpc-base-project/pkg/proto/v1/permission"
-	"github.com/kucow/golang-grpc-base-project/pkg/validator"
 )
 
 type PermissionService struct {
@@ -22,11 +23,11 @@ type PermissionService struct {
 	validator *validator.Validator
 }
 
-func NewPermissionService(opts *common.Option, persist repo.Persist) *PermissionService {
+func NewPermissionService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *PermissionService {
 	svc := &PermissionService{
 		log:       opts.Log,
 		persist:   persist,
-		validator: opts.Validator,
+		validator: validator,
 	}
 
 	return svc
@@ -49,7 +50,7 @@ func (svc *PermissionService) FindPermissionByID(_ context.Context, in *commonpr
 		return nil, err
 	}
 
-	u, err := svc.persist.FindPermissionByID(in.Id)
+	u, err := svc.persist.FindPermissionByID(cast.ToUint64(in.Id))
 	if err != nil {
 		return nil, common.PermissionNotExist.Err()
 	}
@@ -92,7 +93,7 @@ func (svc *PermissionService) UpdatePermission(_ context.Context, in *permission
 		return nil, err
 	}
 
-	r, err := svc.persist.FindPermissionByID(in.GetId())
+	r, err := svc.persist.FindPermissionByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.PermissionNotExist.Err()
 	}
@@ -117,11 +118,12 @@ func (svc *PermissionService) DeletePermission(_ context.Context, in *commonprot
 		return nil, err
 	}
 
-	if exist := svc.persist.ExistPermissionByID(in.GetId()); !exist {
+	id := cast.ToUint64(in.GetId())
+	if exist := svc.persist.ExistPermissionByID(id); !exist {
 		return nil, common.PermissionNotExist.Err()
 	}
 
-	if err := svc.persist.SoftDeletePermission(in.GetId()); err != nil {
+	if err := svc.persist.SoftDeletePermission(id); err != nil {
 		return nil, err
 	}
 

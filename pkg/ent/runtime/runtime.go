@@ -18,8 +18,6 @@ func init() {
 	permissionMixin := schema.Permission{}.Mixin()
 	permissionMixinHooks0 := permissionMixin[0].Hooks()
 	permission.Hooks[0] = permissionMixinHooks0[0]
-	permissionMixinFields0 := permissionMixin[0].Fields()
-	_ = permissionMixinFields0
 	permissionMixinFields1 := permissionMixin[1].Fields()
 	_ = permissionMixinFields1
 	permissionFields := schema.Permission{}.Fields()
@@ -46,29 +44,9 @@ func init() {
 	permissionDescStatus := permissionFields[2].Descriptor()
 	// permission.DefaultStatus holds the default value on creation for the status field.
 	permission.DefaultStatus = permissionDescStatus.Default.(int32)
-	// permissionDescID is the schema descriptor for id field.
-	permissionDescID := permissionMixinFields0[0].Descriptor()
-	// permission.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	permission.IDValidator = func() func(string) error {
-		validators := permissionDescID.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(id string) error {
-			for _, fn := range fns {
-				if err := fn(id); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
 	roleMixin := schema.Role{}.Mixin()
 	roleMixinHooks0 := roleMixin[0].Hooks()
 	role.Hooks[0] = roleMixinHooks0[0]
-	roleMixinFields0 := roleMixin[0].Fields()
-	_ = roleMixinFields0
 	roleMixinFields1 := roleMixin[1].Fields()
 	_ = roleMixinFields1
 	roleFields := schema.Role{}.Fields()
@@ -91,33 +69,17 @@ func init() {
 	roleDescSlug := roleFields[1].Descriptor()
 	// role.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
 	role.SlugValidator = roleDescSlug.Validators[0].(func(string) error)
+	// roleDescFullAccess is the schema descriptor for full_access field.
+	roleDescFullAccess := roleFields[2].Descriptor()
+	// role.DefaultFullAccess holds the default value on creation for the full_access field.
+	role.DefaultFullAccess = roleDescFullAccess.Default.(bool)
 	// roleDescStatus is the schema descriptor for status field.
-	roleDescStatus := roleFields[2].Descriptor()
+	roleDescStatus := roleFields[3].Descriptor()
 	// role.DefaultStatus holds the default value on creation for the status field.
 	role.DefaultStatus = roleDescStatus.Default.(int32)
-	// roleDescID is the schema descriptor for id field.
-	roleDescID := roleMixinFields0[0].Descriptor()
-	// role.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	role.IDValidator = func() func(string) error {
-		validators := roleDescID.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(id string) error {
-			for _, fn := range fns {
-				if err := fn(id); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
 	userMixin := schema.User{}.Mixin()
 	userMixinHooks0 := userMixin[0].Hooks()
 	user.Hooks[0] = userMixinHooks0[0]
-	userMixinFields0 := userMixin[0].Fields()
-	_ = userMixinFields0
 	userMixinFields1 := userMixin[1].Fields()
 	_ = userMixinFields1
 	userFields := schema.User{}.Fields()
@@ -148,24 +110,6 @@ func init() {
 	userDescStatus := userFields[3].Descriptor()
 	// user.DefaultStatus holds the default value on creation for the status field.
 	user.DefaultStatus = userDescStatus.Default.(int32)
-	// userDescID is the schema descriptor for id field.
-	userDescID := userMixinFields0[0].Descriptor()
-	// user.IDValidator is a validator for the "id" field. It is called by the builders before save.
-	user.IDValidator = func() func(string) error {
-		validators := userDescID.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(id string) error {
-			for _, fn := range fns {
-				if err := fn(id); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
 }
 
 const (
