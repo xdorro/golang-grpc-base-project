@@ -38,7 +38,7 @@ type Service struct {
 func NewService(
 	log *zap.Logger, client *client.Client,
 	grpcServer *grpc.Server, redis redis.UniversalClient,
-) {
+) *Service {
 	svc := &Service{
 		log:        log,
 		client:     client,
@@ -56,6 +56,8 @@ func NewService(
 
 	// get Service Info
 	svc.getServiceInfo()
+
+	return svc
 }
 
 // registerServiceServers registers Service Servers
@@ -105,4 +107,9 @@ func (svc *Service) getServiceInfo() {
 			}
 		}
 	}
+}
+
+// Close closes the service.
+func (svc *Service) Close() error {
+	return svc.event.Close()
 }
