@@ -12,7 +12,7 @@ import (
 	authproto "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
-// Login login
+// Login is a gRPC handler for the Login method.
 func (svc *Service) Login(ctx context.Context, in *authproto.LoginRequest) (
 	*authproto.TokenResponse, error,
 ) {

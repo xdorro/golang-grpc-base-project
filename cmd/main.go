@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	. "github.com/xdorro/golang-grpc-base-project/internal/config"
+	"github.com/xdorro/golang-grpc-base-project/internal/config"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
@@ -24,7 +24,7 @@ func main() {
 	// create new logger
 	log := logger.NewLogger()
 	// Load config environment
-	NewConfig(log)
+	config.NewConfig(log)
 
 	// declare new client
 	db := client.NewClient(ctx, log)

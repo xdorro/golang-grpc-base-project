@@ -13,6 +13,7 @@ import (
 	roleproto "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
+// FindAllRoles returns all roles
 func (svc *Service) FindAllRoles(context.Context, *roleproto.FindAllRolesRequest) (
 	*roleproto.ListRolesResponse, error,
 ) {
@@ -21,6 +22,7 @@ func (svc *Service) FindAllRoles(context.Context, *roleproto.FindAllRolesRequest
 	return &roleproto.ListRolesResponse{Data: common.RolesProto(roles)}, nil
 }
 
+// FindRoleByID returns a role by id
 func (svc *Service) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest) (
 	*roleproto.Role, error,
 ) {
@@ -38,6 +40,7 @@ func (svc *Service) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest)
 	return common.RoleProto(u), nil
 }
 
+// CreateRole creates a new role
 func (svc *Service) CreateRole(_ context.Context, in *roleproto.CreateRoleRequest) (
 	*statusproto.Status, error,
 ) {
@@ -71,6 +74,7 @@ func (svc *Service) CreateRole(_ context.Context, in *roleproto.CreateRoleReques
 	return common.Success.Proto(), nil
 }
 
+// UpdateRole update a role
 func (svc *Service) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRequest) (
 	*statusproto.Status, error,
 ) {
@@ -103,6 +107,7 @@ func (svc *Service) UpdateRole(_ context.Context, in *roleproto.UpdateRoleReques
 	return common.Success.Proto(), nil
 }
 
+// DeleteRole delete a role
 func (svc *Service) DeleteRole(_ context.Context, in *commonproto.UUIDRequest) (
 	*statusproto.Status, error,
 ) {

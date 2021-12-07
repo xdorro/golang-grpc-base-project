@@ -40,7 +40,7 @@ func (svc *Service) FindUserByID(_ context.Context, in *commonproto.UUIDRequest)
 	return common.UserProto(u), nil
 }
 
-// CreateUser handler CreateUser function
+// CreateUser create user
 func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserRequest) (
 	*status.Status, error,
 ) {
@@ -80,7 +80,7 @@ func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserReques
 	return common.Success.Proto(), nil
 }
 
-// UpdateUser handler UpdateUser function
+// UpdateUser update user
 func (svc *Service) UpdateUser(_ context.Context, in *userproto.UpdateUserRequest) (
 	*status.Status, error,
 ) {
@@ -112,7 +112,7 @@ func (svc *Service) UpdateUser(_ context.Context, in *userproto.UpdateUserReques
 	return common.Success.Proto(), nil
 }
 
-// DeleteUser handler DeleteUser function
+// DeleteUser delete user
 func (svc *Service) DeleteUser(_ context.Context, in *commonproto.UUIDRequest) (
 	*status.Status, error,
 ) {
