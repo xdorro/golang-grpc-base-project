@@ -22,26 +22,23 @@ type Event struct {
 
 // NewEvent creates a new event.
 func NewEvent(log *zap.Logger, client *client.Client) *Event {
-	evt := &Event{
-		log:    log,
-		client: client,
-	}
-
 	redisURL := strings.Trim(viper.GetString("REDIS_URL"), " ")
 	rdb := asynq.RedisClientOpt{Addr: redisURL}
 
-	evt.event = asynq.NewClient(rdb)
+	evt := &Event{
+		log:    log,
+		client: client,
+		event:  asynq.NewClient(rdb),
+	}
 
 	go func() {
 		if err := evt.eventWorker(rdb); err != nil {
-			evt.log.Fatal("error starting event worker", zap.Error(err))
 			return
 		}
 	}()
 
 	go func() {
 		if err := evt.eventScheduler(rdb); err != nil {
-			evt.log.Fatal("error starting event scheduler", zap.Error(err))
 			return
 		}
 	}()
