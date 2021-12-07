@@ -9,8 +9,9 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
+	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	roleproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
@@ -19,11 +20,11 @@ type RoleService struct {
 	roleproto2.UnimplementedRoleServiceServer
 
 	log       *zap.Logger
-	persist   repo.Persist
+	persist   persist.Persist
 	validator *validator.Validator
 }
 
-func NewRoleService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *RoleService {
+func NewRoleService(opts *optioncommon.Option, validator *validator.Validator, persist persist.Persist) *RoleService {
 	return &RoleService{
 		log:       opts.Log,
 		persist:   persist,

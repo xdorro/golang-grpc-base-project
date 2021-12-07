@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
 )
 
 const (
@@ -17,10 +17,10 @@ const (
 
 type Validator struct {
 	log     *zap.Logger
-	persist repo.Persist
+	persist persist.Persist
 }
 
-func NewValidator(log *zap.Logger, persist repo.Persist) *Validator {
+func NewValidator(log *zap.Logger, persist persist.Persist) *Validator {
 	val := &Validator{
 		log:     log,
 		persist: persist,

@@ -1,4 +1,4 @@
-package repo
+package persist
 
 import (
 	"github.com/xdorro/golang-grpc-base-project/ent"

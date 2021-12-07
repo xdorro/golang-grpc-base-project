@@ -9,8 +9,9 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
+	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	permissionproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
@@ -19,12 +20,12 @@ type PermissionService struct {
 	permissionproto2.UnimplementedPermissionServiceServer
 
 	log       *zap.Logger
-	persist   repo.Persist
+	persist   persist.Persist
 	validator *validator.Validator
 }
 
 func NewPermissionService(
-	opts *common.Option, validator *validator.Validator, persist repo.Persist,
+	opts *optioncommon.Option, validator *validator.Validator, persist persist.Persist,
 ) *PermissionService {
 	svc := &PermissionService{
 		log:       opts.Log,

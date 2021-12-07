@@ -4,17 +4,15 @@ import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
 )
 
 func TestNewRepo(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	opts := common.NewOption(ctx)
+	opts := optioncommon.NewOption(ctx)
 
 	type args struct {
-		opts *common.Option
+		opts *optioncommon.Option
 	}
 	tests := []struct {
 		name string

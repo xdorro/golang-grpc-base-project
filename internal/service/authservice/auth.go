@@ -10,8 +10,9 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
+	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	authproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
@@ -21,11 +22,11 @@ type AuthService struct {
 	ctx       context.Context
 	log       *zap.Logger
 	redis     redis.UniversalClient
-	persist   repo.Persist
+	persist   persist.Persist
 	validator *validator.Validator
 }
 
-func NewAuthService(opts *common.Option, validator *validator.Validator, persist repo.Persist) *AuthService {
+func NewAuthService(opts *optioncommon.Option, validator *validator.Validator, persist persist.Persist) *AuthService {
 	svc := &AuthService{
 		ctx:       opts.Ctx,
 		log:       opts.Log,

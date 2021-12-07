@@ -1,11 +1,10 @@
-package interceptor
+package server
 
 import (
 	"context"
 	"encoding/json"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"github.com/spf13/cast"
@@ -15,18 +14,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
-
 	"github.com/xdorro/golang-grpc-base-project/ent/role"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
-
-// Interceptor struct
-type Interceptor struct {
-	log     *zap.Logger
-	persist repo.Persist
-	redis   redis.UniversalClient
-}
 
 type contextKey string
 
@@ -34,26 +24,17 @@ const (
 	ctxUserID contextKey = "userID"
 )
 
-// NewInterceptor create new interceptor
-func NewInterceptor(log *zap.Logger, redis redis.UniversalClient, persist *repo.Repo) *Interceptor {
-	return &Interceptor{
-		log:     log,
-		persist: persist,
-		redis:   redis,
-	}
-}
-
 // AuthInterceptorStream create auth Interceptor stream
-func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
+func (srv *server) AuthInterceptorStream() grpc.StreamServerInterceptor {
 	return func(
-		srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
+		grpcSrv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
 	) error {
 		var newCtx context.Context
 		var err error
-		if overrideSrv, ok := srv.(grpc_auth.ServiceAuthFuncOverride); ok {
+		if overrideSrv, ok := grpcSrv.(grpc_auth.ServiceAuthFuncOverride); ok {
 			newCtx, err = overrideSrv.AuthFuncOverride(stream.Context(), info.FullMethod)
 		} else {
-			authFunc := inter.authInterceptor(info.FullMethod)
+			authFunc := srv.authInterceptor(info.FullMethod)
 			newCtx, err = authFunc(stream.Context())
 		}
 		if err != nil {
@@ -66,7 +47,7 @@ func (inter *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
 }
 
 // AuthInterceptorUnary create auth Interceptor unary
-func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
+func (srv *server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 	) (interface{}, error) {
@@ -75,7 +56,7 @@ func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 		if overrideSrv, ok := info.Server.(grpc_auth.ServiceAuthFuncOverride); ok {
 			newCtx, err = overrideSrv.AuthFuncOverride(ctx, info.FullMethod)
 		} else {
-			authFunc := inter.authInterceptor(info.FullMethod)
+			authFunc := srv.authInterceptor(info.FullMethod)
 			newCtx, err = authFunc(ctx)
 		}
 		if err != nil {
@@ -86,9 +67,9 @@ func (inter *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 }
 
 // authInterceptor handler interceptor
-func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
+func (srv *server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
-		authorize := inter.getInfoAuthorization(ctx)
+		authorize := srv.getInfoAuthorization(ctx)
 
 		if len(authorize) == 0 {
 			return ctx, nil
@@ -104,20 +85,20 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 				return nil, err
 			}
 
-			verifiedToken, err := common.VerifyToken(inter.log, token)
+			verifiedToken, err := common.VerifyToken(srv.Log, token)
 			if err != nil {
 				return nil, err
 			}
 
 			claims := verifiedToken.StandardClaims
-			user, err := inter.persist.FindUserByID(cast.ToUint64(claims.Subject))
+			user, err := srv.Persist.FindUserByID(cast.ToUint64(claims.Subject))
 			if err != nil {
 				return nil, common.UserNotExist.Err()
 			}
 
 			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
 
-			if inter.hasAccessTo(roles, userRoles) {
+			if srv.hasAccessTo(roles, userRoles) {
 				return context.WithValue(ctx, ctxUserID, user.ID), nil
 			}
 		}
@@ -127,31 +108,31 @@ func (inter *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc 
 }
 
 // getInfoAuthorization get info authorization
-func (inter *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
+func (srv *server) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string)
 
-	val := inter.redis.Get(inter.redis.Context(), common.ServiceRoles).Val()
+	val := srv.Redis.Get(srv.Redis.Context(), common.ServiceRoles).Val()
 	if val != "" {
 		authorize = cast.ToStringMapStringSlice(val)
 		return authorize
 	}
 
-	permissions := inter.persist.FindAllPermissions()
+	permissions := srv.Persist.FindAllPermissions()
 	for _, per := range permissions {
-		authorize[per.Slug] = inter.getPermissionRoles(ctx, per)
+		authorize[per.Slug] = srv.getPermissionRoles(ctx, per)
 	}
 
 	data, _ := json.Marshal(authorize)
-	err := inter.redis.Set(inter.redis.Context(), common.ServiceRoles, data, -1).Err()
+	err := srv.Redis.Set(srv.Redis.Context(), common.ServiceRoles, data, -1).Err()
 	if err != nil {
-		inter.log.Error("redis.Set()", zap.Error(err))
+		srv.Log.Error("redis.Set()", zap.Error(err))
 	}
 
 	return authorize
 }
 
 // getPermissionRoles get permission roles
-func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
+func (srv *server) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
 	roles := make([]string, 0)
 
 	perRoles, _ := per.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
@@ -163,7 +144,7 @@ func (inter *Interceptor) getPermissionRoles(ctx context.Context, per *ent.Permi
 }
 
 // hasAccessTo check has access
-func (inter *Interceptor) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
+func (srv *server) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
 	for _, ur := range userRoles {
 		if ur.FullAccess {
 			return true

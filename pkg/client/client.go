@@ -11,11 +11,11 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/migrate"
 	_ "github.com/xdorro/golang-grpc-base-project/ent/runtime"
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
 )
 
 // NewClient database with config
-func NewClient(opts *common.Option) {
+func NewClient(opts *optioncommon.Option) {
 	driver := viper.GetString("DB_DRIVER")
 	url := viper.GetString("DB_URL")
 

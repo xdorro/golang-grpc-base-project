@@ -6,9 +6,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
 )
 
-var _ Persist = (*Repo)(nil)
+var _ persist.Persist = (*Repo)(nil)
 
 // Repo struct
 type Repo struct {
