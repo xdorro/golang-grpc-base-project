@@ -56,10 +56,12 @@ func NewClient(ctx context.Context, log *zap.Logger) *Client {
 		log.Info("Migrated")
 	}
 
+	// Create new persist
+	per := repo.NewRepo(ctx, log, db)
+
 	client := &Client{
-		DB: db,
-		// Create new persist
-		Persist: repo.NewRepo(ctx, log, db),
+		DB:      db,
+		Persist: per,
 	}
 
 	return client

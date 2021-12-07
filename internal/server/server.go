@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 )
 
@@ -29,6 +28,7 @@ type Server struct {
 	log        *zap.Logger
 	client     *client.Client
 	grpcServer *grpc.Server
+	service    *service.Service
 }
 
 // NewServer create new Server
@@ -68,7 +68,7 @@ func NewServer(ctx context.Context, log *zap.Logger, client *client.Client, redi
 func (srv *Server) Close() error {
 	srv.grpcServer.GracefulStop()
 
-	return nil
+	return srv.service.Close()
 }
 
 // CreateServer create new Server
@@ -113,10 +113,7 @@ func (srv *Server) createServer(listener net.Listener) error {
 	)
 
 	// Create new validator
-	valid := validator.NewValidator(srv.log, srv.client)
-	// Create new validator
-	service.NewService(srv.log, srv.client, valid,
-		srv.grpcServer, srv.redis)
+	srv.service = service.NewService(srv.log, srv.client, srv.grpcServer, srv.redis)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"runtime"
 	"time"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/config"
@@ -17,14 +19,21 @@ const (
 	defaultShutdownTimeout = 10 * time.Second
 )
 
+func init() {
+	// Load config environment
+	config.NewConfig()
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// create new logger
 	log := logger.NewLogger()
-	// Load config environment
-	config.NewConfig(log)
+	log.Info(viper.GetString("APP_NAME"),
+		zap.String("app-version", viper.GetString("APP_VERSION")),
+		zap.String("go-version", runtime.Version()),
+	)
 
 	// declare new client
 	db := client.NewClient(ctx, log)
