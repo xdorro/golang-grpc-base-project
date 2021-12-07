@@ -15,7 +15,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
-	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
 const (

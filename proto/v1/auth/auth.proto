@@ -4,7 +4,7 @@ package authproto;
 
 // Defines the import path that should be used to import the generated package,
 // and the package name.
-option go_package = "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth;authproto";
+option go_package = "github.com/xdorro/golang-grpc-base-project/proto/v1/auth;authproto";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";

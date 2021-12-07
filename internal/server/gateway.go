@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
-	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
-	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
-	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
 func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {

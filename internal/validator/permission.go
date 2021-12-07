@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
 
 func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {

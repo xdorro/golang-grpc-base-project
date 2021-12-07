@@ -11,12 +11,12 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
-	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
+	userproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
 type UserService struct {
-	userproto.UnimplementedUserServiceServer
+	userproto2.UnimplementedUserServiceServer
 
 	log       *zap.Logger
 	persist   repo.Persist
@@ -32,17 +32,17 @@ func NewUserService(opts *common.Option, validator *validator.Validator, persist
 }
 
 // FindAllUsers find all users
-func (svc *UserService) FindAllUsers(context.Context, *userproto.FindAllUsersRequest) (
-	*userproto.ListUsersResponse, error,
+func (svc *UserService) FindAllUsers(context.Context, *userproto2.FindAllUsersRequest) (
+	*userproto2.ListUsersResponse, error,
 ) {
 	users := svc.persist.FindAllUsers()
 
-	return &userproto.ListUsersResponse{Data: common.UsersProto(users)}, nil
+	return &userproto2.ListUsersResponse{Data: common.UsersProto(users)}, nil
 }
 
 // FindUserByID find user by id
 func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequest) (
-	*userproto.User, error,
+	*userproto2.User, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
@@ -59,7 +59,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 }
 
 // CreateUser handler CreateUser function
-func (svc *UserService) CreateUser(_ context.Context, in *userproto.CreateUserRequest) (
+func (svc *UserService) CreateUser(_ context.Context, in *userproto2.CreateUserRequest) (
 	*status.Status, error,
 ) {
 	// Validate request
@@ -99,7 +99,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto.CreateUserRe
 }
 
 // UpdateUser handler UpdateUser function
-func (svc *UserService) UpdateUser(_ context.Context, in *userproto.UpdateUserRequest) (
+func (svc *UserService) UpdateUser(_ context.Context, in *userproto2.UpdateUserRequest) (
 	*status.Status, error,
 ) {
 	// Validate request

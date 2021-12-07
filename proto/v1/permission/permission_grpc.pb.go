@@ -4,7 +4,7 @@ package permissionproto
 
 import (
 	context "context"
-	common "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
+	common "github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -251,5 +251,5 @@ var PermissionService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/proto/v1/permission/permission.proto",
+	Metadata: "proto/v1/permission/permission.proto",
 }

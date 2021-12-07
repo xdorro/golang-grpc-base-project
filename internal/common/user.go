@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
 // UserProto convert ent user to proto

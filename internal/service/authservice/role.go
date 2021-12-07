@@ -11,12 +11,12 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
-	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
+	roleproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
 type RoleService struct {
-	roleproto.UnimplementedRoleServiceServer
+	roleproto2.UnimplementedRoleServiceServer
 
 	log       *zap.Logger
 	persist   repo.Persist
@@ -31,16 +31,16 @@ func NewRoleService(opts *common.Option, validator *validator.Validator, persist
 	}
 }
 
-func (svc *RoleService) FindAllRoles(context.Context, *roleproto.FindAllRolesRequest) (
-	*roleproto.ListRolesResponse, error,
+func (svc *RoleService) FindAllRoles(context.Context, *roleproto2.FindAllRolesRequest) (
+	*roleproto2.ListRolesResponse, error,
 ) {
 	roles := svc.persist.FindAllRoles()
 
-	return &roleproto.ListRolesResponse{Data: common.RolesProto(roles)}, nil
+	return &roleproto2.ListRolesResponse{Data: common.RolesProto(roles)}, nil
 }
 
 func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest) (
-	*roleproto.Role, error,
+	*roleproto2.Role, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
@@ -56,7 +56,7 @@ func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequ
 	return common.RoleProto(u), nil
 }
 
-func (svc *RoleService) CreateRole(_ context.Context, in *roleproto.CreateRoleRequest) (
+func (svc *RoleService) CreateRole(_ context.Context, in *roleproto2.CreateRoleRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -89,7 +89,7 @@ func (svc *RoleService) CreateRole(_ context.Context, in *roleproto.CreateRoleRe
 	return common.Success.Proto(), nil
 }
 
-func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRequest) (
+func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto2.UpdateRoleRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request

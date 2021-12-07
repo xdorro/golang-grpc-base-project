@@ -168,5 +168,5 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/proto/v1/auth/auth.proto",
+	Metadata: "proto/v1/auth/auth.proto",
 }

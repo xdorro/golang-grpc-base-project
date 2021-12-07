@@ -12,11 +12,11 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
+	authproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
 type AuthService struct {
-	authproto.UnimplementedAuthServiceServer
+	authproto2.UnimplementedAuthServiceServer
 
 	ctx       context.Context
 	log       *zap.Logger
@@ -38,8 +38,8 @@ func NewAuthService(opts *common.Option, validator *validator.Validator, persist
 }
 
 // Login login
-func (svc *AuthService) Login(_ context.Context, in *authproto.LoginRequest) (
-	*authproto.TokenResponse, error,
+func (svc *AuthService) Login(_ context.Context, in *authproto2.LoginRequest) (
+	*authproto2.TokenResponse, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateLoginRequest(in); err != nil {
@@ -62,7 +62,7 @@ func (svc *AuthService) Login(_ context.Context, in *authproto.LoginRequest) (
 }
 
 // RevokeToken revoke token
-func (svc *AuthService) RevokeToken(_ context.Context, in *authproto.TokenRequest) (
+func (svc *AuthService) RevokeToken(_ context.Context, in *authproto2.TokenRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -95,8 +95,8 @@ func (svc *AuthService) RevokeToken(_ context.Context, in *authproto.TokenReques
 }
 
 // RefreshToken refresh token
-func (svc *AuthService) RefreshToken(_ context.Context, in *authproto.TokenRequest) (
-	*authproto.TokenResponse, error,
+func (svc *AuthService) RefreshToken(_ context.Context, in *authproto2.TokenRequest) (
+	*authproto2.TokenResponse, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateTokenRequest(in); err != nil {
@@ -128,8 +128,8 @@ func (svc *AuthService) RefreshToken(_ context.Context, in *authproto.TokenReque
 }
 
 // generateToken generate token
-func (svc *AuthService) generateToken(user *ent.User) (*authproto.TokenResponse, error) {
-	result := &authproto.TokenResponse{
+func (svc *AuthService) generateToken(user *ent.User) (*authproto2.TokenResponse, error) {
+	result := &authproto2.TokenResponse{
 		TokenType: common.TokenType,
 	}
 

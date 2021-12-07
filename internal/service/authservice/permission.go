@@ -11,12 +11,12 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	commonproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/common"
-	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
+	permissionproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
 
 type PermissionService struct {
-	permissionproto.UnimplementedPermissionServiceServer
+	permissionproto2.UnimplementedPermissionServiceServer
 
 	log       *zap.Logger
 	persist   repo.Persist
@@ -35,16 +35,16 @@ func NewPermissionService(
 	return svc
 }
 
-func (svc *PermissionService) FindAllPermissions(context.Context, *permissionproto.FindAllPermissionsRequest) (
-	*permissionproto.ListPermissionsResponse, error,
+func (svc *PermissionService) FindAllPermissions(context.Context, *permissionproto2.FindAllPermissionsRequest) (
+	*permissionproto2.ListPermissionsResponse, error,
 ) {
 	permissions := svc.persist.FindAllPermissions()
 
-	return &permissionproto.ListPermissionsResponse{Data: common.PermissionsProto(permissions)}, nil
+	return &permissionproto2.ListPermissionsResponse{Data: common.PermissionsProto(permissions)}, nil
 }
 
 func (svc *PermissionService) FindPermissionByID(_ context.Context, in *commonproto.UUIDRequest) (
-	*permissionproto.Permission, error,
+	*permissionproto2.Permission, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
@@ -60,7 +60,7 @@ func (svc *PermissionService) FindPermissionByID(_ context.Context, in *commonpr
 	return common.PermissionProto(u), nil
 }
 
-func (svc *PermissionService) CreatePermission(_ context.Context, in *permissionproto.CreatePermissionRequest) (
+func (svc *PermissionService) CreatePermission(_ context.Context, in *permissionproto2.CreatePermissionRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -86,7 +86,7 @@ func (svc *PermissionService) CreatePermission(_ context.Context, in *permission
 	return common.Success.Proto(), nil
 }
 
-func (svc *PermissionService) UpdatePermission(_ context.Context, in *permissionproto.UpdatePermissionRequest) (
+func (svc *PermissionService) UpdatePermission(_ context.Context, in *permissionproto2.UpdatePermissionRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
