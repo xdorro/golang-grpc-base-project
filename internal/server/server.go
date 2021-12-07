@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/go-redis/redis/v8"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -15,17 +16,37 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common/servercommon"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/option"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
 
-type server servercommon.Server
+// Server struct
+type Server struct {
+	ctx     context.Context
+	log     *zap.Logger
+	Persist persist.Persist
+	Client  *ent.Client
+	Redis   redis.UniversalClient
 
-// NewServer create new server
-func NewServer(commonSrv *servercommon.Server) (*server, error) {
-	srv := (*server)(commonSrv)
+	grpcServer *grpc.Server
+}
+
+// NewServer create new Server
+func NewServer(opts *option.Option) (*Server, error) {
+	srv := &Server{
+		ctx:    opts.Ctx,
+		log:    opts.Log,
+		Client: opts.Client,
+		Redis:  opts.Redis,
+	}
+
+	// Create new persist
+	srv.Persist = repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
 
 	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
-	srv.Log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
+	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
 
 	listener, err := net.Listen("tcp", grpcPort)
 	if err != nil {
@@ -34,35 +55,35 @@ func NewServer(commonSrv *servercommon.Server) (*server, error) {
 
 	go func() {
 		if err = srv.createServer(listener); err != nil {
-			srv.Log.Fatal("srv.createServer()", zap.Error(err))
+			srv.log.Fatal("srv.createServer()", zap.Error(err))
 		}
 	}()
 
 	go func() {
 		if err = srv.createGateway(grpcPort); err != nil {
-			srv.Log.Fatal("srv.createGateway()", zap.Error(err))
+			srv.log.Fatal("srv.createGateway()", zap.Error(err))
 		}
 	}()
 
 	return srv, nil
 }
 
-func (srv *server) Close() error {
-	srv.GRPCServer.GracefulStop()
+func (srv *Server) Close() error {
+	srv.grpcServer.GracefulStop()
 
 	return nil
 }
 
-// CreateServer create new server
-func (srv *server) createServer(listener net.Listener) error {
+// CreateServer create new Server
+func (srv *Server) createServer(listener net.Listener) error {
 	// Log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(srv.Log)
+	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.StreamServerInterceptor(),
 		grpc_prometheus.StreamServerInterceptor,
-		grpc_zap.StreamServerInterceptor(srv.Log),
+		grpc_zap.StreamServerInterceptor(srv.log),
 		grpc_recovery.StreamServerInterceptor(),
 		// Customer Interceptor
 		srv.AuthInterceptorStream(),
@@ -72,7 +93,7 @@ func (srv *server) createServer(listener net.Listener) error {
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.UnaryServerInterceptor(),
 		grpc_prometheus.UnaryServerInterceptor,
-		grpc_zap.UnaryServerInterceptor(srv.Log),
+		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
 		// Customer Interceptor
 		srv.AuthInterceptorUnary(),
@@ -84,23 +105,23 @@ func (srv *server) createServer(listener net.Listener) error {
 			return true
 		}
 
-		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(srv.Log, alwaysLoggingDeciderServer))
-		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(srv.Log, alwaysLoggingDeciderServer))
+		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(srv.log, alwaysLoggingDeciderServer))
+		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(srv.log, alwaysLoggingDeciderServer))
 	}
 
-	// register grpc service server
-	srv.GRPCServer = grpc.NewServer(
+	// register grpc service Server
+	srv.grpcServer = grpc.NewServer(
 		grpc_middleware.WithStreamServerChain(streamChain...),
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
 	// Create new validator
-	// valid := validator.NewValidator(srv.Log, srv.Persist)
+	// valid := validator.NewValidator(srv.log, srv.Persist)
 	// Create new validator
-	// service.NewService(opts, srv.GRPCServer, valid, srv.Persist)
+	// service.NewService(opts, srv.grpcServer, valid, srv.Persist)
 
-	if err := srv.GRPCServer.Serve(listener); err != nil {
-		srv.Log.Error("srv.grpcServer.Serve()", zap.Error(err))
+	if err := srv.grpcServer.Serve(listener); err != nil {
+		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))
 		return err
 	}
 

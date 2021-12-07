@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/option"
 )
 
-func NewRedis(opts *optioncommon.Option) {
+func NewRedis(opts *option.Option) {
 	opts.Log.Info("Connecting to Redis...")
 
 	redisURL := strings.Split(strings.Trim(viper.GetString("REDIS_URL"), " "), ",")

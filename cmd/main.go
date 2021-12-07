@@ -8,8 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
-	"github.com/xdorro/golang-grpc-base-project/internal/common/servercommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/option"
 	"github.com/xdorro/golang-grpc-base-project/internal/config"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
@@ -30,7 +29,7 @@ func main() {
 	defer cancel()
 
 	// declare new option
-	opts := optioncommon.NewOption(ctx)
+	opts := option.NewOption(ctx)
 	opts.Log.Info(viper.GetString("APP_NAME"),
 		zap.String("app-version", viper.GetString("APP_VERSION")),
 		zap.String("go-version", runtime.Version()),
@@ -42,7 +41,7 @@ func main() {
 	redis.NewRedis(opts)
 
 	// create new server
-	srv, err := server.NewServer(servercommon.NewServer(opts))
+	srv, err := server.NewServer(opts)
 	if err != nil {
 		opts.Log.Fatal("server.NewServer()", zap.Error(err))
 	}

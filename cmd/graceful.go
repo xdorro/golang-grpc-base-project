@@ -9,13 +9,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
+	"github.com/xdorro/golang-grpc-base-project/internal/common/option"
 )
 
 // operation is a cleanup function on shutting down
 type operation func(ctx context.Context) error
 
-func gracefulShutdown(opts *optioncommon.Option, timeout time.Duration, ops map[string]operation) <-chan struct{} {
+func gracefulShutdown(opts *option.Option, timeout time.Duration, ops map[string]operation) <-chan struct{} {
 	wait := make(chan struct{})
 	go func() {
 		s := make(chan os.Signal, 1)

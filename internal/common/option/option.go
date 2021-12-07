@@ -1,4 +1,4 @@
-package optioncommon
+package option
 
 import (
 	"context"
@@ -19,8 +19,10 @@ type Option struct {
 }
 
 func NewOption(ctx context.Context) *Option {
-	return &Option{
+	opts := &Option{
 		Ctx: ctx,
 		Log: logger.NewLogger(),
 	}
+
+	return opts
 }

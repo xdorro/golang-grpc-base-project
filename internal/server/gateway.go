@@ -16,34 +16,34 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
-func (srv *server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {
+func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {
 	conn, err := grpc.DialContext(
-		srv.Ctx,
+		srv.ctx,
 		grpcPort,
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		log.Fatalln("Failed to dial server:", err)
+		log.Fatalln("Failed to dial Server:", err)
 	}
 
 	// Register AuthService Handler
-	if err = authproto.RegisterAuthServiceHandler(srv.Ctx, mux, conn); err != nil {
+	if err = authproto.RegisterAuthServiceHandler(srv.ctx, mux, conn); err != nil {
 		return fmt.Errorf("proto.RegisterAuthServiceHandler(): %w", err)
 	}
 
 	// Register UserService Handler
-	if err = userproto.RegisterUserServiceHandler(srv.Ctx, mux, conn); err != nil {
+	if err = userproto.RegisterUserServiceHandler(srv.ctx, mux, conn); err != nil {
 		return fmt.Errorf("proto.RegisterUserServiceHandler(): %w", err)
 	}
 
 	// Register RoleService Handler
-	if err = roleproto.RegisterRoleServiceHandler(srv.Ctx, mux, conn); err != nil {
+	if err = roleproto.RegisterRoleServiceHandler(srv.ctx, mux, conn); err != nil {
 		return fmt.Errorf("proto.RegisterRoleServiceHandler(): %w", err)
 	}
 
 	// Register PermissionService Handler
-	if err = permissionproto.RegisterPermissionServiceHandler(srv.Ctx, mux, conn); err != nil {
+	if err = permissionproto.RegisterPermissionServiceHandler(srv.ctx, mux, conn); err != nil {
 		return fmt.Errorf("proto.RegisterPermissionServiceHandler(): %w", err)
 	}
 
@@ -51,12 +51,12 @@ func (srv *server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMu
 }
 
 // createGateway create Gateway client
-func (srv *server) createGateway(grpcPort string) error {
+func (srv *Server) createGateway(grpcPort string) error {
 	httpPort := fmt.Sprintf(":%d", viper.GetInt("HTTP_PORT"))
 	if httpPort != "" {
-		srv.Log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
+		srv.log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
 
-		// Create HTTP server
+		// Create HTTP Server
 		opts := []runtime.ServeMuxOption{
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 				MarshalOptions: protojson.MarshalOptions{

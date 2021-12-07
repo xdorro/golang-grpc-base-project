@@ -9,7 +9,6 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
 	"github.com/xdorro/golang-grpc-base-project/internal/persist"
 	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
@@ -24,7 +23,7 @@ type UserService struct {
 	validator *validator.Validator
 }
 
-func NewUserService(opts *optioncommon.Option, validator *validator.Validator, persist persist.Persist) *UserService {
+func NewUserService(opts *option.Option, validator *validator.Validator, persist persist.Persist) *UserService {
 	return &UserService{
 		log:       opts.Log,
 		persist:   persist,

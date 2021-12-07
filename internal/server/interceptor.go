@@ -25,7 +25,7 @@ const (
 )
 
 // AuthInterceptorStream create auth Interceptor stream
-func (srv *server) AuthInterceptorStream() grpc.StreamServerInterceptor {
+func (srv *Server) AuthInterceptorStream() grpc.StreamServerInterceptor {
 	return func(
 		grpcSrv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
 	) error {
@@ -47,7 +47,7 @@ func (srv *server) AuthInterceptorStream() grpc.StreamServerInterceptor {
 }
 
 // AuthInterceptorUnary create auth Interceptor unary
-func (srv *server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
+func (srv *Server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 	) (interface{}, error) {
@@ -67,7 +67,7 @@ func (srv *server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 }
 
 // authInterceptor handler interceptor
-func (srv *server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
+func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
 		authorize := srv.getInfoAuthorization(ctx)
 
@@ -85,7 +85,7 @@ func (srv *server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 				return nil, err
 			}
 
-			verifiedToken, err := common.VerifyToken(srv.Log, token)
+			verifiedToken, err := common.VerifyToken(srv.log, token)
 			if err != nil {
 				return nil, err
 			}
@@ -108,7 +108,7 @@ func (srv *server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 }
 
 // getInfoAuthorization get info authorization
-func (srv *server) getInfoAuthorization(ctx context.Context) map[string][]string {
+func (srv *Server) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string)
 
 	val := srv.Redis.Get(srv.Redis.Context(), common.ServiceRoles).Val()
@@ -125,14 +125,14 @@ func (srv *server) getInfoAuthorization(ctx context.Context) map[string][]string
 	data, _ := json.Marshal(authorize)
 	err := srv.Redis.Set(srv.Redis.Context(), common.ServiceRoles, data, -1).Err()
 	if err != nil {
-		srv.Log.Error("redis.Set()", zap.Error(err))
+		srv.log.Error("redis.Set()", zap.Error(err))
 	}
 
 	return authorize
 }
 
 // getPermissionRoles get permission roles
-func (srv *server) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
+func (srv *Server) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
 	roles := make([]string, 0)
 
 	perRoles, _ := per.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
@@ -144,7 +144,7 @@ func (srv *server) getPermissionRoles(ctx context.Context, per *ent.Permission) 
 }
 
 // hasAccessTo check has access
-func (srv *server) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
+func (srv *Server) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
 	for _, ur := range userRoles {
 		if ur.FullAccess {
 			return true

@@ -10,7 +10,6 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/common/optioncommon"
 	"github.com/xdorro/golang-grpc-base-project/internal/persist"
 	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	authproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
@@ -26,7 +25,7 @@ type AuthService struct {
 	validator *validator.Validator
 }
 
-func NewAuthService(opts *optioncommon.Option, validator *validator.Validator, persist persist.Persist) *AuthService {
+func NewAuthService(opts *option.Option, validator *validator.Validator, persist persist.Persist) *AuthService {
 	svc := &AuthService{
 		ctx:       opts.Ctx,
 		log:       opts.Log,
