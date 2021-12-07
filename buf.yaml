@@ -1,4 +1,4 @@
 version: v1
-name: buf.build/kucow/golang-grpc-base
+name: buf.build/xdorro/golang-grpc-base-project
 deps:
   - buf.build/googleapis/googleapis

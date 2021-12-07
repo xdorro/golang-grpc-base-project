@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
 	"github.com/xdorro/golang-grpc-base-project/internal/config"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 )
 
@@ -28,37 +28,34 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// declare new option
-	opts := common.NewOption(ctx)
-	opts.Log.Info(viper.GetString("APP_NAME"),
+	// create new logger
+	log := logger.NewLogger()
+	log.Info(viper.GetString("APP_NAME"),
 		zap.String("app-version", viper.GetString("APP_VERSION")),
 		zap.String("go-version", runtime.Version()),
 	)
 
 	// declare new client
-	client.NewClient(opts)
+	db := client.NewClient(ctx, log)
 	// declare new redis
-	redis.NewRedis(opts)
+	rdb := redis.NewRedis(log)
 
 	// create new server
-	srv, err := server.NewServer(opts)
+	srv, err := server.NewServer(ctx, log, db, rdb)
 	if err != nil {
-		opts.Log.Fatal("server.NewServer()", zap.Error(err))
+		log.Panic("server.NewServer()", zap.Error(err))
 	}
 
 	// wait for termination signal and register database & http server clean-up operations
-	wait := gracefulShutdown(opts, defaultShutdownTimeout, map[string]operation{
+	wait := gracefulShutdown(ctx, log, defaultShutdownTimeout, map[string]operation{
 		"server": func(ctx context.Context) error {
 			return srv.Close()
 		},
 		"client": func(ctx context.Context) error {
-			return opts.Client.Close()
+			return db.Close()
 		},
 		"redis": func(ctx context.Context) error {
-			return opts.Redis.Close()
-		},
-		"logger": func(ctx context.Context) error {
-			return opts.Log.Sync()
+			return rdb.Close()
 		},
 	})
 

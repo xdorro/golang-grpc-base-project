@@ -9,13 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"go.uber.org/zap"
 )
 
 // operation is a cleanup function on shutting down
 type operation func(ctx context.Context) error
 
-func gracefulShutdown(opts *common.Option, timeout time.Duration, ops map[string]operation) <-chan struct{} {
+func gracefulShutdown(
+	ctx context.Context, log *zap.Logger, timeout time.Duration, ops map[string]operation,
+) <-chan struct{} {
 	wait := make(chan struct{})
 	go func() {
 		s := make(chan os.Signal, 1)
@@ -24,11 +26,11 @@ func gracefulShutdown(opts *common.Option, timeout time.Duration, ops map[string
 		signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 		<-s
 
-		opts.Log.Info("Shutting down")
+		log.Info("Shutting down")
 
 		// set timeout for the ops to be done to prevent system hang
 		timeoutFunc := time.AfterFunc(timeout, func() {
-			opts.Log.Fatal(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
+			log.Fatal(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
 		})
 
 		defer timeoutFunc.Stop()
@@ -43,19 +45,21 @@ func gracefulShutdown(opts *common.Option, timeout time.Duration, ops map[string
 			go func() {
 				defer wg.Done()
 
-				opts.Log.Info(fmt.Sprintf("cleaning up: %s", innerKey))
-				if err := innerOp(opts.Ctx); err != nil {
-					opts.Log.Info(fmt.Sprintf("%s: clean up failed: %s", innerKey, err.Error()))
+				log.Info(fmt.Sprintf("cleaning up: %s", innerKey))
+				if err := innerOp(ctx); err != nil {
+					log.Info(fmt.Sprintf("%s: clean up failed: %s", innerKey, err.Error()))
 					return
 				}
 
-				opts.Log.Info(fmt.Sprintf("%s was shutdown gracefully", innerKey))
+				log.Info(fmt.Sprintf("%s was shutdown gracefully", innerKey))
 			}()
 		}
 
 		wg.Wait()
 		close(wait)
 	}()
+
+	_ = log.Sync()
 
 	return wait
 }

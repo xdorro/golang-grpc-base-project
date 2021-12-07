@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
 func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {
@@ -64,7 +64,7 @@ func (val *Validator) ValidateListRoles(list []string) ([]*ent.Role, error) {
 
 	if len(list) > 0 {
 		for _, slug := range list {
-			r, err := val.persist.FindRoleBySlug(slug)
+			r, err := val.client.Persist.FindRoleBySlug(slug)
 			if err != nil {
 				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("role: %s doesn't exist", slug)).Err()
 			}

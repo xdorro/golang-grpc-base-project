@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -46,7 +46,7 @@ func NewConfig(path ...string) {
 	// Find and read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file not found; ignore error if desired
-		log.Printf("viper.ReadInConfig(): %v", err)
+		fmt.Printf("viper.ReadInConfig(): %v", err)
 	}
 
 	viper.AutomaticEnv()

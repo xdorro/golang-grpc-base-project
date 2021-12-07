@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+
 	"entgo.io/ent/dialect/sql"
 	"github.com/spf13/viper"
 
@@ -8,42 +10,63 @@ import (
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/migrate"
-	_ "github.com/xdorro/golang-grpc-base-project/pkg/ent/runtime"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent/migrate"
+	// runtime entgo
+	_ "github.com/xdorro/golang-grpc-base-project/ent/runtime"
+	"github.com/xdorro/golang-grpc-base-project/internal/persist"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
 
+type Client struct {
+	DB      *ent.Client
+	Persist persist.Persist
+}
+
 // NewClient database with config
-func NewClient(opts *common.Option) {
+func NewClient(ctx context.Context, log *zap.Logger) *Client {
 	driver := viper.GetString("DB_DRIVER")
 	url := viper.GetString("DB_URL")
 
-	opts.Log.Info("Connect to database",
+	log.Info("Connect to database",
 		zap.String("driver", driver),
 		zap.String("url", url),
 	)
 
 	// Open the database connection.
-	db, err := sql.Open(driver, url)
+	drv, err := sql.Open(driver, url)
 	if err != nil {
-		opts.Log.Fatal("sql.Open()", zap.Error(err))
+		log.Fatal("sql.Open()", zap.Error(err))
 	}
 
-	// Create an ent.Client.
-	opts.Client = ent.NewClient(ent.Driver(db))
+	// Create an ent.client.
+	db := ent.NewClient(ent.Driver(drv))
 
 	if viper.GetBool("DB_MIGRATE") {
-		opts.Log.Info("Migrating...")
+		log.Info("Migrating...")
 		// Run migration.
-		if err = opts.Client.Schema.Create(
-			opts.Ctx,
+		if err = db.Schema.Create(
+			ctx,
 			migrate.WithGlobalUniqueID(true),
 		); err != nil {
-			_ = opts.Client.Close()
-			opts.Log.Fatal("failed creating schema resources", zap.Error(err))
+			_ = db.Close()
+			log.Fatal("failed creating schema resources", zap.Error(err))
 		}
 
-		opts.Log.Info("Migrated")
+		log.Info("Migrated")
 	}
+
+	// Create new persist
+	per := repo.NewRepo(ctx, log, db)
+
+	client := &Client{
+		DB:      db,
+		Persist: per,
+	}
+
+	return client
+}
+
+func (client *Client) Close() error {
+	return client.DB.Close()
 }

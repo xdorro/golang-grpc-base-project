@@ -3,60 +3,81 @@ package service
 import (
 	"fmt"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/authservice"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/userservice"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/internal/event"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
-	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
-	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
-	userproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/pkg/client"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
+// Service is the service struct
 type Service struct {
-	log       *zap.Logger
-	client    *ent.Client
-	persist   *repo.Repo
+	authproto.UnimplementedAuthServiceServer
+	permissionproto.UnimplementedPermissionServiceServer
+	roleproto.UnimplementedRoleServiceServer
+	userproto.UnimplementedUserServiceServer
+
+	redis      redis.UniversalClient
+	log        *zap.Logger
+	client     *client.Client
+	grpcServer *grpc.Server
+
 	validator *validator.Validator
+	event     *event.Event
 }
 
-func NewService(opts *common.Option, srv *grpc.Server, validator *validator.Validator, persist *repo.Repo) {
+// NewService returns a new service instance
+func NewService(
+	log *zap.Logger, client *client.Client,
+	grpcServer *grpc.Server, redis redis.UniversalClient,
+) *Service {
 	svc := &Service{
-		log:       opts.Log,
-		client:    opts.Client,
-		persist:   persist,
-		validator: validator,
+		log:        log,
+		client:     client,
+		grpcServer: grpcServer,
+		redis:      redis,
 	}
 
+	// Create new validator
+	svc.validator = validator.NewValidator(log, client)
+	// Create new event
+	svc.event = event.NewEvent(log, client)
+
 	// register Service Servers
-	svc.registerServiceServers(opts, srv)
+	svc.registerServiceServers()
 
 	// get Service Info
-	svc.getServiceInfo(srv)
+	svc.getServiceInfo()
+
+	return svc
 }
 
-func (svc *Service) registerServiceServers(opts *common.Option, srv *grpc.Server) {
+// registerServiceServers registers Service Servers
+func (svc *Service) registerServiceServers() {
 	// Register AuthService Server
-	authproto.RegisterAuthServiceServer(srv, authservice.NewAuthService(opts, svc.validator, svc.persist))
+	authproto.RegisterAuthServiceServer(svc.grpcServer, svc)
 	// Register UserService Server
-	userproto.RegisterUserServiceServer(srv, userservice.NewUserService(opts, svc.validator, svc.persist))
+	userproto.RegisterUserServiceServer(svc.grpcServer, svc)
 	// Register RoleService Server
-	roleproto.RegisterRoleServiceServer(srv, authservice.NewRoleService(opts, svc.validator, svc.persist))
+	roleproto.RegisterRoleServiceServer(svc.grpcServer, svc)
 	// Register PermissionService Server
-	permissionproto.RegisterPermissionServiceServer(srv, authservice.NewPermissionService(opts, svc.validator, svc.persist))
+	permissionproto.RegisterPermissionServiceServer(svc.grpcServer, svc)
 }
 
-func (svc *Service) getServiceInfo(srv *grpc.Server) {
+// getServiceInfo returns service info
+func (svc *Service) getServiceInfo() {
 	if viper.GetBool("SEEDER_SERVICE") {
 		bulk := make([]*ent.PermissionCreate, 0)
 
-		for name, val := range srv.GetServiceInfo() {
+		for name, val := range svc.grpcServer.GetServiceInfo() {
 			if len(val.Methods) == 0 {
 				return
 			}
@@ -64,13 +85,13 @@ func (svc *Service) getServiceInfo(srv *grpc.Server) {
 			for _, info := range val.Methods {
 				slug := fmt.Sprintf("/%s/%s", name, info.Name)
 
-				if !svc.persist.ExistPermissionBySlug(slug) {
+				if !svc.client.Persist.ExistPermissionBySlug(slug) {
 					svc.log.Info("GetServiceInfo",
 						zap.Any("Name", info.Name),
 						zap.Any("Slug", slug),
 					)
 
-					bulk = append(bulk, svc.client.Permission.
+					bulk = append(bulk, svc.client.DB.Permission.
 						Create().
 						SetName(info.Name).
 						SetSlug(slug).
@@ -81,9 +102,14 @@ func (svc *Service) getServiceInfo(srv *grpc.Server) {
 		}
 
 		if len(bulk) > 0 {
-			if err := svc.persist.CreatePermissionBulk(bulk); err != nil {
+			if err := svc.client.Persist.CreatePermissionBulk(bulk); err != nil {
 				svc.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
 			}
 		}
 	}
+}
+
+// Close closes the service.
+func (svc *Service) Close() error {
+	return svc.event.Close()
 }

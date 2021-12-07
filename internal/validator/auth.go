@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	authproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/auth"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
 func (val *Validator) ValidateLoginRequest(in *authproto.LoginRequest) error {
@@ -49,7 +49,7 @@ func (val *Validator) ValidateToken(token string) (*ent.User, error) {
 	}
 
 	userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
-	u, err := val.persist.FindUserByID(userID)
+	u, err := val.client.Persist.FindUserByID(userID)
 	if err != nil {
 		err = common.UserNotExist.Err()
 		val.log.Error("persist.FindUserByID()", zap.Error(err))
