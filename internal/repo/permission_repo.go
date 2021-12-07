@@ -5,14 +5,14 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/permission"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent/permission"
+	"github.com/xdorro/golang-grpc-base-project/ent/role"
 )
 
 // FindAllPermissions find all permissions
 func (repo *Repo) FindAllPermissions() []*ent.Permission {
-	permissions, err := repo.Client.Permission.
+	permissions, err := repo.client.Permission.
 		Query().
 		Select(
 			permission.FieldID,
@@ -21,10 +21,10 @@ func (repo *Repo) FindAllPermissions() []*ent.Permission {
 			permission.FieldStatus,
 		).
 		Where(permission.DeleteTimeIsNil()).
-		All(repo.Ctx)
+		All(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.FindAllPermissions()", zap.Error(err))
+		repo.log.Error("persist.FindAllPermissions()", zap.Error(err))
 		return nil
 	}
 
@@ -33,13 +33,13 @@ func (repo *Repo) FindAllPermissions() []*ent.Permission {
 
 // FindPermissionByID find permission by ID
 func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
-	r, err := repo.Client.Permission.
+	r, err := repo.client.Permission.
 		Query().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).
-		First(repo.Ctx)
+		First(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.FindPermissionByID()", zap.Error(err))
+		repo.log.Error("persist.FindPermissionByID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -48,13 +48,13 @@ func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 
 // FindPermissionBySlug find permission by slug
 func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
-	r, err := repo.Client.Permission.
+	r, err := repo.client.Permission.
 		Query().
 		Where(permission.SlugEqualFold(slug), permission.DeleteTimeIsNil()).
-		First(repo.Ctx)
+		First(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.FindPermissionBySlug()", zap.Error(err))
+		repo.log.Error("persist.FindPermissionBySlug()", zap.Error(err))
 		return nil, err
 	}
 
@@ -63,17 +63,17 @@ func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
 
 // FindPermissionByIDAndRoleIDNot find permission by ID and roleID not
 func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent.Permission, error) {
-	p, err := repo.Client.Permission.
+	p, err := repo.client.Permission.
 		Query().
 		Where(
 			permission.ID(id),
 			permission.DeleteTimeIsNil(),
 			permission.HasRolesWith(role.Not(role.ID(roleId))),
 		).
-		First(repo.Ctx)
+		First(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.FindPermissionByIDAndRoleIDNot()", zap.Error(err))
+		repo.log.Error("persist.FindPermissionByIDAndRoleIDNot()", zap.Error(err))
 		return nil, err
 	}
 
@@ -82,13 +82,13 @@ func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent
 
 // ExistPermissionByID exists a permission by ID
 func (repo *Repo) ExistPermissionByID(id uint64) bool {
-	exist, err := repo.Client.Permission.
+	exist, err := repo.client.Permission.
 		Query().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).
-		Exist(repo.Ctx)
+		Exist(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.ExistPermissionByID()", zap.Error(err))
+		repo.log.Error("persist.ExistPermissionByID()", zap.Error(err))
 		return exist
 	}
 
@@ -97,13 +97,13 @@ func (repo *Repo) ExistPermissionByID(id uint64) bool {
 
 // ExistPermissionBySlug exist permission by slug
 func (repo *Repo) ExistPermissionBySlug(slug string) bool {
-	exist, err := repo.Client.Permission.
+	exist, err := repo.client.Permission.
 		Query().
 		Where(permission.Slug(slug), permission.DeleteTimeIsNil()).
-		Exist(repo.Ctx)
+		Exist(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.ExistPermissionBySlug()", zap.Error(err))
+		repo.log.Error("persist.ExistPermissionBySlug()", zap.Error(err))
 		return exist
 	}
 
@@ -112,15 +112,15 @@ func (repo *Repo) ExistPermissionBySlug(slug string) bool {
 
 // CreatePermission create permission
 func (repo *Repo) CreatePermission(r *ent.Permission) error {
-	r, err := repo.Client.Permission.
+	r, err := repo.client.Permission.
 		Create().
 		SetName(r.Name).
 		SetSlug(r.Slug).
 		SetStatus(r.Status).
-		Save(repo.Ctx)
+		Save(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.CreatePermission()", zap.Error(err))
+		repo.log.Error("persist.CreatePermission()", zap.Error(err))
 		return err
 	}
 
@@ -129,12 +129,12 @@ func (repo *Repo) CreatePermission(r *ent.Permission) error {
 
 // CreatePermissionBulk create permission bulk
 func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
-	_, err := repo.Client.Permission.
+	_, err := repo.client.Permission.
 		CreateBulk(r...).
-		Save(repo.Ctx)
+		Save(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+		repo.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
 		return err
 	}
 
@@ -143,16 +143,16 @@ func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
 
 // UpdatePermission update permission
 func (repo *Repo) UpdatePermission(r *ent.Permission) error {
-	_, err := repo.Client.Permission.
+	_, err := repo.client.Permission.
 		Update().
 		Where(permission.ID(r.ID), permission.DeleteTimeIsNil()).
 		SetName(r.Name).
 		SetSlug(r.Slug).
 		SetStatus(r.Status).
-		Save(repo.Ctx)
+		Save(repo.ctx)
 
 	if err != nil {
-		repo.Log.Error("persist.UpdatePermission()", zap.Error(err))
+		repo.log.Error("persist.UpdatePermission()", zap.Error(err))
 		return err
 	}
 
@@ -161,13 +161,13 @@ func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 
 // SoftDeletePermission soft delete permission
 func (repo *Repo) SoftDeletePermission(id uint64) error {
-	if _, err := repo.Client.Permission.
+	if _, err := repo.client.Permission.
 		Update().
 		Where(permission.ID(id), permission.DeleteTimeIsNil()).
 		SetDeleteTime(time.Now()).
 		ClearRoles().
-		Save(repo.Ctx); err != nil {
-		repo.Log.Error("persist.SoftDeletePermission()", zap.Error(err))
+		Save(repo.ctx); err != nil {
+		repo.log.Error("persist.SoftDeletePermission()", zap.Error(err))
 		return err
 	}
 

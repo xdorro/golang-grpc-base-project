@@ -3,8 +3,8 @@ package common
 import (
 	"github.com/spf13/cast"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	permissionproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
 
 // PermissionProto convert ent permission to proto

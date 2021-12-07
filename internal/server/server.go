@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/go-redis/redis/v8"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -15,26 +16,30 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/interceptor"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 )
 
 // Server struct
 type Server struct {
-	ctx context.Context
-	log *zap.Logger
+	ctx   context.Context
+	redis redis.UniversalClient
 
+	log        *zap.Logger
+	client     *client.Client
 	grpcServer *grpc.Server
 }
 
-// NewServer create new server
-func NewServer(opts *common.Option) (*Server, error) {
+// NewServer create new Server
+func NewServer(ctx context.Context, log *zap.Logger, client *client.Client, redis redis.UniversalClient) (
+	*Server, error,
+) {
 	srv := &Server{
-		ctx: opts.Ctx,
-		log: opts.Log,
+		ctx:    ctx,
+		log:    log,
+		client: client,
+		redis:  redis,
 	}
 
 	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
@@ -46,14 +51,14 @@ func NewServer(opts *common.Option) (*Server, error) {
 	}
 
 	go func() {
-		if err = srv.createServer(opts, listener); err != nil {
-			opts.Log.Fatal("srv.createServer()", zap.Error(err))
+		if err = srv.createServer(listener); err != nil {
+			srv.log.Fatal("srv.createServer()", zap.Error(err))
 		}
 	}()
 
 	go func() {
 		if err = srv.createGateway(grpcPort); err != nil {
-			opts.Log.Fatal("srv.createGateway()", zap.Error(err))
+			srv.log.Fatal("srv.createGateway()", zap.Error(err))
 		}
 	}()
 
@@ -66,14 +71,9 @@ func (srv *Server) Close() error {
 	return nil
 }
 
-// CreateServer create new server
-func (srv *Server) createServer(opts *common.Option, listener net.Listener) error {
-	// Create new persist
-	persist := repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
-	// Create new Interceptor
-	inter := interceptor.NewInterceptor(opts.Log, opts.Redis, persist)
-
-	// Log gRPC library internals with log
+// CreateServer create new Server
+func (srv *Server) createServer(listener net.Listener) error {
+	// log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
 	streamChain := []grpc.StreamServerInterceptor{
@@ -83,7 +83,7 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_zap.StreamServerInterceptor(srv.log),
 		grpc_recovery.StreamServerInterceptor(),
 		// Customer Interceptor
-		inter.AuthInterceptorStream(),
+		srv.AuthInterceptorStream(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
@@ -93,10 +93,10 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
 		// Customer Interceptor
-		inter.AuthInterceptorUnary(),
+		srv.AuthInterceptorUnary(),
 	}
 
-	// Log payload if enabled
+	// log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
 		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
 			return true
@@ -106,16 +106,17 @@ func (srv *Server) createServer(opts *common.Option, listener net.Listener) erro
 		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(srv.log, alwaysLoggingDeciderServer))
 	}
 
-	// register grpc service server
+	// register grpc service Server
 	srv.grpcServer = grpc.NewServer(
 		grpc_middleware.WithStreamServerChain(streamChain...),
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
 	// Create new validator
-	valid := validator.NewValidator(opts.Log, persist)
+	valid := validator.NewValidator(srv.log, srv.client)
 	// Create new validator
-	service.NewService(opts, srv.grpcServer, valid, persist)
+	service.NewService(srv.log, srv.client, valid,
+		srv.grpcServer, srv.redis)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

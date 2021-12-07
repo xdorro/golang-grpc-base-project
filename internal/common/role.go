@@ -3,8 +3,8 @@ package common
 import (
 	"github.com/spf13/cast"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	roleproto "github.com/xdorro/golang-grpc-base-project/pkg/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
 // RoleProto convert ent role to proto
