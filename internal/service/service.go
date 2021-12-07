@@ -17,6 +17,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
+// Service is the service struct
 type Service struct {
 	authproto.UnimplementedAuthServiceServer
 	permissionproto.UnimplementedPermissionServiceServer
@@ -30,6 +31,7 @@ type Service struct {
 	grpcServer *grpc.Server
 }
 
+// NewService returns a new service instance
 func NewService(
 	log *zap.Logger, client *client.Client, validator *validator.Validator,
 	grpcServer *grpc.Server, redis redis.UniversalClient,
@@ -49,6 +51,7 @@ func NewService(
 	svc.getServiceInfo()
 }
 
+// registerServiceServers registers Service Servers
 func (svc *Service) registerServiceServers() {
 	// Register AuthService Server
 	authproto.RegisterAuthServiceServer(svc.grpcServer, svc)
@@ -60,6 +63,7 @@ func (svc *Service) registerServiceServers() {
 	permissionproto.RegisterPermissionServiceServer(svc.grpcServer, svc)
 }
 
+// getServiceInfo returns service info
 func (svc *Service) getServiceInfo() {
 	if viper.GetBool("SEEDER_SERVICE") {
 		bulk := make([]*ent.PermissionCreate, 0)

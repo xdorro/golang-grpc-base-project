@@ -33,7 +33,7 @@ lint.install:
 	go install golang.org/x/tools/cmd/goimports@latest
 
 lint.run:
-	golangci-lint run ./...
+	golangci-lint run --fast ./...
 
 ent.install:
 	go install entgo.io/ent/cmd/ent@latest

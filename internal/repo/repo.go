@@ -11,7 +11,7 @@ import (
 
 var _ persist.Persist = (*Repo)(nil)
 
-// Repo struct
+// Repo is a wrapper around an ent.Client that provides a convenient API for
 type Repo struct {
 	ctx    context.Context
 	log    *zap.Logger

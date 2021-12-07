@@ -62,13 +62,13 @@ func (repo *Repo) FindRoleBySlug(slug string) (*ent.Role, error) {
 }
 
 // FindRoleByIDAndPermissionID find role by ID and permissionID
-func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Role, error) {
+func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionID uint64) (*ent.Role, error) {
 	r, err := repo.client.Role.
 		Query().
 		Where(
 			role.ID(id),
 			role.DeleteTimeIsNil(),
-			role.HasPermissionsWith(permission.ID(permissionId)),
+			role.HasPermissionsWith(permission.ID(permissionID)),
 		).
 		First(repo.ctx)
 
@@ -81,13 +81,13 @@ func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionId uint64) (*ent.Rol
 }
 
 // FindRoleByIDAndPermissionIDNot find role by ID and permissionID not
-func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionId uint64) (*ent.Role, error) {
+func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionID uint64) (*ent.Role, error) {
 	r, err := repo.client.Role.
 		Query().
 		Where(
 			role.ID(id),
 			role.DeleteTimeIsNil(),
-			role.HasPermissionsWith(permission.Not(permission.ID(permissionId))),
+			role.HasPermissionsWith(permission.Not(permission.ID(permissionID))),
 		).
 		First(repo.ctx)
 
@@ -131,6 +131,7 @@ func (repo *Repo) ExistRoleBySlug(slug string) bool {
 
 // CreateRole create role
 func (repo *Repo) CreateRole(r *ent.Role, p []*ent.Permission) error {
+	// nolint:staticcheck
 	r, err := repo.client.Role.
 		Create().
 		SetName(r.Name).

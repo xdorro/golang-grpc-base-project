@@ -13,6 +13,7 @@ import (
 	permissionproto "github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
 
+// FindAllPermissions returns all permissions
 func (svc *Service) FindAllPermissions(context.Context, *permissionproto.FindAllPermissionsRequest) (
 	*permissionproto.ListPermissionsResponse, error,
 ) {
@@ -21,6 +22,7 @@ func (svc *Service) FindAllPermissions(context.Context, *permissionproto.FindAll
 	return &permissionproto.ListPermissionsResponse{Data: common.PermissionsProto(permissions)}, nil
 }
 
+// FindPermissionByID returns a permission by id
 func (svc *Service) FindPermissionByID(_ context.Context, in *commonproto.UUIDRequest) (
 	*permissionproto.Permission, error,
 ) {
@@ -38,6 +40,7 @@ func (svc *Service) FindPermissionByID(_ context.Context, in *commonproto.UUIDRe
 	return common.PermissionProto(u), nil
 }
 
+// CreatePermission creates a new permission
 func (svc *Service) CreatePermission(_ context.Context, in *permissionproto.CreatePermissionRequest) (
 	*statusproto.Status, error,
 ) {
@@ -64,6 +67,7 @@ func (svc *Service) CreatePermission(_ context.Context, in *permissionproto.Crea
 	return common.Success.Proto(), nil
 }
 
+// UpdatePermission updates a permission
 func (svc *Service) UpdatePermission(_ context.Context, in *permissionproto.UpdatePermissionRequest) (
 	*statusproto.Status, error,
 ) {
@@ -89,6 +93,7 @@ func (svc *Service) UpdatePermission(_ context.Context, in *permissionproto.Upda
 	return common.Success.Proto(), nil
 }
 
+// DeletePermission deletes a permission
 func (svc *Service) DeletePermission(_ context.Context, in *commonproto.UUIDRequest) (
 	*statusproto.Status, error,
 ) {
