@@ -49,7 +49,7 @@ func (val *Validator) ValidateToken(token string) (*ent.User, error) {
 	}
 
 	userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
-	u, err := val.persist.FindUserByID(userID)
+	u, err := val.client.Persist.FindUserByID(userID)
 	if err != nil {
 		err = common.UserNotExist.Err()
 		val.log.Error("persist.FindUserByID()", zap.Error(err))

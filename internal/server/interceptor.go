@@ -91,7 +91,7 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 			}
 
 			claims := verifiedToken.StandardClaims
-			user, err := srv.Persist.FindUserByID(cast.ToUint64(claims.Subject))
+			user, err := srv.client.Persist.FindUserByID(cast.ToUint64(claims.Subject))
 			if err != nil {
 				return nil, common.UserNotExist.Err()
 			}
@@ -111,19 +111,19 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 func (srv *Server) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string)
 
-	val := srv.Redis.Get(srv.Redis.Context(), common.ServiceRoles).Val()
+	val := srv.redis.Get(srv.redis.Context(), common.ServiceRoles).Val()
 	if val != "" {
 		authorize = cast.ToStringMapStringSlice(val)
 		return authorize
 	}
 
-	permissions := srv.Persist.FindAllPermissions()
+	permissions := srv.client.Persist.FindAllPermissions()
 	for _, per := range permissions {
 		authorize[per.Slug] = srv.getPermissionRoles(ctx, per)
 	}
 
 	data, _ := json.Marshal(authorize)
-	err := srv.Redis.Set(srv.Redis.Context(), common.ServiceRoles, data, -1).Err()
+	err := srv.redis.Set(srv.redis.Context(), common.ServiceRoles, data, -1).Err()
 	if err != nil {
 		srv.log.Error("redis.Set()", zap.Error(err))
 	}

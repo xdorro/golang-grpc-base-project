@@ -1,45 +1,20 @@
-package authservice
+package service
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/persist"
-	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
-	authproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
+	authproto "github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
-type AuthService struct {
-	authproto2.UnimplementedAuthServiceServer
-
-	ctx       context.Context
-	log       *zap.Logger
-	redis     redis.UniversalClient
-	persist   persist.Persist
-	validator *validator.Validator
-}
-
-func NewAuthService(opts *option.Option, validator *validator.Validator, persist persist.Persist) *AuthService {
-	svc := &AuthService{
-		ctx:       opts.Ctx,
-		log:       opts.Log,
-		redis:     opts.Redis,
-		persist:   persist,
-		validator: validator,
-	}
-
-	return svc
-}
-
 // Login login
-func (svc *AuthService) Login(_ context.Context, in *authproto2.LoginRequest) (
-	*authproto2.TokenResponse, error,
+func (svc *Service) Login(ctx context.Context, in *authproto.LoginRequest) (
+	*authproto.TokenResponse, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateLoginRequest(in); err != nil {
@@ -47,7 +22,7 @@ func (svc *AuthService) Login(_ context.Context, in *authproto2.LoginRequest) (
 		return nil, err
 	}
 
-	u, err := svc.persist.FindUserByEmail(in.GetEmail())
+	u, err := svc.client.Persist.FindUserByEmail(in.GetEmail())
 	if err != nil {
 		return nil, common.EmailNotExist.Err()
 	}
@@ -58,11 +33,11 @@ func (svc *AuthService) Login(_ context.Context, in *authproto2.LoginRequest) (
 		return nil, err
 	}
 
-	return svc.generateToken(u)
+	return svc.generateToken(ctx, u)
 }
 
 // RevokeToken revoke token
-func (svc *AuthService) RevokeToken(_ context.Context, in *authproto2.TokenRequest) (
+func (svc *Service) RevokeToken(_ context.Context, in *authproto.TokenRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -95,8 +70,8 @@ func (svc *AuthService) RevokeToken(_ context.Context, in *authproto2.TokenReque
 }
 
 // RefreshToken refresh token
-func (svc *AuthService) RefreshToken(_ context.Context, in *authproto2.TokenRequest) (
-	*authproto2.TokenResponse, error,
+func (svc *Service) RefreshToken(ctx context.Context, in *authproto.TokenRequest) (
+	*authproto.TokenResponse, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateTokenRequest(in); err != nil {
@@ -124,16 +99,16 @@ func (svc *AuthService) RefreshToken(_ context.Context, in *authproto2.TokenRequ
 		return nil, err
 	}
 
-	return svc.generateToken(u)
+	return svc.generateToken(ctx, u)
 }
 
 // generateToken generate token
-func (svc *AuthService) generateToken(user *ent.User) (*authproto2.TokenResponse, error) {
-	result := &authproto2.TokenResponse{
+func (svc *Service) generateToken(ctx context.Context, user *ent.User) (*authproto.TokenResponse, error) {
+	result := &authproto.TokenResponse{
 		TokenType: common.TokenType,
 	}
 
-	if err := common.GenerateAccessToken(svc.ctx, svc.log, user, result); err != nil {
+	if err := common.GenerateAccessToken(ctx, svc.log, user, result); err != nil {
 		return nil, err
 	}
 

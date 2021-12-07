@@ -1,10 +1,12 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // loadDefault load default config
@@ -30,7 +32,7 @@ func loadDefault() {
 }
 
 // NewConfig create new config
-func NewConfig(path ...string) {
+func NewConfig(log *zap.Logger, path ...string) {
 	configPath := "."
 	if len(path) > 0 {
 		configPath = path[0]
@@ -46,7 +48,7 @@ func NewConfig(path ...string) {
 	// Find and read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file not found; ignore error if desired
-		log.Printf("viper.ReadInConfig(): %v", err)
+		log.Info(fmt.Sprintf("viper.ReadInConfig(): %v", err))
 	}
 
 	viper.AutomaticEnv()
@@ -56,4 +58,9 @@ func NewConfig(path ...string) {
 
 	// Replace env key
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	log.Info(viper.GetString("APP_NAME"),
+		zap.String("app-version", viper.GetString("APP_VERSION")),
+		zap.String("go-version", runtime.Version()),
+	)
 }

@@ -1,4 +1,4 @@
-package authservice
+package service
 
 import (
 	"context"
@@ -9,38 +9,20 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/persist"
-	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
-	roleproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
+	roleproto "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
-type RoleService struct {
-	roleproto2.UnimplementedRoleServiceServer
-
-	log       *zap.Logger
-	persist   persist.Persist
-	validator *validator.Validator
-}
-
-func NewRoleService(opts *option.Option, validator *validator.Validator, persist persist.Persist) *RoleService {
-	return &RoleService{
-		log:       opts.Log,
-		persist:   persist,
-		validator: validator,
-	}
-}
-
-func (svc *RoleService) FindAllRoles(context.Context, *roleproto2.FindAllRolesRequest) (
-	*roleproto2.ListRolesResponse, error,
+func (svc *Service) FindAllRoles(context.Context, *roleproto.FindAllRolesRequest) (
+	*roleproto.ListRolesResponse, error,
 ) {
-	roles := svc.persist.FindAllRoles()
+	roles := svc.client.Persist.FindAllRoles()
 
-	return &roleproto2.ListRolesResponse{Data: common.RolesProto(roles)}, nil
+	return &roleproto.ListRolesResponse{Data: common.RolesProto(roles)}, nil
 }
 
-func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest) (
-	*roleproto2.Role, error,
+func (svc *Service) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest) (
+	*roleproto.Role, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
@@ -48,7 +30,7 @@ func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, err
 	}
 
-	u, err := svc.persist.FindRoleByID(cast.ToUint64(in.Id))
+	u, err := svc.client.Persist.FindRoleByID(cast.ToUint64(in.Id))
 	if err != nil {
 		return nil, common.RoleNotExist.Err()
 	}
@@ -56,7 +38,7 @@ func (svc *RoleService) FindRoleByID(_ context.Context, in *commonproto.UUIDRequ
 	return common.RoleProto(u), nil
 }
 
-func (svc *RoleService) CreateRole(_ context.Context, in *roleproto2.CreateRoleRequest) (
+func (svc *Service) CreateRole(_ context.Context, in *roleproto.CreateRoleRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -65,7 +47,7 @@ func (svc *RoleService) CreateRole(_ context.Context, in *roleproto2.CreateRoleR
 		return nil, err
 	}
 
-	if exist := svc.persist.ExistRoleBySlug(in.GetSlug()); exist {
+	if exist := svc.client.Persist.ExistRoleBySlug(in.GetSlug()); exist {
 		return nil, common.RoleAlreadyExist.Err()
 	}
 
@@ -82,14 +64,14 @@ func (svc *RoleService) CreateRole(_ context.Context, in *roleproto2.CreateRoleR
 		FullAccess: in.GetFullAccess(),
 	}
 
-	if err = svc.persist.CreateRole(roleIn, permissions); err != nil {
+	if err = svc.client.Persist.CreateRole(roleIn, permissions); err != nil {
 		return nil, err
 	}
 
 	return common.Success.Proto(), nil
 }
 
-func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto2.UpdateRoleRequest) (
+func (svc *Service) UpdateRole(_ context.Context, in *roleproto.UpdateRoleRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -98,7 +80,7 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto2.UpdateRoleR
 		return nil, err
 	}
 
-	r, err := svc.persist.FindRoleByID(cast.ToUint64(in.GetId()))
+	r, err := svc.client.Persist.FindRoleByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.RoleNotExist.Err()
 	}
@@ -114,14 +96,14 @@ func (svc *RoleService) UpdateRole(_ context.Context, in *roleproto2.UpdateRoleR
 	r.Status = in.GetStatus()
 	r.FullAccess = in.GetFullAccess()
 
-	if err = svc.persist.UpdateRole(r, permissions); err != nil {
+	if err = svc.client.Persist.UpdateRole(r, permissions); err != nil {
 		return nil, err
 	}
 
 	return common.Success.Proto(), nil
 }
 
-func (svc *RoleService) DeleteRole(_ context.Context, in *commonproto.UUIDRequest) (
+func (svc *Service) DeleteRole(_ context.Context, in *commonproto.UUIDRequest) (
 	*statusproto.Status, error,
 ) {
 	// Validate request
@@ -131,11 +113,11 @@ func (svc *RoleService) DeleteRole(_ context.Context, in *commonproto.UUIDReques
 	}
 
 	id := cast.ToUint64(in.GetId())
-	if exist := svc.persist.ExistRoleByID(id); !exist {
+	if exist := svc.client.Persist.ExistRoleByID(id); !exist {
 		return nil, common.RoleNotExist.Err()
 	}
 
-	if err := svc.persist.SoftDeleteRole(id); err != nil {
+	if err := svc.client.Persist.SoftDeleteRole(id); err != nil {
 		return nil, err
 	}
 

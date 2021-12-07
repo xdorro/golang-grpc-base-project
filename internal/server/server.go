@@ -16,34 +16,31 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/internal/common/option"
-	"github.com/xdorro/golang-grpc-base-project/internal/persist"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 )
 
 // Server struct
 type Server struct {
-	ctx     context.Context
-	log     *zap.Logger
-	Persist persist.Persist
-	Client  *ent.Client
-	Redis   redis.UniversalClient
+	ctx   context.Context
+	redis redis.UniversalClient
 
+	log        *zap.Logger
+	client     *client.Client
 	grpcServer *grpc.Server
 }
 
 // NewServer create new Server
-func NewServer(opts *option.Option) (*Server, error) {
+func NewServer(ctx context.Context, log *zap.Logger, client *client.Client, redis redis.UniversalClient) (
+	*Server, error,
+) {
 	srv := &Server{
-		ctx:    opts.Ctx,
-		log:    opts.Log,
-		Client: opts.Client,
-		Redis:  opts.Redis,
+		ctx:    ctx,
+		log:    log,
+		client: client,
+		redis:  redis,
 	}
-
-	// Create new persist
-	srv.Persist = repo.NewRepo(opts.Ctx, opts.Log, opts.Client)
 
 	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
 	srv.log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
@@ -76,7 +73,7 @@ func (srv *Server) Close() error {
 
 // CreateServer create new Server
 func (srv *Server) createServer(listener net.Listener) error {
-	// Log gRPC library internals with log
+	// log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(srv.log)
 
 	streamChain := []grpc.StreamServerInterceptor{
@@ -99,7 +96,7 @@ func (srv *Server) createServer(listener net.Listener) error {
 		srv.AuthInterceptorUnary(),
 	}
 
-	// Log payload if enabled
+	// log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
 		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
 			return true
@@ -116,9 +113,10 @@ func (srv *Server) createServer(listener net.Listener) error {
 	)
 
 	// Create new validator
-	// valid := validator.NewValidator(srv.log, srv.Persist)
+	valid := validator.NewValidator(srv.log, srv.client)
 	// Create new validator
-	// service.NewService(opts, srv.grpcServer, valid, srv.Persist)
+	service.NewService(srv.log, srv.client, valid,
+		srv.grpcServer, srv.redis)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

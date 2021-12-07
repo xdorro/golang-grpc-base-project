@@ -25,9 +25,9 @@ func TestNewRepo(t *testing.T) {
 				opts: opts,
 			},
 			want: &Repo{
-				Ctx:    opts.Ctx,
-				Log:    opts.Log,
-				Client: opts.Client,
+				ctx:    opts.Ctx,
+				log:    opts.Log,
+				client: opts.Client,
 			},
 		},
 	}

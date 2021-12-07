@@ -13,16 +13,16 @@ var _ persist.Persist = (*Repo)(nil)
 
 // Repo struct
 type Repo struct {
-	Ctx    context.Context
-	Log    *zap.Logger
-	Client *ent.Client
+	ctx    context.Context
+	log    *zap.Logger
+	client *ent.Client
 }
 
-// NewRepo create new Persist
+// NewRepo create new persist
 func NewRepo(ctx context.Context, log *zap.Logger, client *ent.Client) *Repo {
 	return &Repo{
-		Ctx:    ctx,
-		Log:    log,
-		Client: client,
+		ctx:    ctx,
+		log:    log,
+		client: client,
 	}
 }

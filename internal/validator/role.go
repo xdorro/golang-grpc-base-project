@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
 
-func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {
+func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -24,12 +24,16 @@ func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.Create
 			validation.Required,
 			validation.Length(3, 0),
 		),
+		// Validate permissions
+		validation.Field(&in.Permissions,
+			validation.Required.When(in.GetPermissions() != nil),
+		),
 	)
 
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.UpdatePermissionRequest) error {
+func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
@@ -46,24 +50,28 @@ func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.Update
 			validation.Required,
 			validation.Length(3, 0),
 		),
+		// Validate permissions
+		validation.Field(&in.Permissions,
+			validation.Required.When(in.GetPermissions() != nil),
+		),
 	)
 
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission, error) {
-	permissions := make([]*ent.Permission, 0)
+func (val *Validator) ValidateListRoles(list []string) ([]*ent.Role, error) {
+	roles := make([]*ent.Role, 0)
 
 	if len(list) > 0 {
 		for _, slug := range list {
-			p, err := val.persist.FindPermissionBySlug(slug)
+			r, err := val.client.Persist.FindRoleBySlug(slug)
 			if err != nil {
-				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("permission: %s doesn't exist", slug)).Err()
+				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("role: %s doesn't exist", slug)).Err()
 			}
 
-			permissions = append(permissions, p)
+			roles = append(roles, r)
 		}
 	}
 
-	return permissions, nil
+	return roles, nil
 }

@@ -1,4 +1,4 @@
-package userservice
+package service
 
 import (
 	"context"
@@ -9,40 +9,22 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/internal/persist"
-	"github.com/xdorro/golang-grpc-base-project/pkg/validator"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
-	userproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/user"
+	userproto "github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
-type UserService struct {
-	userproto2.UnimplementedUserServiceServer
-
-	log       *zap.Logger
-	persist   persist.Persist
-	validator *validator.Validator
-}
-
-func NewUserService(opts *option.Option, validator *validator.Validator, persist persist.Persist) *UserService {
-	return &UserService{
-		log:       opts.Log,
-		persist:   persist,
-		validator: validator,
-	}
-}
-
 // FindAllUsers find all users
-func (svc *UserService) FindAllUsers(context.Context, *userproto2.FindAllUsersRequest) (
-	*userproto2.ListUsersResponse, error,
+func (svc *Service) FindAllUsers(context.Context, *userproto.FindAllUsersRequest) (
+	*userproto.ListUsersResponse, error,
 ) {
-	users := svc.persist.FindAllUsers()
+	users := svc.client.Persist.FindAllUsers()
 
-	return &userproto2.ListUsersResponse{Data: common.UsersProto(users)}, nil
+	return &userproto.ListUsersResponse{Data: common.UsersProto(users)}, nil
 }
 
 // FindUserByID find user by id
-func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequest) (
-	*userproto2.User, error,
+func (svc *Service) FindUserByID(_ context.Context, in *commonproto.UUIDRequest) (
+	*userproto.User, error,
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
@@ -50,7 +32,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 		return nil, err
 	}
 
-	u, err := svc.persist.FindUserByID(cast.ToUint64(in.GetId()))
+	u, err := svc.client.Persist.FindUserByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.UserNotExist.Err()
 	}
@@ -59,7 +41,7 @@ func (svc *UserService) FindUserByID(_ context.Context, in *commonproto.UUIDRequ
 }
 
 // CreateUser handler CreateUser function
-func (svc *UserService) CreateUser(_ context.Context, in *userproto2.CreateUserRequest) (
+func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserRequest) (
 	*status.Status, error,
 ) {
 	// Validate request
@@ -68,7 +50,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto2.CreateUserR
 		return nil, err
 	}
 
-	if check := svc.persist.ExistUserByEmail(in.GetEmail()); check {
+	if check := svc.client.Persist.ExistUserByEmail(in.GetEmail()); check {
 		return nil, common.EmailAlreadyExist.Err()
 	}
 
@@ -91,7 +73,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto2.CreateUserR
 		return nil, err
 	}
 
-	if err = svc.persist.CreateUser(userIn, roles); err != nil {
+	if err = svc.client.Persist.CreateUser(userIn, roles); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +81,7 @@ func (svc *UserService) CreateUser(_ context.Context, in *userproto2.CreateUserR
 }
 
 // UpdateUser handler UpdateUser function
-func (svc *UserService) UpdateUser(_ context.Context, in *userproto2.UpdateUserRequest) (
+func (svc *Service) UpdateUser(_ context.Context, in *userproto.UpdateUserRequest) (
 	*status.Status, error,
 ) {
 	// Validate request
@@ -108,7 +90,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto2.UpdateUserR
 		return nil, err
 	}
 
-	u, err := svc.persist.FindUserByID(cast.ToUint64(in.GetId()))
+	u, err := svc.client.Persist.FindUserByID(cast.ToUint64(in.GetId()))
 	if err != nil {
 		return nil, common.UserNotExist.Err()
 	}
@@ -123,7 +105,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto2.UpdateUserR
 	u.Email = in.GetEmail()
 	u.Status = in.GetStatus()
 
-	if err = svc.persist.UpdateUser(u, roles); err != nil {
+	if err = svc.client.Persist.UpdateUser(u, roles); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +113,7 @@ func (svc *UserService) UpdateUser(_ context.Context, in *userproto2.UpdateUserR
 }
 
 // DeleteUser handler DeleteUser function
-func (svc *UserService) DeleteUser(_ context.Context, in *commonproto.UUIDRequest) (
+func (svc *Service) DeleteUser(_ context.Context, in *commonproto.UUIDRequest) (
 	*status.Status, error,
 ) {
 	// Validate request
@@ -142,11 +124,11 @@ func (svc *UserService) DeleteUser(_ context.Context, in *commonproto.UUIDReques
 
 	id := cast.ToUint64(in.GetId())
 
-	if exist := svc.persist.ExistUserByID(id); !exist {
+	if exist := svc.client.Persist.ExistUserByID(id); !exist {
 		return nil, common.UserNotExist.Err()
 	}
 
-	if err := svc.persist.SoftDeleteUser(id); err != nil {
+	if err := svc.client.Persist.SoftDeleteUser(id); err != nil {
 		return nil, err
 	}
 
