@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 )
 
@@ -113,10 +112,7 @@ func (srv *Server) createServer(listener net.Listener) error {
 	)
 
 	// Create new validator
-	valid := validator.NewValidator(srv.log, srv.client)
-	// Create new validator
-	service.NewService(srv.log, srv.client, valid,
-		srv.grpcServer, srv.redis)
+	service.NewService(srv.log, srv.client, srv.grpcServer, srv.redis)
 
 	if err := srv.grpcServer.Serve(listener); err != nil {
 		srv.log.Error("srv.grpcServer.Serve()", zap.Error(err))

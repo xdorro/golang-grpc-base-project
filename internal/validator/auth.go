@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/common"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 

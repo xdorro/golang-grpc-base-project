@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/internal/event"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
@@ -27,22 +28,28 @@ type Service struct {
 	redis      redis.UniversalClient
 	log        *zap.Logger
 	client     *client.Client
-	validator  *validator.Validator
 	grpcServer *grpc.Server
+
+	validator *validator.Validator
+	event     *event.Event
 }
 
 // NewService returns a new service instance
 func NewService(
-	log *zap.Logger, client *client.Client, validator *validator.Validator,
+	log *zap.Logger, client *client.Client,
 	grpcServer *grpc.Server, redis redis.UniversalClient,
 ) {
 	svc := &Service{
 		log:        log,
 		client:     client,
-		validator:  validator,
 		grpcServer: grpcServer,
 		redis:      redis,
 	}
+
+	// Create new validator
+	svc.validator = validator.NewValidator(log, client)
+	// Create new event
+	svc.event = event.NewEvent(log, client)
 
 	// register Service Servers
 	svc.registerServiceServers()
