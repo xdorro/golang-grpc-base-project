@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent/role"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 

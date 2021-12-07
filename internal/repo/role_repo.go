@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/permission"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent/permission"
+	"github.com/xdorro/golang-grpc-base-project/ent/role"
 )
 
 // FindAllRoles find all roles

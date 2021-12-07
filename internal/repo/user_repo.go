@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent/user"
+	"github.com/xdorro/golang-grpc-base-project/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent/user"
 )
 
 // FindAllUsers find all users

@@ -6,7 +6,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 

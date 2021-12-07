@@ -7,12 +7,12 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
+	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service/authservice"
 	"github.com/xdorro/golang-grpc-base-project/internal/service/userservice"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"

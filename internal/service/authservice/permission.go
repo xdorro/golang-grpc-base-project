@@ -7,10 +7,10 @@ import (
 	"go.uber.org/zap"
 	statusproto "google.golang.org/genproto/googleapis/rpc/status"
 
+	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	permissionproto2 "github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )

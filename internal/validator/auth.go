@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 
+	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 

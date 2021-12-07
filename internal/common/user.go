@@ -3,7 +3,7 @@ package common
 import (
 	"github.com/spf13/cast"
 
-	"github.com/xdorro/golang-grpc-base-project/pkg/ent"
+	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
 
