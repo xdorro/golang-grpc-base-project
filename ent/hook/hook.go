@@ -157,7 +157,7 @@ func If(hk ent.Hook, cond Condition) ent.Hook {
 
 // On executes the given hook only for the given operation.
 //
-//	hook.On(log, ent.Delete|ent.Create)
+//	hook.On(Log, ent.Delete|ent.Create)
 //
 func On(hk ent.Hook, op ent.Op) ent.Hook {
 	return If(hk, HasOp(op))
@@ -165,7 +165,7 @@ func On(hk ent.Hook, op ent.Op) ent.Hook {
 
 // Unless skips the given hook only for the given operation.
 //
-//	hook.Unless(log, ent.Update|ent.UpdateOne)
+//	hook.Unless(Log, ent.Update|ent.UpdateOne)
 //
 func Unless(hk ent.Hook, op ent.Op) ent.Hook {
 	return If(hk, Not(HasOp(op)))
