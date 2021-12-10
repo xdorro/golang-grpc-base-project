@@ -9,6 +9,7 @@ import (
 
 // loadDefault load default config
 func loadDefault() {
+	// APP
 	viper.SetDefault("APP_NAME", "Golang gRPC Base Project")
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("APP_DEBUG", false)
@@ -27,6 +28,8 @@ func loadDefault() {
 	viper.SetDefault("REDIS_URL", "localhost:16379")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
+	// REDIS
+	viper.SetDefault("ASYNQ_ENABLE", false)
 }
 
 // NewConfig create new config

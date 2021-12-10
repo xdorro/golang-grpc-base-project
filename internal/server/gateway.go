@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -24,7 +24,7 @@ func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMu
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		log.Fatalln("Failed to dial Server:", err)
+		srv.log.Fatal("Failed to dial Server:", zap.Error(err))
 	}
 
 	// Register AuthService Handler
