@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -74,6 +75,15 @@ func (srv *Server) createGateway(grpcPort string) error {
 		mux := runtime.NewServeMux(opts...)
 		if err := srv.registerServiceHandlers(grpcPort, mux); err != nil {
 			return fmt.Errorf("srv.registerServiceHandlers(): %w", err)
+		}
+
+		if viper.GetBool("METRIC_ENABLE") {
+			// Register Prometheus metrics handler.
+			if err := mux.HandlePath("GET", "/metrics", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+				promhttp.Handler().ServeHTTP(w, r)
+			}); err != nil {
+				srv.log.Fatal("Failed to register Prometheus metrics handler:", zap.Error(err))
+			}
 		}
 
 		if err := http.ListenAndServe(httpPort, mux); err != nil {

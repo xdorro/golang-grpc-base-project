@@ -18,6 +18,9 @@ func loadDefault() {
 
 	viper.SetDefault("LOG_PAYLOAD", true)
 	viper.SetDefault("SEEDER_SERVICE", false)
+	viper.SetDefault("METRIC_ENABLE", false)
+	// ASYNQ
+	viper.SetDefault("ASYNQ_ENABLE", false)
 
 	viper.SetDefault("MACHINE_ID", "0")
 	viper.SetDefault("AUTH_SECRET_KEY", "your-256-bit-secret")
@@ -28,8 +31,6 @@ func loadDefault() {
 	viper.SetDefault("REDIS_URL", "localhost:16379")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
-	// REDIS
-	viper.SetDefault("ASYNQ_ENABLE", false)
 }
 
 // NewConfig create new config
