@@ -9,6 +9,7 @@ import (
 
 // loadDefault load default config
 func loadDefault() {
+	// APP
 	viper.SetDefault("APP_NAME", "Golang gRPC Base Project")
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("APP_DEBUG", false)
@@ -17,6 +18,9 @@ func loadDefault() {
 
 	viper.SetDefault("LOG_PAYLOAD", true)
 	viper.SetDefault("SEEDER_SERVICE", false)
+	viper.SetDefault("METRIC_ENABLE", false)
+	// ASYNQ
+	viper.SetDefault("ASYNQ_ENABLE", false)
 
 	viper.SetDefault("MACHINE_ID", "0")
 	viper.SetDefault("AUTH_SECRET_KEY", "your-256-bit-secret")

@@ -425,7 +425,7 @@ func RegisterRoleServiceHandlerFromEndpoint(ctx context.Context, mux *runtime.Se
 
 // RegisterRoleServiceHandler registers the http handlers for service RoleService to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterRoleServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+func RegisterRoleServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn grpc.ClientConnInterface) error {
 	return RegisterRoleServiceHandlerClient(ctx, mux, NewRoleServiceClient(conn))
 }
 

@@ -48,6 +48,7 @@ func NewClient(ctx context.Context, log *zap.Logger) *Client {
 		if err = db.Schema.Create(
 			ctx,
 			migrate.WithGlobalUniqueID(true),
+			migrate.WithForeignKeys(false), // Disable foreign keys.
 		); err != nil {
 			_ = db.Close()
 			log.Fatal("failed creating schema resources", zap.Error(err))

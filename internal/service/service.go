@@ -48,8 +48,11 @@ func NewService(
 
 	// Create new validator
 	svc.validator = validator.NewValidator(log, client)
-	// Create new event
-	svc.event = event.NewEvent(log, client)
+
+	if viper.GetBool("ASYNQ_ENABLE") {
+		// Create new event
+		svc.event = event.NewEvent(log, client)
+	}
 
 	// register Service Servers
 	svc.registerServiceServers()
@@ -111,5 +114,9 @@ func (svc *Service) getServiceInfo() {
 
 // Close closes the service.
 func (svc *Service) Close() error {
-	return svc.event.Close()
+	if svc.event != nil {
+		return svc.event.Close()
+	}
+
+	return nil
 }
