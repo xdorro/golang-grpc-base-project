@@ -79,7 +79,6 @@ func (srv *Server) createServer(listener net.Listener) error {
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.StreamServerInterceptor(),
-		grpc_prometheus.StreamServerInterceptor,
 		grpc_zap.StreamServerInterceptor(srv.log),
 		grpc_recovery.StreamServerInterceptor(),
 		// Customer Interceptor
@@ -89,7 +88,6 @@ func (srv *Server) createServer(listener net.Listener) error {
 	unaryChain := []grpc.UnaryServerInterceptor{
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
 		grpc_opentracing.UnaryServerInterceptor(),
-		grpc_prometheus.UnaryServerInterceptor,
 		grpc_zap.UnaryServerInterceptor(srv.log),
 		grpc_recovery.UnaryServerInterceptor(),
 		// Customer Interceptor
@@ -106,11 +104,21 @@ func (srv *Server) createServer(listener net.Listener) error {
 		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(srv.log, alwaysLoggingDeciderServer))
 	}
 
+	if viper.GetBool("METRIC_ENABLE") {
+		streamChain = append(streamChain, grpc_prometheus.StreamServerInterceptor)
+		unaryChain = append(unaryChain, grpc_prometheus.UnaryServerInterceptor)
+	}
+
 	// register grpc service Server
 	srv.grpcServer = grpc.NewServer(
 		grpc_middleware.WithStreamServerChain(streamChain...),
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
+
+	if viper.GetBool("METRIC_ENABLE") {
+		// After all your registrations, make sure all the Prometheus metrics are initialized.
+		grpc_prometheus.Register(srv.grpcServer)
+	}
 
 	// Create new validator
 	srv.service = service.NewService(srv.log, srv.client, srv.grpcServer, srv.redis)
