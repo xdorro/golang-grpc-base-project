@@ -9,6 +9,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	userproto "github.com/xdorro/golang-grpc-base-project/proto/v1/user"
 )
@@ -28,7 +29,7 @@ func (svc *Service) FindUserByID(_ context.Context, in *commonproto.UUIDRequest)
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -46,7 +47,7 @@ func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserReques
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCreateUserRequest(in); err != nil {
-		svc.log.Error("svc.validateCreateUserRequest()", zap.Error(err))
+		logger.Error("svc.validateCreateUserRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -56,7 +57,7 @@ func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserReques
 
 	hashPassword, err := common.GenerateFromPassword(in.GetPassword())
 	if err != nil {
-		svc.log.Error("util.HashPassword()", zap.Error(err))
+		logger.Error("util.HashPassword()", zap.Error(err))
 		return nil, err
 	}
 
@@ -69,7 +70,7 @@ func (svc *Service) CreateUser(_ context.Context, in *userproto.CreateUserReques
 
 	roles, err := svc.validator.ValidateListRoles(in.GetRoles())
 	if err != nil {
-		svc.log.Error("svc.validateListRoles()", zap.Error(err))
+		logger.Error("svc.validateListRoles()", zap.Error(err))
 		return nil, err
 	}
 
@@ -86,7 +87,7 @@ func (svc *Service) UpdateUser(_ context.Context, in *userproto.UpdateUserReques
 ) {
 	// Validate request
 	if err := svc.validator.ValidateUpdateUserRequest(in); err != nil {
-		svc.log.Error("svc.validateUpdateUserRequest()", zap.Error(err))
+		logger.Error("svc.validateUpdateUserRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -97,7 +98,7 @@ func (svc *Service) UpdateUser(_ context.Context, in *userproto.UpdateUserReques
 
 	roles, err := svc.validator.ValidateListRoles(in.GetRoles())
 	if err != nil {
-		svc.log.Error("svc.validateListRoles()", zap.Error(err))
+		logger.Error("svc.validateListRoles()", zap.Error(err))
 		return nil, err
 	}
 
@@ -118,7 +119,7 @@ func (svc *Service) DeleteUser(_ context.Context, in *commonproto.UUIDRequest) (
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 

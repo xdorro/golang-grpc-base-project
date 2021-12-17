@@ -3,6 +3,8 @@ package event
 import (
 	"github.com/hibiken/asynq"
 	"go.uber.org/zap"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 func (evt *Event) eventWorker(rdb asynq.RedisConnOpt) error {
@@ -16,7 +18,7 @@ func (evt *Event) eventWorker(rdb asynq.RedisConnOpt) error {
 	// mux.HandleFunc("email:reminder", sendReminderEmail)
 
 	if err := evt.server.Run(mux); err != nil {
-		evt.log.Error("evt.server.Run()", zap.Error(err))
+		logger.Error("evt.server.Run()", zap.Error(err))
 		return err
 	}
 

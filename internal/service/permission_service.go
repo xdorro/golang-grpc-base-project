@@ -9,6 +9,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	permissionproto "github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 )
@@ -28,7 +29,7 @@ func (svc *Service) FindPermissionByID(_ context.Context, in *commonproto.UUIDRe
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -46,7 +47,7 @@ func (svc *Service) CreatePermission(_ context.Context, in *permissionproto.Crea
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCreatePermissionRequest(in); err != nil {
-		svc.log.Error("svc.validateCreatePermissionRequest()", zap.Error(err))
+		logger.Error("svc.validateCreatePermissionRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -73,7 +74,7 @@ func (svc *Service) UpdatePermission(_ context.Context, in *permissionproto.Upda
 ) {
 	// Validate request
 	if err := svc.validator.ValidateUpdatePermissionRequest(in); err != nil {
-		svc.log.Error("svc.validateUpdatePermissionRequest()", zap.Error(err))
+		logger.Error("svc.validateUpdatePermissionRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -99,7 +100,7 @@ func (svc *Service) DeletePermission(_ context.Context, in *commonproto.UUIDRequ
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 

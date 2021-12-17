@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
@@ -25,7 +26,7 @@ func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMu
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		srv.log.Fatal("Failed to dial Server:", zap.Error(err))
+		logger.Fatal("Failed to dial Server:", zap.Error(err))
 	}
 
 	// Register AuthService Handler
@@ -55,7 +56,7 @@ func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMu
 func (srv *Server) createGateway(grpcPort string) error {
 	httpPort := fmt.Sprintf(":%d", viper.GetInt("HTTP_PORT"))
 	if httpPort != "" {
-		srv.log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
+		logger.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
 
 		// Create HTTP Server
 		opts := []runtime.ServeMuxOption{
@@ -82,7 +83,7 @@ func (srv *Server) createGateway(grpcPort string) error {
 			if err := mux.HandlePath("GET", "/metrics", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 				promhttp.Handler().ServeHTTP(w, r)
 			}); err != nil {
-				srv.log.Fatal("Failed to register Prometheus metrics handler:", zap.Error(err))
+				logger.Fatal("Failed to register Prometheus metrics handler:", zap.Error(err))
 			}
 		}
 
