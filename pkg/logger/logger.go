@@ -1,11 +1,8 @@
 package logger
 
 import (
-	"fmt"
-
 	"go.elastic.co/ecszap"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -14,18 +11,22 @@ var (
 
 func init() {
 	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stderr", "./logs/go.log"}
 	config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	config.EncoderConfig = ecszap.ECSCompatibleEncoderConfig(config.EncoderConfig)
+	config.OutputPaths = []string{"stderr", "./logs.log"}
+
 	var err error
-	logger, err = config.Build(ecszap.WrapCoreOption(), zap.AddCaller())
+	logger, err = config.Build(
+		ecszap.WrapCoreOption(),
+		zap.AddCaller(),
+		// zap.Hooks(func(entry zapcore.Entry) error {
+		// 	// fmt.Println("test hooks test hooks")
+		// 	return nil
+		// }),
+	)
 	if err != nil {
 		panic(err)
 	}
-	logger = logger.WithOptions(zap.Hooks(func(entry zapcore.Entry) error {
-		fmt.Println("test hooks test hooks")
-		return nil
-	}))
 }
 
 // NewLogger is a wrapper for zap.Logger
