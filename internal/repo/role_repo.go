@@ -8,6 +8,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/permission"
 	"github.com/xdorro/golang-grpc-base-project/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 // FindAllRoles find all roles
@@ -24,7 +25,7 @@ func (repo *Repo) FindAllRoles() []*ent.Role {
 		All(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindAllRoles()", zap.Error(err))
+		logger.Error("persist.FindAllRoles()", zap.Error(err))
 		return nil
 	}
 
@@ -39,7 +40,7 @@ func (repo *Repo) FindRoleByID(id uint64) (*ent.Role, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindRoleByID()", zap.Error(err))
+		logger.Error("persist.FindRoleByID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -54,7 +55,7 @@ func (repo *Repo) FindRoleBySlug(slug string) (*ent.Role, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindRoleBySlug()", zap.Error(err))
+		logger.Error("persist.FindRoleBySlug()", zap.Error(err))
 		return nil, err
 	}
 
@@ -73,7 +74,7 @@ func (repo *Repo) FindRoleByIDAndPermissionID(id, permissionID uint64) (*ent.Rol
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindRoleByIDAndPermissionID()", zap.Error(err))
+		logger.Error("persist.FindRoleByIDAndPermissionID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -92,7 +93,7 @@ func (repo *Repo) FindRoleByIDAndPermissionIDNot(id, permissionID uint64) (*ent.
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindRoleByIDAndPermissionIDNot()", zap.Error(err))
+		logger.Error("persist.FindRoleByIDAndPermissionIDNot()", zap.Error(err))
 		return nil, err
 	}
 
@@ -107,7 +108,7 @@ func (repo *Repo) ExistRoleByID(id uint64) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistRoleByID()", zap.Error(err))
+		logger.Error("persist.ExistRoleByID()", zap.Error(err))
 		return exist
 	}
 
@@ -122,7 +123,7 @@ func (repo *Repo) ExistRoleBySlug(slug string) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistRoleBySlug()", zap.Error(err))
+		logger.Error("persist.ExistRoleBySlug()", zap.Error(err))
 		return exist
 	}
 
@@ -142,7 +143,7 @@ func (repo *Repo) CreateRole(r *ent.Role, p []*ent.Permission) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.CreateRole()", zap.Error(err))
+		logger.Error("persist.CreateRole()", zap.Error(err))
 		return err
 	}
 
@@ -163,7 +164,7 @@ func (repo *Repo) UpdateRole(r *ent.Role, p []*ent.Permission) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.UpdateRole()", zap.Error(err))
+		logger.Error("persist.UpdateRole()", zap.Error(err))
 		return err
 	}
 
@@ -180,7 +181,7 @@ func (repo *Repo) SoftDeleteRole(id uint64) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.SoftDeleteRole()", zap.Error(err))
+		logger.Error("persist.SoftDeleteRole()", zap.Error(err))
 		return err
 	}
 

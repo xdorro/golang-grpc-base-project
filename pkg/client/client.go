@@ -12,6 +12,8 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/migrate"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
+
 	// runtime entgo
 	_ "github.com/xdorro/golang-grpc-base-project/ent/runtime"
 	"github.com/xdorro/golang-grpc-base-project/internal/persist"
@@ -24,11 +26,11 @@ type Client struct {
 }
 
 // NewClient database with config
-func NewClient(ctx context.Context, log *zap.Logger) *Client {
+func NewClient(ctx context.Context) *Client {
 	driver := viper.GetString("DB_DRIVER")
 	url := viper.GetString("DB_URL")
 
-	log.Info("Connect to database",
+	logger.Info("Connect to database",
 		zap.String("driver", driver),
 		zap.String("url", url),
 	)
@@ -36,14 +38,14 @@ func NewClient(ctx context.Context, log *zap.Logger) *Client {
 	// Open the database connection.
 	drv, err := sql.Open(driver, url)
 	if err != nil {
-		log.Fatal("sql.Open()", zap.Error(err))
+		logger.Fatal("sql.Open()", zap.Error(err))
 	}
 
 	// Create an ent.client.
 	db := ent.NewClient(ent.Driver(drv))
 
 	if viper.GetBool("DB_MIGRATE") {
-		log.Info("Migrating...")
+		logger.Info("Migrating...")
 		// Run migration.
 		if err = db.Schema.Create(
 			ctx,
@@ -51,14 +53,14 @@ func NewClient(ctx context.Context, log *zap.Logger) *Client {
 			migrate.WithForeignKeys(false), // Disable foreign keys.
 		); err != nil {
 			_ = db.Close()
-			log.Fatal("failed creating schema resources", zap.Error(err))
+			logger.Fatal("failed creating schema resources", zap.Error(err))
 		}
 
-		log.Info("Migrated")
+		logger.Info("Migrated")
 	}
 
 	// Create new persist
-	per := repo.NewRepo(ctx, log, db)
+	per := repo.NewRepo(ctx, db)
 
 	client := &Client{
 		DB:      db,

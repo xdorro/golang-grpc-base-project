@@ -8,6 +8,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/permission"
 	"github.com/xdorro/golang-grpc-base-project/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 // FindAllPermissions find all permissions
@@ -24,7 +25,7 @@ func (repo *Repo) FindAllPermissions() []*ent.Permission {
 		All(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindAllPermissions()", zap.Error(err))
+		logger.Error("persist.FindAllPermissions()", zap.Error(err))
 		return nil
 	}
 
@@ -39,7 +40,7 @@ func (repo *Repo) FindPermissionByID(id uint64) (*ent.Permission, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindPermissionByID()", zap.Error(err))
+		logger.Error("persist.FindPermissionByID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -54,7 +55,7 @@ func (repo *Repo) FindPermissionBySlug(slug string) (*ent.Permission, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindPermissionBySlug()", zap.Error(err))
+		logger.Error("persist.FindPermissionBySlug()", zap.Error(err))
 		return nil, err
 	}
 
@@ -73,7 +74,7 @@ func (repo *Repo) FindPermissionByIDAndRoleIDNot(id uint64, roleId uint64) (*ent
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindPermissionByIDAndRoleIDNot()", zap.Error(err))
+		logger.Error("persist.FindPermissionByIDAndRoleIDNot()", zap.Error(err))
 		return nil, err
 	}
 
@@ -88,7 +89,7 @@ func (repo *Repo) ExistPermissionByID(id uint64) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistPermissionByID()", zap.Error(err))
+		logger.Error("persist.ExistPermissionByID()", zap.Error(err))
 		return exist
 	}
 
@@ -103,7 +104,7 @@ func (repo *Repo) ExistPermissionBySlug(slug string) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistPermissionBySlug()", zap.Error(err))
+		logger.Error("persist.ExistPermissionBySlug()", zap.Error(err))
 		return exist
 	}
 
@@ -120,7 +121,7 @@ func (repo *Repo) CreatePermission(r *ent.Permission) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.CreatePermission()", zap.Error(err))
+		logger.Error("persist.CreatePermission()", zap.Error(err))
 		return err
 	}
 
@@ -134,7 +135,7 @@ func (repo *Repo) CreatePermissionBulk(r []*ent.PermissionCreate) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+		logger.Error("persist.CreatePermissionBulk()", zap.Error(err))
 		return err
 	}
 
@@ -152,7 +153,7 @@ func (repo *Repo) UpdatePermission(r *ent.Permission) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.UpdatePermission()", zap.Error(err))
+		logger.Error("persist.UpdatePermission()", zap.Error(err))
 		return err
 	}
 
@@ -167,7 +168,7 @@ func (repo *Repo) SoftDeletePermission(id uint64) error {
 		SetDeleteTime(time.Now()).
 		ClearRoles().
 		Save(repo.ctx); err != nil {
-		repo.log.Error("persist.SoftDeletePermission()", zap.Error(err))
+		logger.Error("persist.SoftDeletePermission()", zap.Error(err))
 		return err
 	}
 

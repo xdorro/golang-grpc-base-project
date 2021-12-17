@@ -7,6 +7,7 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/kataras/jwt"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -16,6 +17,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/role"
 	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 type contextKey string
@@ -85,19 +87,20 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 				return nil, err
 			}
 
-			verifiedToken, err := common.VerifyToken(srv.log, token)
+			var verifiedToken *jwt.VerifiedToken
+			verifiedToken, err = common.VerifyToken(token)
 			if err != nil {
 				return nil, err
 			}
 
 			claims := verifiedToken.StandardClaims
-			user, err := srv.client.Persist.FindUserByID(cast.ToUint64(claims.Subject))
+			var user *ent.User
+			user, err = srv.client.Persist.FindUserByID(cast.ToUint64(claims.Subject))
 			if err != nil {
 				return nil, common.UserNotExist.Err()
 			}
 
 			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
-
 			if srv.hasAccessTo(roles, userRoles) {
 				return context.WithValue(ctx, ctxUserID, user.ID), nil
 			}
@@ -111,8 +114,7 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 func (srv *Server) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string)
 
-	val := srv.redis.Get(srv.redis.Context(), common.ServiceRoles).Val()
-	if val != "" {
+	if val := srv.redis.Get(ctx, common.ServiceRoles).Val(); val != "" {
 		authorize = cast.ToStringMapStringSlice(val)
 		return authorize
 	}
@@ -123,9 +125,8 @@ func (srv *Server) getInfoAuthorization(ctx context.Context) map[string][]string
 	}
 
 	data, _ := json.Marshal(authorize)
-	err := srv.redis.Set(srv.redis.Context(), common.ServiceRoles, data, -1).Err()
-	if err != nil {
-		srv.log.Error("redis.Set()", zap.Error(err))
+	if err := srv.redis.Set(ctx, common.ServiceRoles, data, -1).Err(); err != nil {
+		logger.Error("redis.Set()", zap.Error(err))
 	}
 
 	return authorize

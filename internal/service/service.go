@@ -12,6 +12,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/event"
 	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
@@ -26,7 +27,6 @@ type Service struct {
 	userproto.UnimplementedUserServiceServer
 
 	redis      redis.UniversalClient
-	log        *zap.Logger
 	client     *client.Client
 	grpcServer *grpc.Server
 
@@ -36,22 +36,21 @@ type Service struct {
 
 // NewService returns a new service instance
 func NewService(
-	log *zap.Logger, client *client.Client,
+	client *client.Client,
 	grpcServer *grpc.Server, redis redis.UniversalClient,
 ) *Service {
 	svc := &Service{
-		log:        log,
 		client:     client,
 		grpcServer: grpcServer,
 		redis:      redis,
 	}
 
 	// Create new validator
-	svc.validator = validator.NewValidator(log, client)
+	svc.validator = validator.NewValidator(client)
 
 	if viper.GetBool("ASYNQ_ENABLE") {
 		// Create new event
-		svc.event = event.NewEvent(log, client)
+		svc.event = event.NewEvent(client)
 	}
 
 	// register Service Servers
@@ -89,7 +88,7 @@ func (svc *Service) getServiceInfo() {
 				slug := fmt.Sprintf("/%s/%s", name, info.Name)
 
 				if !svc.client.Persist.ExistPermissionBySlug(slug) {
-					svc.log.Info("GetServiceInfo",
+					logger.Info("GetServiceInfo",
 						zap.Any("Name", info.Name),
 						zap.Any("Slug", slug),
 					)
@@ -106,7 +105,7 @@ func (svc *Service) getServiceInfo() {
 
 		if len(bulk) > 0 {
 			if err := svc.client.Persist.CreatePermissionBulk(bulk); err != nil {
-				svc.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+				logger.Error("persist.CreatePermissionBulk()", zap.Error(err))
 			}
 		}
 	}

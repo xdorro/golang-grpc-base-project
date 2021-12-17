@@ -9,6 +9,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/common"
 	roleproto "github.com/xdorro/golang-grpc-base-project/proto/v1/role"
 )
@@ -28,7 +29,7 @@ func (svc *Service) FindRoleByID(_ context.Context, in *commonproto.UUIDRequest)
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -46,7 +47,7 @@ func (svc *Service) CreateRole(_ context.Context, in *roleproto.CreateRoleReques
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCreateRoleRequest(in); err != nil {
-		svc.log.Error("svc.validateCreateRoleRequest()", zap.Error(err))
+		logger.Error("svc.validateCreateRoleRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -56,7 +57,7 @@ func (svc *Service) CreateRole(_ context.Context, in *roleproto.CreateRoleReques
 
 	permissions, err := svc.validator.ValidateListPermissions(in.GetPermissions())
 	if err != nil {
-		svc.log.Error("svc.validateCreateRolePermissions()", zap.Error(err))
+		logger.Error("svc.validateCreateRolePermissions()", zap.Error(err))
 		return nil, err
 	}
 
@@ -80,7 +81,7 @@ func (svc *Service) UpdateRole(_ context.Context, in *roleproto.UpdateRoleReques
 ) {
 	// Validate request
 	if err := svc.validator.ValidateUpdateRoleRequest(in); err != nil {
-		svc.log.Error("svc.validateUpdateRoleRequest()", zap.Error(err))
+		logger.Error("svc.validateUpdateRoleRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -91,7 +92,7 @@ func (svc *Service) UpdateRole(_ context.Context, in *roleproto.UpdateRoleReques
 
 	permissions, err := svc.validator.ValidateListPermissions(in.GetPermissions())
 	if err != nil {
-		svc.log.Error("svc.validateUpdateRolePermissions()", zap.Error(err))
+		logger.Error("svc.validateUpdateRolePermissions()", zap.Error(err))
 		return nil, err
 	}
 
@@ -113,7 +114,7 @@ func (svc *Service) DeleteRole(_ context.Context, in *commonproto.UUIDRequest) (
 ) {
 	// Validate request
 	if err := svc.validator.ValidateCommonID(in); err != nil {
-		svc.log.Error("common.ValidateCommonID()", zap.Error(err))
+		logger.Error("common.ValidateCommonID()", zap.Error(err))
 		return nil, err
 	}
 

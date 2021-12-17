@@ -7,6 +7,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/ent/user"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 // FindAllUsers find all users
@@ -23,7 +24,7 @@ func (repo *Repo) FindAllUsers() []*ent.User {
 		All(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindAllUsers()", zap.Error(err))
+		logger.Error("persist.FindAllUsers()", zap.Error(err))
 		return nil
 	}
 
@@ -42,7 +43,7 @@ func (repo *Repo) CreateUser(u *ent.User, r []*ent.Role) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.CreateUser()", zap.Error(err))
+		logger.Error("persist.CreateUser()", zap.Error(err))
 		return err
 	}
 
@@ -63,7 +64,7 @@ func (repo *Repo) UpdateUser(u *ent.User, r []*ent.Role) error {
 		Save(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.UpdateUser()", zap.Error(err))
+		logger.Error("persist.UpdateUser()", zap.Error(err))
 		return err
 	}
 
@@ -78,7 +79,7 @@ func (repo *Repo) FindUserByEmail(email string) (*ent.User, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindUserByEmail()", zap.Error(err))
+		logger.Error("persist.FindUserByEmail()", zap.Error(err))
 		return nil, err
 	}
 
@@ -93,7 +94,7 @@ func (repo *Repo) FindUserByID(id uint64) (*ent.User, error) {
 		First(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.FindUserByID()", zap.Error(err))
+		logger.Error("persist.FindUserByID()", zap.Error(err))
 		return nil, err
 	}
 
@@ -108,7 +109,7 @@ func (repo *Repo) ExistUserByEmail(email string) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistUserByEmail()", zap.Error(err))
+		logger.Error("persist.ExistUserByEmail()", zap.Error(err))
 		return check
 	}
 
@@ -123,7 +124,7 @@ func (repo *Repo) ExistUserByID(id uint64) bool {
 		Exist(repo.ctx)
 
 	if err != nil {
-		repo.log.Error("persist.ExistUserByID()", zap.Error(err))
+		logger.Error("persist.ExistUserByID()", zap.Error(err))
 		return check
 	}
 
@@ -136,7 +137,7 @@ func (repo *Repo) DeleteUser(id uint64) error {
 		Delete().
 		Where(user.ID(id)).
 		Exec(repo.ctx); err != nil {
-		repo.log.Error("persist.DeleteUser()", zap.Error(err))
+		logger.Error("persist.DeleteUser()", zap.Error(err))
 		return err
 	}
 
@@ -150,7 +151,7 @@ func (repo *Repo) SoftDeleteUser(id uint64) error {
 		Where(user.ID(id), user.DeleteTimeIsNil()).
 		SetDeleteTime(time.Now()).
 		Save(repo.ctx); err != nil {
-		repo.log.Error("persist.SoftDeleteUser()", zap.Error(err))
+		logger.Error("persist.SoftDeleteUser()", zap.Error(err))
 		return err
 	}
 

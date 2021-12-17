@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -16,13 +15,11 @@ const (
 )
 
 type Validator struct {
-	log    *zap.Logger
 	client *client.Client
 }
 
-func NewValidator(log *zap.Logger, client *client.Client) *Validator {
+func NewValidator(client *client.Client) *Validator {
 	val := &Validator{
-		log:    log,
 		client: client,
 	}
 

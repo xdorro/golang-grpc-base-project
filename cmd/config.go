@@ -1,10 +1,12 @@
-package config
+package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
 // loadDefault load default config
@@ -34,23 +36,18 @@ func loadDefault() {
 }
 
 // NewConfig create new config
-func NewConfig(path ...string) {
-	configPath := "."
-	if len(path) > 0 {
-		configPath = path[0]
-	}
-
+func init() {
 	// SetConfigFile explicitly defines the path, name and extension of the config file.
 	// Viper will use this and not check any of the config paths.
 	// .env - It will search for the .env file in the current directory
-	viper.AddConfigPath(configPath)
+	viper.AddConfigPath(".")
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
 
 	// Find and read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file not found; ignore error if desired
-		fmt.Printf("viper.ReadInConfig(): %v", err)
+		logger.Error("viper.ReadInConfig()", zap.Error(err))
 	}
 
 	viper.AutomaticEnv()

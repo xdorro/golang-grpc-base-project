@@ -8,6 +8,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/ent"
 	"github.com/xdorro/golang-grpc-base-project/pkg/common"
+	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
 )
 
@@ -43,7 +44,7 @@ func (val *Validator) ValidateTokenRequest(in *authproto.TokenRequest) error {
 
 // ValidateToken validate token
 func (val *Validator) ValidateToken(token string) (*ent.User, error) {
-	verifiedToken, err := common.VerifyToken(val.log, token)
+	verifiedToken, err := common.VerifyToken(token)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +53,7 @@ func (val *Validator) ValidateToken(token string) (*ent.User, error) {
 	u, err := val.client.Persist.FindUserByID(userID)
 	if err != nil {
 		err = common.UserNotExist.Err()
-		val.log.Error("persist.FindUserByID()", zap.Error(err))
+		logger.Error("persist.FindUserByID()", zap.Error(err))
 		return nil, err
 	}
 
