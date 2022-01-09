@@ -21,3 +21,4 @@ vendor/
 /coverage.out
 /coverage.html
 /report.json
+/tests/

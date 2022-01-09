@@ -3,22 +3,16 @@ package validator
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	"github.com/spf13/cast"
-	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/pkg/common"
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
-	"github.com/xdorro/golang-grpc-base-project/proto/v1/auth"
+	auth_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/auth"
 )
 
-func (val *Validator) ValidateLoginRequest(in *authproto.LoginRequest) error {
+func (val *Validator) ValidateLoginRequest(in *auth_proto.LoginRequest) error {
 	err := validation.ValidateStruct(in,
-		// Validate email
+		// Validate phone
 		validation.Field(&in.Email,
 			validation.Required,
 			is.Email,
-			validation.Length(5, 0),
 		),
 		// Validate password
 		validation.Field(&in.Password,
@@ -30,7 +24,7 @@ func (val *Validator) ValidateLoginRequest(in *authproto.LoginRequest) error {
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateTokenRequest(in *authproto.TokenRequest) error {
+func (val *Validator) ValidateTokenRequest(in *auth_proto.TokenRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate token
 		validation.Field(&in.Token,
@@ -40,28 +34,4 @@ func (val *Validator) ValidateTokenRequest(in *authproto.TokenRequest) error {
 	)
 
 	return ValidateError(err)
-}
-
-// ValidateToken validate token
-func (val *Validator) ValidateToken(token string) (*ent.User, error) {
-	verifiedToken, err := common.VerifyToken(token)
-	if err != nil {
-		return nil, err
-	}
-
-	userID := cast.ToUint64(verifiedToken.StandardClaims.Subject)
-	u, err := val.client.Persist.FindUserByID(userID)
-	if err != nil {
-		err = common.UserNotExist.Err()
-		logger.Error("persist.FindUserByID()", zap.Error(err))
-		return nil, err
-	}
-
-	// tokenKey := fmt.Sprintf(common.UserTokenKey, userID, token)
-	// if _, err = FindRefreshToken(log, rdb, tokenKey); err != nil {
-	// 	err = status.Error(codes.InvalidArgument, "Token is invalid")
-	// 	return nil, err
-	// }
-
-	return u, nil
 }
