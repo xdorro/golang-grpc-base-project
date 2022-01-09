@@ -1,0 +1,35 @@
+version: '3.8'
+
+#services describe the containers that will start
+services:
+  # backend is the container name for our Go API
+  backend:
+    container_name: golang-grpc-base-project
+    image: registry.gitlab.com/xdorro/registry/golang-grpc-base-project:0.0.0
+    # Exposes the port 8000 from a container and binds it to a random port
+    ports:
+      - "8100:3100"
+      - "8200:3200"
+    # If the container goes down, it will restart
+    # restart: "always"
+    restart: "no"
+    # Connects the API to a common base-project bridge
+    networks:
+      - base-project
+    # Starts up 1 replicas of the same image
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: "500M"
+    environment:
+      - DB_DRIVER=postgres
+      - DB_URL=postgres://postgres:123456aA@@postgres:5432/base?sslmode=disable
+      - DB_MIGRATE=true
+      - REDIS_URL=redis:6379
+      - DEBUG_ENABLE=true
+
+networks:
+  base-project:
+    external: true

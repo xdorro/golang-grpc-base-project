@@ -4,10 +4,10 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 
-	"github.com/xdorro/golang-grpc-base-project/proto/v1/user"
+	user_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/user"
 )
 
-func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest) error {
+func (val *Validator) ValidateCreateUserRequest(in *user_proto.CreateUserRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -18,7 +18,6 @@ func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest)
 		validation.Field(&in.Email,
 			validation.Required,
 			is.Email,
-			validation.Length(5, 0),
 		),
 		// Validate password
 		validation.Field(&in.Password,
@@ -26,15 +25,15 @@ func (val *Validator) ValidateCreateUserRequest(in *userproto.CreateUserRequest)
 			validation.Length(5, 0),
 		),
 		// Validate roles
-		validation.Field(&in.Roles,
-			validation.Required.When(in.GetRoles() != nil),
+		validation.Field(&in.Role,
+			validation.Required.When(in.GetRole() != ""),
 		),
 	)
 
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateUpdateUserRequest(in *userproto.UpdateUserRequest) error {
+func (val *Validator) ValidateUpdateUserRequest(in *user_proto.UpdateUserRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
@@ -50,11 +49,10 @@ func (val *Validator) ValidateUpdateUserRequest(in *userproto.UpdateUserRequest)
 		validation.Field(&in.Email,
 			validation.Required,
 			is.Email,
-			validation.Length(5, 0),
 		),
 		// Validate roles
-		validation.Field(&in.Roles,
-			validation.Required.When(in.GetRoles() != nil),
+		validation.Field(&in.Role,
+			validation.Required.When(in.GetRole() != ""),
 		),
 	)
 

@@ -5,19 +5,19 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/wire"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
 
-var rdb redis.UniversalClient
+// ProviderSet is redis providers.
+var ProviderSet = wire.NewSet(NewRedis)
 
-func NewRedis() redis.UniversalClient {
-	logger.Info("Connecting to redis...")
+func NewRedis(log *zap.Logger) redis.UniversalClient {
+	log.Info("Connecting to redis...")
 
 	redisURL := strings.Split(strings.Trim(viper.GetString("REDIS_URL"), " "), ",")
-	rdb = redis.NewUniversalClient(&redis.UniversalOptions{
+	rdb := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:    redisURL,
 		Password: viper.GetString("REDIS_PASSWORD"), // no password set
 		DB:       viper.GetInt("REDIS_DB"),          // use default DB
@@ -30,10 +30,10 @@ func NewRedis() redis.UniversalClient {
 	})
 
 	if err := rdb.Ping(rdb.Context()).Err(); err != nil {
-		logger.Fatal("rdb.Ping()", zap.Error(err))
+		log.Fatal("rdb.Ping()", zap.Error(err))
 	}
 
-	logger.Info("redis connected")
+	log.Info("Redis connected")
 
 	return rdb
 }

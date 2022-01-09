@@ -4,58 +4,88 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"sync"
 
 	"github.com/go-redis/redis/v8"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/google/wire"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/xdorro/golang-grpc-base-project/api/ent"
+	auth_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/auth"
+	permission_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/permission"
+	role_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/role"
+	user_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/pkg/client"
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
+
+// ProviderSet is server providers.
+var ProviderSet = wire.NewSet(NewServer, NewGRPCServer, NewHTTPServer, NewInterceptor)
 
 // Server struct
 type Server struct {
 	ctx   context.Context
 	redis redis.UniversalClient
 
-	client     *client.Client
-	grpcServer *grpc.Server
-	service    *service.Service
+	log   *zap.Logger
+	repo  *repo.Repo
+	grpc  *grpc.Server
+	mutex *sync.Mutex
 }
 
-// NewServer create new Server
-func NewServer(ctx context.Context, client *client.Client, redis redis.UniversalClient) (*Server, error) {
+func NewServer(
+	ctx context.Context, log *zap.Logger, repo *repo.Repo, redis redis.UniversalClient, grpc *grpc.Server,
+	mux *runtime.ServeMux, _ *service.Service,
+) (*Server, error) {
 	srv := &Server{
-		ctx:    ctx,
-		client: client,
-		redis:  redis,
+		ctx:   ctx,
+		log:   log,
+		repo:  repo,
+		redis: redis,
+		grpc:  grpc,
+		mutex: &sync.Mutex{},
 	}
 
 	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
-	logger.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
+	log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
 
-	listener, err := net.Listen("tcp", grpcPort)
+	listenGRPC, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		return nil, fmt.Errorf("net.Listen(): %w", err)
 	}
 
+	httpPort := fmt.Sprintf(":%d", viper.GetInt("HTTP_PORT"))
+	log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
+
+	listenHTTP, err := net.Listen("tcp", httpPort)
+	if err != nil {
+		return nil, fmt.Errorf("net.Listen(): %w", err)
+	}
+
+	// get UserService Info
+	if viper.GetBool("SEEDER_SERVICE") {
+		go srv.getServiceInfo()
+	}
+
 	go func() {
-		if err = srv.createServer(listener); err != nil {
-			logger.Fatal("srv.createServer()", zap.Error(err))
+		if err = grpc.Serve(listenGRPC); err != nil {
+			srv.log.Fatal("grpc.Serve()", zap.Error(err))
 		}
 	}()
 
 	go func() {
-		if err = srv.createGateway(grpcPort); err != nil {
-			logger.Fatal("srv.createGateway()", zap.Error(err))
+		if err = srv.registerServiceHandlers(grpcPort, mux); err != nil {
+			log.Fatal("srv.registerServiceHandlers()", zap.Error(err))
+		}
+
+		if err = http.Serve(listenHTTP, mux); err != nil {
+			log.Fatal("http.Serve()", zap.Error(err))
 		}
 	}()
 
@@ -63,66 +93,95 @@ func NewServer(ctx context.Context, client *client.Client, redis redis.Universal
 }
 
 func (srv *Server) Close() error {
-	srv.grpcServer.GracefulStop()
+	if srv.grpc != nil {
+		srv.grpc.GracefulStop()
+	}
 
-	return srv.service.Close()
+	if srv.repo != nil {
+		if err := srv.repo.Close(); err != nil {
+			return err
+		}
+	}
+
+	if srv.redis != nil {
+		if err := srv.redis.Close(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// CreateServer create new Server
-func (srv *Server) createServer(listener net.Listener) error {
-	// log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(logger.NewLogger())
+// getServiceInfo returns service info
+func (srv *Server) getServiceInfo() {
+	srv.mutex.Lock()
+	defer srv.mutex.Unlock()
 
-	streamChain := []grpc.StreamServerInterceptor{
-		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_opentracing.StreamServerInterceptor(),
-		grpc_zap.StreamServerInterceptor(logger.NewLogger()),
-		grpc_recovery.StreamServerInterceptor(),
-		// Customer Interceptor
-		srv.AuthInterceptorStream(),
-	}
-
-	unaryChain := []grpc.UnaryServerInterceptor{
-		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_opentracing.UnaryServerInterceptor(),
-		grpc_zap.UnaryServerInterceptor(logger.NewLogger()),
-		grpc_recovery.UnaryServerInterceptor(),
-		// Customer Interceptor
-		srv.AuthInterceptorUnary(),
-	}
-
-	// log payload if enabled
-	if viper.GetBool("LOG_PAYLOAD") {
-		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
-			return true
+	bulk := make([]*ent.PermissionCreate, 0)
+	for name, val := range srv.grpc.GetServiceInfo() {
+		if len(val.Methods) == 0 {
+			return
 		}
 
-		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(logger.NewLogger(), alwaysLoggingDeciderServer))
-		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(logger.NewLogger(), alwaysLoggingDeciderServer))
+		for _, info := range val.Methods {
+			slug := fmt.Sprintf("/%s/%s", name, info.Name)
+
+			if !srv.repo.ExistPermissionBySlug(slug) {
+				srv.log.Info("GetServiceInfo",
+					zap.Any("Name", info.Name),
+					zap.Any("Slug", slug),
+				)
+
+				bulk = append(bulk, srv.repo.Permission.
+					Create().
+					SetName(info.Name).
+					SetSlug(slug).
+					SetStatus(1),
+				)
+			}
+		}
 	}
 
-	if viper.GetBool("METRIC_ENABLE") {
-		streamChain = append(streamChain, grpc_prometheus.StreamServerInterceptor)
-		unaryChain = append(unaryChain, grpc_prometheus.UnaryServerInterceptor)
-	}
+	if len(bulk) > 0 {
+		if err := srv.repo.CreatePermissionBulk(bulk); err != nil {
+			srv.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+		}
 
-	// register grpc service Server
-	srv.grpcServer = grpc.NewServer(
-		grpc_middleware.WithStreamServerChain(streamChain...),
-		grpc_middleware.WithUnaryServerChain(unaryChain...),
+		if err := srv.redis.Del(srv.ctx, common.KeyServiceRoles).Err(); err != nil {
+			srv.log.Error("redis.Del()", zap.Error(err))
+		}
+	}
+}
+
+func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {
+	conn, err := grpc.DialContext(
+		srv.ctx,
+		grpcPort,
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-
-	if viper.GetBool("METRIC_ENABLE") {
-		// After all your registrations, make sure all the Prometheus metrics are initialized.
-		grpc_prometheus.Register(srv.grpcServer)
+	if err != nil {
+		srv.log.Fatal("Failed to dial Server:", zap.Error(err))
 	}
 
-	// Create new validator
-	srv.service = service.NewService(srv.client, srv.grpcServer, srv.redis)
+	// Register AuthService Handler
+	if err = auth_proto.RegisterAuthServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterAuthServiceHandler(): %w", err)
+	}
 
-	if err := srv.grpcServer.Serve(listener); err != nil {
-		logger.Error("srv.grpcServer.Serve()", zap.Error(err))
-		return err
+	// Register UserService Handler
+	if err = user_proto.RegisterUserServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterUserServiceHandler(): %w", err)
+	}
+
+	// Register RoleService Handler
+	if err = role_proto.RegisterRoleServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterRoleServiceHandler(): %w", err)
+	}
+
+	// Register PermissionService Handler
+	if err = permission_proto.RegisterPermissionServiceHandler(srv.ctx, mux, conn); err != nil {
+		return fmt.Errorf("proto.RegisterPermissionServiceHandler(): %w", err)
 	}
 
 	return nil
