@@ -1,19 +1,20 @@
 APP_NAME=golang-grpc-base-project
 APP_VERSION=0.0.0
-DOCKER_LOCAL=registry.gitlab.com/xdorro/registry
+DOCKER_REGISTRY=registry.gitlab.com/xdorro/registry
 BUILD_DIR=./build
 MAIN_DIR=./cmd
 
 docker.build:
-	docker build  -f $(BUILD_DIR)/Dockerfile -t $(DOCKER_LOCAL)/$(APP_NAME):$(APP_VERSION) .
+	docker build  -f $(BUILD_DIR)/Dockerfile -t $(DOCKER_REGISTRY)/$(APP_NAME):$(APP_VERSION) .
 
 docker.push:
-	docker push $(DOCKER_LOCAL)/$(APP_NAME):$(APP_VERSION)
+	docker push $(DOCKER_REGISTRY)/$(APP_NAME):$(APP_VERSION)
 
 docker.dev: docker.build docker.push
 
 grpc.install:
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
@@ -40,20 +41,28 @@ ent.install:
 	go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@latest
 
 ent.init:
-	go run entgo.io/ent/cmd/ent init --target pkg/ent/schema User
+	go run entgo.io/ent/cmd/ent init --target api/ent/schema User
 
-go.gen:
-	go generate ./...
+ent.gen:
+	go generate ./api/ent/...
 
 go.get:
-	go get -u ./...
+	go get ./...
+
+go.gen: ent.gen buf.gen wire.gen
 
 go.tidy:
-	go mod tidy
+	go mod tidy -compat=1.17
 
 go.test:
 	go test ./...
 
 go.lint: lint.run
 
-go.install: grpc.install buf.install ent.install lint.install
+go.install: grpc.install buf.install ent.install lint.install wire.install
+
+wire.gen:
+	wire ./...
+
+wire.install:
+	go install github.com/google/wire/cmd/wire@latest

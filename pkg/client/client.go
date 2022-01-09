@@ -4,33 +4,29 @@ import (
 	"context"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/schema"
+	"github.com/google/wire"
 	"github.com/spf13/viper"
 
 	// postgresql driver
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/ent/migrate"
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
-
+	"github.com/xdorro/golang-grpc-base-project/api/ent"
+	"github.com/xdorro/golang-grpc-base-project/api/ent/migrate"
 	// runtime entgo
-	_ "github.com/xdorro/golang-grpc-base-project/ent/runtime"
-	"github.com/xdorro/golang-grpc-base-project/internal/persist"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
+	_ "github.com/xdorro/golang-grpc-base-project/api/ent/runtime"
 )
 
-type Client struct {
-	DB      *ent.Client
-	Persist persist.Persist
-}
+// ProviderSet is client providers.
+var ProviderSet = wire.NewSet(NewClient)
 
 // NewClient database with config
-func NewClient(ctx context.Context) *Client {
+func NewClient(ctx context.Context, log *zap.Logger) *ent.Client {
 	driver := viper.GetString("DB_DRIVER")
 	url := viper.GetString("DB_URL")
 
-	logger.Info("Connect to database",
+	log.Info("Connect to database",
 		zap.String("driver", driver),
 		zap.String("url", url),
 	)
@@ -38,38 +34,37 @@ func NewClient(ctx context.Context) *Client {
 	// Open the database connection.
 	drv, err := sql.Open(driver, url)
 	if err != nil {
-		logger.Fatal("sql.Open()", zap.Error(err))
+		log.Fatal("sql.Open()", zap.Error(err))
 	}
 
-	// Create an ent.client.
-	db := ent.NewClient(ent.Driver(drv))
+	// Create an ent.Client.
+	client := ent.NewClient(ent.Driver(drv))
+	opts := []schema.MigrateOption{
+		// migrate.WithGlobalUniqueID(true),
+		migrate.WithForeignKeys(false), // Disable foreign keys.
+	}
+
+	if viper.GetBool("DEBUG_ENABLE") {
+		client = client.Debug()
+
+		opts = append(opts, migrate.WithDropIndex(true))
+		opts = append(opts, migrate.WithDropColumn(true))
+		opts = append(opts, migrate.WithFixture(true))
+	}
 
 	if viper.GetBool("DB_MIGRATE") {
-		logger.Info("Migrating...")
+		log.Info("Migrating...")
+
 		// Run migration.
-		if err = db.Schema.Create(
-			ctx,
-			migrate.WithGlobalUniqueID(true),
-			migrate.WithForeignKeys(false), // Disable foreign keys.
-		); err != nil {
-			_ = db.Close()
-			logger.Fatal("failed creating schema resources", zap.Error(err))
+		if err = client.Schema.Create(ctx, opts...); err != nil {
+			defer func() {
+				_ = client.Close()
+			}()
+			log.Fatal("failed creating schema resources", zap.Error(err))
 		}
 
-		logger.Info("Migrated")
-	}
-
-	// Create new persist
-	per := repo.NewRepo(ctx, db)
-
-	client := &Client{
-		DB:      db,
-		Persist: per,
+		log.Info("Migrated")
 	}
 
 	return client
-}
-
-func (client *Client) Close() error {
-	return client.DB.Close()
 }

@@ -3,31 +3,50 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
+	"sync"
 
+	"github.com/go-redis/redis/v8"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	"github.com/kataras/jwt"
 	"github.com/spf13/cast"
+	"github.com/vk-rv/pvx"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/ent/role"
-	"github.com/xdorro/golang-grpc-base-project/pkg/common"
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
+	"github.com/xdorro/golang-grpc-base-project/api/ent"
+	"github.com/xdorro/golang-grpc-base-project/api/ent/role"
+	"github.com/xdorro/golang-grpc-base-project/internal/common"
+	"github.com/xdorro/golang-grpc-base-project/internal/handler"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
 
-type contextKey string
+type Interceptor struct {
+	log     *zap.Logger
+	redis   redis.UniversalClient
+	repo    *repo.Repo
+	handler *handler.Handler
+	mutex   *sync.Mutex
+}
 
-const (
-	ctxUserID contextKey = "userID"
-)
+func NewInterceptor(
+	log *zap.Logger, repo *repo.Repo, redis redis.UniversalClient, handler *handler.Handler,
+) *Interceptor {
+	return &Interceptor{
+		log:     log,
+		repo:    repo,
+		redis:   redis,
+		handler: handler,
+		mutex:   &sync.Mutex{},
+	}
+}
 
 // AuthInterceptorStream create auth Interceptor stream
-func (srv *Server) AuthInterceptorStream() grpc.StreamServerInterceptor {
+func (interceptor *Interceptor) AuthInterceptorStream() grpc.StreamServerInterceptor {
 	return func(
 		grpcSrv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
 	) error {
@@ -36,7 +55,7 @@ func (srv *Server) AuthInterceptorStream() grpc.StreamServerInterceptor {
 		if overrideSrv, ok := grpcSrv.(grpc_auth.ServiceAuthFuncOverride); ok {
 			newCtx, err = overrideSrv.AuthFuncOverride(stream.Context(), info.FullMethod)
 		} else {
-			authFunc := srv.authInterceptor(info.FullMethod)
+			authFunc := interceptor.authInterceptor(info.FullMethod)
 			newCtx, err = authFunc(stream.Context())
 		}
 		if err != nil {
@@ -44,12 +63,12 @@ func (srv *Server) AuthInterceptorStream() grpc.StreamServerInterceptor {
 		}
 		wrapped := grpc_middleware.WrapServerStream(stream)
 		wrapped.WrappedContext = newCtx
-		return handler(srv, wrapped)
+		return handler(grpcSrv, wrapped)
 	}
 }
 
 // AuthInterceptorUnary create auth Interceptor unary
-func (srv *Server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
+func (interceptor *Interceptor) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 	) (interface{}, error) {
@@ -58,7 +77,7 @@ func (srv *Server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 		if overrideSrv, ok := info.Server.(grpc_auth.ServiceAuthFuncOverride); ok {
 			newCtx, err = overrideSrv.AuthFuncOverride(ctx, info.FullMethod)
 		} else {
-			authFunc := srv.authInterceptor(info.FullMethod)
+			authFunc := interceptor.authInterceptor(info.FullMethod)
 			newCtx, err = authFunc(ctx)
 		}
 		if err != nil {
@@ -69,10 +88,9 @@ func (srv *Server) AuthInterceptorUnary() grpc.UnaryServerInterceptor {
 }
 
 // authInterceptor handler interceptor
-func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
+func (interceptor *Interceptor) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 	return func(ctx context.Context) (context.Context, error) {
-		authorize := srv.getInfoAuthorization(ctx)
-
+		authorize := interceptor.getInfoAuthorization(ctx)
 		if len(authorize) == 0 {
 			return ctx, nil
 		}
@@ -82,27 +100,46 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 				return ctx, nil
 			}
 
-			token, err := grpc_auth.AuthFromMD(ctx, common.TokenType)
+			accessToken, err := grpc_auth.AuthFromMD(ctx, common.TokenType)
 			if err != nil {
 				return nil, err
 			}
 
-			var verifiedToken *jwt.VerifiedToken
-			verifiedToken, err = common.VerifyToken(token)
+			var claims *pvx.RegisteredClaims
+			claims, err = interceptor.handler.DecryptToken(accessToken)
 			if err != nil {
+				return nil, status.New(codes.InvalidArgument, err.Error()).Err()
+			}
+
+			interceptor.log.Info("svc.handler.DecryptToken()",
+				zap.Any("claims", claims),
+			)
+
+			tokenKey := fmt.Sprintf(common.UserSessionKey, claims.Subject, claims.TokenID)
+			if err = interceptor.handler.ExistRefreshToken(tokenKey); err != nil {
 				return nil, err
 			}
 
-			claims := verifiedToken.StandardClaims
-			var user *ent.User
-			user, err = srv.client.Persist.FindUserByID(cast.ToUint64(claims.Subject))
+			var u *ent.User
+			u, err = interceptor.repo.FindUserByID(cast.ToUint64(claims.Subject))
 			if err != nil {
-				return nil, common.UserNotExist.Err()
+				return nil, common.EmailNotExist.Err()
 			}
 
-			userRoles, _ := user.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
-			if srv.hasAccessTo(roles, userRoles) {
-				return context.WithValue(ctx, ctxUserID, user.ID), nil
+			// add key-value pairs of metadata to context
+			ctx = metadata.NewOutgoingContext(
+				ctx,
+				metadata.Pairs(common.CtxUserID, claims.Subject),
+			)
+
+			var userRole *ent.Role
+			userRole, err = u.QueryRoles().Where(role.DeleteTimeIsNil()).First(ctx)
+			if err != nil {
+				return ctx, err
+			}
+
+			if hasAccessTo(roles, userRole) {
+				return ctx, nil
 			}
 		}
 
@@ -111,29 +148,29 @@ func (srv *Server) authInterceptor(fullMethod string) grpc_auth.AuthFunc {
 }
 
 // getInfoAuthorization get info authorization
-func (srv *Server) getInfoAuthorization(ctx context.Context) map[string][]string {
+func (interceptor *Interceptor) getInfoAuthorization(ctx context.Context) map[string][]string {
 	authorize := make(map[string][]string)
 
-	if val := srv.redis.Get(ctx, common.ServiceRoles).Val(); val != "" {
+	if val := interceptor.redis.Get(ctx, common.KeyServiceRoles).Val(); val != "" {
 		authorize = cast.ToStringMapStringSlice(val)
 		return authorize
 	}
 
-	permissions := srv.client.Persist.FindAllPermissions()
+	permissions := interceptor.repo.FindAllPermissions()
 	for _, per := range permissions {
-		authorize[per.Slug] = srv.getPermissionRoles(ctx, per)
+		authorize[per.Slug] = getPermissionRoles(ctx, per)
 	}
 
 	data, _ := json.Marshal(authorize)
-	if err := srv.redis.Set(ctx, common.ServiceRoles, data, -1).Err(); err != nil {
-		logger.Error("redis.Set()", zap.Error(err))
+	if err := interceptor.redis.Set(ctx, common.KeyServiceRoles, data, common.KeyServiceRolesExpire).Err(); err != nil {
+		interceptor.log.Error("redis.Set()", zap.Error(err))
 	}
 
 	return authorize
 }
 
 // getPermissionRoles get permission roles
-func (srv *Server) getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
+func getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
 	roles := make([]string, 0)
 
 	perRoles, _ := per.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
@@ -145,16 +182,14 @@ func (srv *Server) getPermissionRoles(ctx context.Context, per *ent.Permission) 
 }
 
 // hasAccessTo check has access
-func (srv *Server) hasAccessTo(roles []string, userRoles []*ent.Role) bool {
-	for _, ur := range userRoles {
-		if ur.FullAccess {
-			return true
-		}
+func hasAccessTo(roles []string, role *ent.Role) bool {
+	if role.FullAccess {
+		return true
+	}
 
-		for _, r := range roles {
-			if strings.EqualFold(ur.Slug, r) {
-				return true
-			}
+	for _, r := range roles {
+		if strings.EqualFold(role.Slug, r) {
+			return true
 		}
 	}
 

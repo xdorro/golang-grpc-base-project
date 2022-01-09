@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package common_proto;
+
+// Defines the import path that should be used to import the generated package,
+// and the package name.
+option go_package = "github.com/xdorro/golang-grpc-base-project/api/proto/v1/common;common_proto";
+
+message UUIDRequest {
+  // The resource name of the book to be deleted, for example:
+  string id = 1;
+}

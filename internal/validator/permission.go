@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/api/ent"
+	permission_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/permission"
 )
 
-func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.CreatePermissionRequest) error {
+func (val *Validator) ValidateCreatePermissionRequest(in *permission_proto.CreatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -29,7 +29,7 @@ func (val *Validator) ValidateCreatePermissionRequest(in *permissionproto.Create
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateUpdatePermissionRequest(in *permissionproto.UpdatePermissionRequest) error {
+func (val *Validator) ValidateUpdatePermissionRequest(in *permission_proto.UpdatePermissionRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
@@ -56,7 +56,7 @@ func (val *Validator) ValidateListPermissions(list []string) ([]*ent.Permission,
 
 	if len(list) > 0 {
 		for _, slug := range list {
-			p, err := val.client.Persist.FindPermissionBySlug(slug)
+			p, err := val.repo.FindPermissionBySlug(slug)
 			if err != nil {
 				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("permission: %s doesn't exist", slug)).Err()
 			}

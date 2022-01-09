@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/xdorro/golang-grpc-base-project/ent"
-	"github.com/xdorro/golang-grpc-base-project/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/api/ent"
+	role_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/role"
 )
 
-func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest) error {
+func (val *Validator) ValidateCreateRoleRequest(in *role_proto.CreateRoleRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate name
 		validation.Field(&in.Name,
@@ -33,7 +33,7 @@ func (val *Validator) ValidateCreateRoleRequest(in *roleproto.CreateRoleRequest)
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest) error {
+func (val *Validator) ValidateUpdateRoleRequest(in *role_proto.UpdateRoleRequest) error {
 	err := validation.ValidateStruct(in,
 		// Validate id
 		validation.Field(&in.Id,
@@ -59,19 +59,11 @@ func (val *Validator) ValidateUpdateRoleRequest(in *roleproto.UpdateRoleRequest)
 	return ValidateError(err)
 }
 
-func (val *Validator) ValidateListRoles(list []string) ([]*ent.Role, error) {
-	roles := make([]*ent.Role, 0)
-
-	if len(list) > 0 {
-		for _, slug := range list {
-			r, err := val.client.Persist.FindRoleBySlug(slug)
-			if err != nil {
-				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("role: %s doesn't exist", slug)).Err()
-			}
-
-			roles = append(roles, r)
-		}
+func (val *Validator) ValidateRole(slug string) (*ent.Role, error) {
+	role, err := val.repo.FindRoleBySlug(slug)
+	if err != nil {
+		return nil, status.New(codes.InvalidArgument, fmt.Sprintf("role: %s doesn't exist", slug)).Err()
 	}
 
-	return roles, nil
+	return role, nil
 }
