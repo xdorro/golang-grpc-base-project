@@ -5,21 +5,23 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rs/cors"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	auth_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/auth"
-	permission_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/permission"
-	role_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/role"
-	user_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/auth"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/permission"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/role"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/user"
 	"github.com/xdorro/golang-grpc-base-project/internal/common"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
@@ -84,7 +86,13 @@ func NewServer(
 			log.Fatal("srv.registerServiceHandlers()", zap.Error(err))
 		}
 
-		if err = http.Serve(listenHTTP, mux); err != nil {
+		// update CORS
+		c := cors.New(cors.Options{
+			AllowedOrigins:   []string{"*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowCredentials: true,
+		})
+		if err = http.Serve(listenHTTP, c.Handler(mux)); err != nil {
 			log.Fatal("http.Serve()", zap.Error(err))
 		}
 	}()
@@ -114,43 +122,52 @@ func (srv *Server) Close() error {
 
 // getServiceInfo returns service info
 func (srv *Server) getServiceInfo() {
-	srv.mutex.Lock()
-	defer srv.mutex.Unlock()
-
-	bulk := make([]*ent.PermissionCreate, 0)
+	list := make([]string, 0)
 	for name, val := range srv.grpc.GetServiceInfo() {
-		if len(val.Methods) == 0 {
-			return
-		}
-
 		for _, info := range val.Methods {
-			slug := fmt.Sprintf("/%s/%s", name, info.Name)
+			list = append(list, fmt.Sprintf("/%s/%s", name, info.Name))
+		}
+	}
 
-			if !srv.repo.ExistPermissionBySlug(slug) {
-				srv.log.Info("GetServiceInfo",
-					zap.Any("Name", info.Name),
-					zap.Any("Slug", slug),
-				)
+	if len(list) > 0 {
+		srv.mutex.Lock()
+		defer srv.mutex.Unlock()
 
+		bulk := make([]*ent.PermissionCreate, 0)
+		permissions := srv.repo.FindAllPermissionBySlugs(list)
+
+		for _, slug := range list {
+			if ok := srv.hasSlugInPermissions(permissions, slug); !ok {
+				name := slug[strings.LastIndex(slug, "/")+1:]
 				bulk = append(bulk, srv.repo.Permission.
 					Create().
-					SetName(info.Name).
+					SetName(name).
 					SetSlug(slug).
 					SetStatus(1),
 				)
 			}
 		}
+
+		if len(bulk) > 0 {
+			if err := srv.repo.CreatePermissionBulk(bulk); err != nil {
+				srv.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
+			}
+
+			if err := srv.redis.Del(srv.ctx, common.KeyServiceRoles).Err(); err != nil {
+				srv.log.Error("redis.Del()", zap.Error(err))
+			}
+		}
+	}
+}
+
+func (srv *Server) hasSlugInPermissions(permissions []*ent.Permission, slug string) bool {
+	for _, permission := range permissions {
+		if strings.EqualFold(slug, permission.Slug) {
+			return true
+		}
 	}
 
-	if len(bulk) > 0 {
-		if err := srv.repo.CreatePermissionBulk(bulk); err != nil {
-			srv.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
-		}
-
-		if err := srv.redis.Del(srv.ctx, common.KeyServiceRoles).Err(); err != nil {
-			srv.log.Error("redis.Del()", zap.Error(err))
-		}
-	}
+	return false
 }
 
 func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {

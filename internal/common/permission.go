@@ -4,7 +4,12 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	permission_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/permission"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/permission"
+)
+
+const (
+	FindAllPermissions = "dashboard:findAllPermissions"
+	FindPermissionByID = "dashboard:%d:findPermissionByID"
 )
 
 // PermissionProto convert ent permission to proto

@@ -10,9 +10,10 @@ import (
 	"entgo.io/ent/entc/integration/ent/hook"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
-	"github.com/AmreeshTyagi/goldflake"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/goldflake"
 )
 
 // BaseMixin struct.

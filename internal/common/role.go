@@ -4,7 +4,12 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	role_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/role"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/role"
+)
+
+const (
+	FindAllRoles = "dashboard:findAllRoles"
+	FindRoleByID = "dashboard:%d:findRoleByID"
 )
 
 // RoleProto convert ent role to proto

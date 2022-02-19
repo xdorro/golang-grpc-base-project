@@ -26,7 +26,7 @@ func (Permission) Fields() []ent.Field {
 			Unique(),
 
 		field.Int32("status").
-			Default(1),
+			Default(0),
 	}
 }
 
@@ -42,7 +42,7 @@ func (Permission) Mixin() []ent.Mixin {
 func (Permission) Indexes() []ent.Index {
 	return []ent.Index{
 		// non-unique index.
-		index.Fields("status"),
+		index.Fields("slug", "status"),
 	}
 }
 

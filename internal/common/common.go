@@ -3,6 +3,8 @@ package common
 
 import (
 	"time"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/slug"
 )
 
 const (
@@ -14,3 +16,12 @@ const (
 const (
 	CtxUserID string = "user_id"
 )
+
+// GetSlugOrMakeSlug returns slug or makes slug
+func GetSlugOrMakeSlug(title string, url string) string {
+	if url == "" {
+		url = slug.Make(title)
+	}
+
+	return url
+}

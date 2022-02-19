@@ -12,7 +12,7 @@ import (
 // loadDefault load default config
 func loadDefault() {
 	// APP
-	viper.SetDefault("APP_NAME", "Golang gRPC Video Project")
+	viper.SetDefault("APP_NAME", "Golang gRPC Base Project")
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("GRPC_PORT", "3100")
 	viper.SetDefault("HTTP_PORT", "3200")

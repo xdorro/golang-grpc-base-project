@@ -156,9 +156,9 @@ func (interceptor *Interceptor) getInfoAuthorization(ctx context.Context) map[st
 		return authorize
 	}
 
-	permissions := interceptor.repo.FindAllPermissions()
+	permissions := interceptor.repo.FindAllPermissionsWithRoles()
 	for _, per := range permissions {
-		authorize[per.Slug] = getPermissionRoles(ctx, per)
+		authorize[per.Slug] = getPermissionRoles(per)
 	}
 
 	data, _ := json.Marshal(authorize)
@@ -170,10 +170,10 @@ func (interceptor *Interceptor) getInfoAuthorization(ctx context.Context) map[st
 }
 
 // getPermissionRoles get permission roles
-func getPermissionRoles(ctx context.Context, per *ent.Permission) []string {
+func getPermissionRoles(per *ent.Permission) []string {
 	roles := make([]string, 0)
 
-	perRoles, _ := per.QueryRoles().Where(role.DeleteTimeIsNil()).All(ctx)
+	perRoles := per.Edges.Roles
 	for _, perRole := range perRoles {
 		roles = append(roles, perRole.Slug)
 	}

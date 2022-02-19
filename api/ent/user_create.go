@@ -247,21 +247,21 @@ func (uc *UserCreate) defaults() error {
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "create_time"`)}
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "User.create_time"`)}
 	}
 	if _, ok := uc.mutation.UpdateTime(); !ok {
-		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "update_time"`)}
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "User.update_time"`)}
 	}
 	if _, ok := uc.mutation.Email(); !ok {
-		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "email"`)}
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
 	if v, ok := uc.mutation.Email(); ok {
 		if err := user.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "email": %w`, err)}
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
 	if _, ok := uc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
 	}
 	return nil
 }

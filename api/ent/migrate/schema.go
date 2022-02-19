@@ -16,7 +16,7 @@ var (
 		{Name: "delete_time", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "slug", Type: field.TypeString, Unique: true},
-		{Name: "status", Type: field.TypeInt32, Default: 1},
+		{Name: "status", Type: field.TypeInt32, Default: 0},
 	}
 	// PermissionsTable holds the schema information for the "permissions" table.
 	PermissionsTable = &schema.Table{
@@ -30,9 +30,9 @@ var (
 				Columns: []*schema.Column{PermissionsColumns[1], PermissionsColumns[2], PermissionsColumns[3]},
 			},
 			{
-				Name:    "permission_status",
+				Name:    "permission_slug_status",
 				Unique:  false,
-				Columns: []*schema.Column{PermissionsColumns[6]},
+				Columns: []*schema.Column{PermissionsColumns[5], PermissionsColumns[6]},
 			},
 		},
 	}
@@ -45,7 +45,7 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "slug", Type: field.TypeString, Unique: true},
 		{Name: "full_access", Type: field.TypeBool, Default: false},
-		{Name: "status", Type: field.TypeInt32, Default: 1},
+		{Name: "status", Type: field.TypeInt32, Default: 0},
 	}
 	// RolesTable holds the schema information for the "roles" table.
 	RolesTable = &schema.Table{
@@ -59,9 +59,9 @@ var (
 				Columns: []*schema.Column{RolesColumns[1], RolesColumns[2], RolesColumns[3]},
 			},
 			{
-				Name:    "role_status",
+				Name:    "role_slug_status",
 				Unique:  false,
-				Columns: []*schema.Column{RolesColumns[7]},
+				Columns: []*schema.Column{RolesColumns[5], RolesColumns[7]},
 			},
 		},
 	}

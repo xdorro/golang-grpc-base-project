@@ -4,9 +4,9 @@ import (
 	"github.com/google/wire"
 
 	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/permission_repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/role_repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/user_repo"
+	permission_repo "github.com/xdorro/golang-grpc-base-project/internal/repo/permission"
+	role_repo "github.com/xdorro/golang-grpc-base-project/internal/repo/role"
+	user_repo "github.com/xdorro/golang-grpc-base-project/internal/repo/user"
 )
 
 // ProviderSet is repo providers.
