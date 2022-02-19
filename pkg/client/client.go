@@ -46,10 +46,6 @@ func NewClient(ctx context.Context, log *zap.Logger) *ent.Client {
 
 	if viper.GetBool("DEBUG_ENABLE") {
 		client = client.Debug()
-
-		opts = append(opts, migrate.WithDropIndex(true))
-		opts = append(opts, migrate.WithDropColumn(true))
-		opts = append(opts, migrate.WithFixture(true))
 	}
 
 	if viper.GetBool("DB_MIGRATE") {

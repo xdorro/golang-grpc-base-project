@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -252,12 +253,12 @@ func (ru *RoleUpdate) defaults() error {
 func (ru *RoleUpdate) check() error {
 	if v, ok := ru.mutation.Name(); ok {
 		if err := role.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Role.name": %w`, err)}
 		}
 	}
 	if v, ok := ru.mutation.Slug(); ok {
 		if err := role.SlugValidator(v); err != nil {
-			return &ValidationError{Name: "slug", err: fmt.Errorf("ent: validator failed for field \"slug\": %w", err)}
+			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Role.slug": %w`, err)}
 		}
 	}
 	return nil
@@ -693,12 +694,12 @@ func (ruo *RoleUpdateOne) defaults() error {
 func (ruo *RoleUpdateOne) check() error {
 	if v, ok := ruo.mutation.Name(); ok {
 		if err := role.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf("ent: validator failed for field \"name\": %w", err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Role.name": %w`, err)}
 		}
 	}
 	if v, ok := ruo.mutation.Slug(); ok {
 		if err := role.SlugValidator(v); err != nil {
-			return &ValidationError{Name: "slug", err: fmt.Errorf("ent: validator failed for field \"slug\": %w", err)}
+			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Role.slug": %w`, err)}
 		}
 	}
 	return nil
@@ -717,7 +718,7 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (_node *Role, err error) 
 	}
 	id, ok := ruo.mutation.ID()
 	if !ok {
-		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Role.ID for update")}
+		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Role.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
 	if fields := ruo.fields; len(fields) > 0 {
