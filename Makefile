@@ -38,7 +38,6 @@ lint.run:
 
 ent.install:
 	go install entgo.io/ent/cmd/ent@latest
-	go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc@latest
 
 ent.init:
 	go run entgo.io/ent/cmd/ent init --target api/ent/schema User
@@ -47,7 +46,7 @@ ent.gen:
 	go generate ./api/ent/...
 
 go.get:
-	go get ./...
+	go get -u ./...
 
 go.gen: ent.gen buf.gen wire.gen
 

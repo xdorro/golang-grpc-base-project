@@ -14,7 +14,6 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 )
@@ -25,7 +24,6 @@ func initializeServer(ctx context.Context, log *zap.Logger) (*server.Server, err
 		repo.ProviderSet,
 		redis.ProviderSet,
 		handler.ProviderSet,
-		validator.ProviderSet,
 		service.ProviderSet,
 		server.ProviderSet,
 	)

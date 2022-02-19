@@ -4,7 +4,12 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	user_proto "github.com/xdorro/golang-grpc-base-project/api/proto/v1/user"
+	"github.com/xdorro/golang-grpc-base-project/api/proto/user"
+)
+
+const (
+	FindAllUsers = "dashboard:findAllUsers"
+	FindUserByID = "dashboard:%d:findUserByID"
 )
 
 // UserProto convert ent user to proto

@@ -241,32 +241,32 @@ func (rc *RoleCreate) defaults() error {
 // check runs all checks and user-defined validators on the builder.
 func (rc *RoleCreate) check() error {
 	if _, ok := rc.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "create_time"`)}
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Role.create_time"`)}
 	}
 	if _, ok := rc.mutation.UpdateTime(); !ok {
-		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "update_time"`)}
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Role.update_time"`)}
 	}
 	if _, ok := rc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Role.name"`)}
 	}
 	if v, ok := rc.mutation.Name(); ok {
 		if err := role.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "name": %w`, err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Role.name": %w`, err)}
 		}
 	}
 	if _, ok := rc.mutation.Slug(); !ok {
-		return &ValidationError{Name: "slug", err: errors.New(`ent: missing required field "slug"`)}
+		return &ValidationError{Name: "slug", err: errors.New(`ent: missing required field "Role.slug"`)}
 	}
 	if v, ok := rc.mutation.Slug(); ok {
 		if err := role.SlugValidator(v); err != nil {
-			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "slug": %w`, err)}
+			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Role.slug": %w`, err)}
 		}
 	}
 	if _, ok := rc.mutation.FullAccess(); !ok {
-		return &ValidationError{Name: "full_access", err: errors.New(`ent: missing required field "full_access"`)}
+		return &ValidationError{Name: "full_access", err: errors.New(`ent: missing required field "Role.full_access"`)}
 	}
 	if _, ok := rc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Role.status"`)}
 	}
 	return nil
 }

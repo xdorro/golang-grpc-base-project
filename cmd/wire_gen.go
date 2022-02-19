@@ -9,17 +9,18 @@ package main
 import (
 	"context"
 	"github.com/xdorro/golang-grpc-base-project/internal/handler"
+	"github.com/xdorro/golang-grpc-base-project/internal/handler/auth"
+	"github.com/xdorro/golang-grpc-base-project/internal/handler/validator"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/permission_repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/role_repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/user_repo"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo/permission"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo/role"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo/user"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/auth_service"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/permission_service"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/role_service"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/user_service"
-	"github.com/xdorro/golang-grpc-base-project/internal/validator"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/auth"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/permission"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/role"
+	"github.com/xdorro/golang-grpc-base-project/internal/service/user"
 	"github.com/xdorro/golang-grpc-base-project/pkg/client"
 	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 	"go.uber.org/zap"
@@ -38,21 +39,25 @@ func initializeServer(ctx context.Context, log *zap.Logger) (*server.Server, err
 		RolePersist:       rolePersist,
 		PermissionPersist: permissionPersist,
 	}
-	universalClient := redis.NewRedis(log)
-	handlerHandler := handler.NewHandler(log, repoRepo, universalClient)
+	universalClient := redis.NewRedis(ctx, log)
+	validatorPersist := validator_handler.NewValidator(log, repoRepo)
+	authPersist := auth_handler.NewHandler(log, repoRepo, universalClient)
+	handlerHandler := &handler.Handler{
+		ValidatorPersist: validatorPersist,
+		AuthPersist:      authPersist,
+	}
 	interceptor := server.NewInterceptor(log, repoRepo, universalClient, handlerHandler)
 	grpcServer := server.NewGRPCServer(log, interceptor)
 	serveMux := server.NewHTTPServer()
-	validatorValidator := validator.NewValidator(log, repoRepo)
-	userService := user_service.NewService(log, repoRepo, validatorValidator, handlerHandler, grpcServer)
-	authService := auth_service.NewService(log, repoRepo, universalClient, validatorValidator, grpcServer, handlerHandler)
-	roleService := role_service.NewService(log, repoRepo, universalClient, validatorValidator, grpcServer)
-	permissionService := permission_service.NewService(log, repoRepo, universalClient, validatorValidator, grpcServer)
+	userServiceServer := user_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
+	authServiceServer := auth_service.NewService(log, repoRepo, universalClient, grpcServer, handlerHandler)
+	roleServiceServer := role_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
+	permissionServiceServer := permission_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
 	serviceService := &service.Service{
-		UserService:       userService,
-		AuthService:       authService,
-		RoleService:       roleService,
-		PermissionService: permissionService,
+		UserServiceServer:       userServiceServer,
+		AuthServiceServer:       authServiceServer,
+		RoleServiceServer:       roleServiceServer,
+		PermissionServiceServer: permissionServiceServer,
 	}
 	serverServer, err := server.NewServer(ctx, log, repoRepo, universalClient, grpcServer, serveMux, serviceService)
 	if err != nil {

@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 // ProviderSet is redis providers.
 var ProviderSet = wire.NewSet(NewRedis)
 
-func NewRedis(log *zap.Logger) redis.UniversalClient {
+func NewRedis(ctx context.Context, log *zap.Logger) redis.UniversalClient {
 	log.Info("Connecting to redis...")
 
 	redisURL := strings.Split(strings.Trim(viper.GetString("REDIS_URL"), " "), ",")
@@ -22,15 +23,14 @@ func NewRedis(log *zap.Logger) redis.UniversalClient {
 		Password: viper.GetString("REDIS_PASSWORD"), // no password set
 		DB:       viper.GetInt("REDIS_DB"),          // use default DB
 
-		PoolSize:     1000,
-		PoolTimeout:  2 * time.Minute,
-		IdleTimeout:  10 * time.Minute,
-		ReadTimeout:  2 * time.Minute,
-		WriteTimeout: 1 * time.Minute,
+		PoolSize: 1000,
 	})
 
-	if err := rdb.Ping(rdb.Context()).Err(); err != nil {
-		log.Fatal("rdb.Ping()", zap.Error(err))
+	redisCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(redisCtx).Err(); err != nil {
+		log.Panic("rdb.Ping()", zap.Error(err))
 	}
 
 	log.Info("Redis connected")

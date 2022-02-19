@@ -207,29 +207,29 @@ func (pc *PermissionCreate) defaults() error {
 // check runs all checks and user-defined validators on the builder.
 func (pc *PermissionCreate) check() error {
 	if _, ok := pc.mutation.CreateTime(); !ok {
-		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "create_time"`)}
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Permission.create_time"`)}
 	}
 	if _, ok := pc.mutation.UpdateTime(); !ok {
-		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "update_time"`)}
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Permission.update_time"`)}
 	}
 	if _, ok := pc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Permission.name"`)}
 	}
 	if v, ok := pc.mutation.Name(); ok {
 		if err := permission.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "name": %w`, err)}
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
 		}
 	}
 	if _, ok := pc.mutation.Slug(); !ok {
-		return &ValidationError{Name: "slug", err: errors.New(`ent: missing required field "slug"`)}
+		return &ValidationError{Name: "slug", err: errors.New(`ent: missing required field "Permission.slug"`)}
 	}
 	if v, ok := pc.mutation.Slug(); ok {
 		if err := permission.SlugValidator(v); err != nil {
-			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "slug": %w`, err)}
+			return &ValidationError{Name: "slug", err: fmt.Errorf(`ent: validator failed for field "Permission.slug": %w`, err)}
 		}
 	}
 	if _, ok := pc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Permission.status"`)}
 	}
 	return nil
 }
