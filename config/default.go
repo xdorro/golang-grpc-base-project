@@ -12,8 +12,8 @@ func defaultConfig() {
 	viper.SetDefault("APP_PORT", "8088")
 
 	viper.SetDefault("LOG_PAYLOAD", true)
-	viper.SetDefault("APP_KEY", "./config/key.pem")
-	viper.SetDefault("APP_CERT", "./config/cert.pem")
+	viper.SetDefault("APP_KEY", "./config/cert/key.pem")
+	viper.SetDefault("APP_CERT", "./config/cert/cert.pem")
 
 	// DATABASE
 	viper.SetDefault("MONGODB_URI", "mongodb://root:123456aA%40@localhost:27017")
