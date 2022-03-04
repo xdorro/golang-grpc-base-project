@@ -3,7 +3,8 @@
 .github/
 tests/
 *.md
-*.log
+**/*.log
+*_test.go
 .env
 .env.example
 .golangci.yml

@@ -9,59 +9,18 @@ package main
 import (
 	"context"
 	"github.com/xdorro/golang-grpc-base-project/internal/handler"
-	"github.com/xdorro/golang-grpc-base-project/internal/handler/auth"
-	"github.com/xdorro/golang-grpc-base-project/internal/handler/validator"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/permission"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/role"
-	"github.com/xdorro/golang-grpc-base-project/internal/repo/user"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/auth"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/permission"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/role"
-	"github.com/xdorro/golang-grpc-base-project/internal/service/user"
-	"github.com/xdorro/golang-grpc-base-project/pkg/client"
-	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:
 
-func initializeServer(ctx context.Context, log *zap.Logger) (*server.Server, error) {
-	entClient := client.NewClient(ctx, log)
-	userPersist := user_repo.NewRepo(ctx, entClient, log)
-	rolePersist := role_repo.NewRepo(ctx, entClient, log)
-	permissionPersist := permission_repo.NewRepo(ctx, entClient, log)
-	repoRepo := &repo.Repo{
-		Client:            entClient,
-		UserPersist:       userPersist,
-		RolePersist:       rolePersist,
-		PermissionPersist: permissionPersist,
-	}
-	universalClient := redis.NewRedis(ctx, log)
-	validatorPersist := validator_handler.NewValidator(log, repoRepo)
-	authPersist := auth_handler.NewHandler(log, repoRepo, universalClient)
-	handlerHandler := &handler.Handler{
-		ValidatorPersist: validatorPersist,
-		AuthPersist:      authPersist,
-	}
-	interceptor := server.NewInterceptor(log, repoRepo, universalClient, handlerHandler)
-	grpcServer := server.NewGRPCServer(log, interceptor)
-	serveMux := server.NewHTTPServer()
-	userServiceServer := user_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
-	authServiceServer := auth_service.NewService(log, repoRepo, universalClient, grpcServer, handlerHandler)
-	roleServiceServer := role_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
-	permissionServiceServer := permission_service.NewService(log, repoRepo, universalClient, handlerHandler, grpcServer)
-	serviceService := &service.Service{
-		UserServiceServer:       userServiceServer,
-		AuthServiceServer:       authServiceServer,
-		RoleServiceServer:       roleServiceServer,
-		PermissionServiceServer: permissionServiceServer,
-	}
-	serverServer, err := server.NewServer(ctx, log, repoRepo, universalClient, grpcServer, serveMux, serviceService)
-	if err != nil {
-		return nil, err
-	}
-	return serverServer, nil
+func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
+	iRepo := repo.NewRepo(ctx, log)
+	iHandler := handler.NewHandler(ctx, log, iRepo)
+	iService := service.NewService(log, iRepo, iHandler)
+	iServer := server.NewServer(ctx, log, iRepo, iService)
+	return iServer
 }

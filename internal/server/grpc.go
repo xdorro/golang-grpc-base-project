@@ -8,28 +8,27 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-func NewGRPCServer(log *zap.Logger, interceptor *Interceptor) *grpc.Server {
+// newGRPCServer creates a new grpc server
+func (s *Server) newGRPCServer(tlsCredentials credentials.TransportCredentials, service service.IService) {
 	// log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(log)
+	grpc_zap.ReplaceGrpcLoggerV2(s.log)
 
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_zap.StreamServerInterceptor(log),
+		grpc_zap.StreamServerInterceptor(s.log),
 		grpc_recovery.StreamServerInterceptor(),
-		// Customer Interceptor
-		interceptor.AuthInterceptorStream(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_zap.UnaryServerInterceptor(log),
+		grpc_zap.UnaryServerInterceptor(s.log),
 		grpc_recovery.UnaryServerInterceptor(),
-		// Customer Interceptor
-		interceptor.AuthInterceptorUnary(),
 	}
 
 	// log payload if enabled
@@ -38,15 +37,17 @@ func NewGRPCServer(log *zap.Logger, interceptor *Interceptor) *grpc.Server {
 			return true
 		}
 
-		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(log, alwaysLoggingDeciderServer))
-		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(log, alwaysLoggingDeciderServer))
+		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(s.log, alwaysLoggingDeciderServer))
+		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(s.log, alwaysLoggingDeciderServer))
 	}
 
 	// register grpc service Server
-	grpcServer := grpc.NewServer(
+	s.grpcServer = grpc.NewServer(
+		grpc.Creds(tlsCredentials),
 		grpc_middleware.WithStreamServerChain(streamChain...),
 		grpc_middleware.WithUnaryServerChain(unaryChain...),
 	)
 
-	return grpcServer
+	// register service to grpc server
+	service.RegisterServiceServer(s.grpcServer)
 }

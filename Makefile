@@ -1,33 +1,27 @@
 APP_NAME=golang-grpc-base-project
-APP_VERSION=0.0.0
+APP_VERSION=latest
 DOCKER_REGISTRY=registry.gitlab.com/xdorro/registry
-BUILD_DIR=./build
 MAIN_DIR=./cmd
 
 docker.build:
-	docker build  -f $(BUILD_DIR)/Dockerfile -t $(DOCKER_REGISTRY)/$(APP_NAME):$(APP_VERSION) .
+	docker build -t $(DOCKER_REGISTRY)/$(APP_NAME):$(APP_VERSION) .
 
 docker.push:
 	docker push $(DOCKER_REGISTRY)/$(APP_NAME):$(APP_VERSION)
 
 docker.dev: docker.build docker.push
 
+wire.gen:
+	wire ./...
+
+wire.install:
+	go install github.com/google/wire/cmd/wire@latest
+
 grpc.install:
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 	go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-buf.gen:
-	buf generate
-
-buf.update:
-	buf mod update
-
-buf.install:
-	go install github.com/bufbuild/buf/cmd/buf@latest
-	go install github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking@latest
-	go install github.com/bufbuild/buf/cmd/protoc-gen-buf-lint@latest
 
 lint.install:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -36,19 +30,18 @@ lint.install:
 lint.run:
 	golangci-lint run --fast ./...
 
-ent.install:
-	go install entgo.io/ent/cmd/ent@latest
+go.install: grpc.install lint.install wire.install
 
-ent.init:
-	go run entgo.io/ent/cmd/ent init --target api/ent/schema User
+go.gen: wire.gen
 
-ent.gen:
-	go generate ./api/ent/...
+go.lint: lint.run
+
+cert.gen:
+	mkcert -install
+	mkcert -key-file ./config/key.pem -cert-file ./config/cert.pem localhost 127.0.0.1 ::1
 
 go.get:
 	go get -u ./...
-
-go.gen: ent.gen buf.gen wire.gen
 
 go.tidy:
 	go mod tidy -compat=1.17
@@ -56,12 +49,3 @@ go.tidy:
 go.test:
 	go test ./...
 
-go.lint: lint.run
-
-go.install: grpc.install buf.install ent.install lint.install wire.install
-
-wire.gen:
-	wire ./...
-
-wire.install:
-	go install github.com/google/wire/cmd/wire@latest

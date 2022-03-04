@@ -2,29 +2,45 @@ package service
 
 import (
 	"github.com/google/wire"
+	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
+	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 
-	auth_proto "github.com/xdorro/golang-grpc-base-project/api/proto/auth"
-	permission_proto "github.com/xdorro/golang-grpc-base-project/api/proto/permission"
-	role_proto "github.com/xdorro/golang-grpc-base-project/api/proto/role"
-	user_proto "github.com/xdorro/golang-grpc-base-project/api/proto/user"
-	auth_service "github.com/xdorro/golang-grpc-base-project/internal/service/auth"
-	permission_service "github.com/xdorro/golang-grpc-base-project/internal/service/permission"
-	role_service "github.com/xdorro/golang-grpc-base-project/internal/service/role"
-	user_service "github.com/xdorro/golang-grpc-base-project/internal/service/user"
+	"github.com/xdorro/golang-grpc-base-project/internal/handler"
+	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 )
 
-// ProviderSet is service providers.
-var ProviderSet = wire.NewSet(
-	wire.Struct(new(Service), "*"),
-	user_service.ProviderSet,
-	auth_service.ProviderSet,
-	role_service.ProviderSet,
-	permission_service.ProviderSet,
-)
+// ProviderServiceSet is service providers.
+var ProviderServiceSet = wire.NewSet(NewService)
+var _ IService = (*Service)(nil)
 
+// IService is the interface for the service
+type IService interface {
+	RegisterServiceServer(grpcServer *grpc.Server)
+}
+
+// Service is service struct.
 type Service struct {
-	user_proto.UserServiceServer
-	auth_proto.AuthServiceServer
-	role_proto.RoleServiceServer
-	permission_proto.PermissionServiceServer
+	log     *zap.Logger
+	repo    repo.IRepo
+	handler handler.IHandler
+
+	userpb.UnimplementedUserServiceServer
+	authpb.UnimplementedAuthServiceServer
+}
+
+// NewService creates a new service.
+func NewService(log *zap.Logger, repo repo.IRepo, handler handler.IHandler) IService {
+	return &Service{
+		log:     log,
+		repo:    repo,
+		handler: handler,
+	}
+}
+
+// RegisterServiceServer registers service server.
+func (s *Service) RegisterServiceServer(grpcServer *grpc.Server) {
+	userpb.RegisterUserServiceServer(grpcServer, s)
+	authpb.RegisterAuthServiceServer(grpcServer, s)
 }

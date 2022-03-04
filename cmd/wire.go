@@ -14,19 +14,15 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/pkg/client"
-	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 )
 
-func initializeServer(ctx context.Context, log *zap.Logger) (*server.Server, error) {
+func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
 	wire.Build(
-		client.ProviderSet,
-		repo.ProviderSet,
-		redis.ProviderSet,
-		handler.ProviderSet,
-		service.ProviderSet,
-		server.ProviderSet,
+		repo.ProviderRepoSet,
+		handler.ProviderHandlerSet,
+		service.ProviderServiceSet,
+		server.ProviderServerSet,
 	)
 
-	return &server.Server{}, nil
+	return &server.Server{}
 }
