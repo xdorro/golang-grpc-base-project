@@ -7,7 +7,7 @@ import (
 // defaultConfig is the default configuration for the application.
 func defaultConfig() {
 	// APP
-	viper.SetDefault("APP_NAME", "Golang gRPC Mongo Project")
+	viper.SetDefault("APP_NAME", "Golang gRPC Base Project")
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("APP_PORT", "8088")
 
