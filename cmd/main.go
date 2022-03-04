@@ -11,9 +11,12 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/config"
+	"github.com/xdorro/golang-grpc-base-project/config"
 	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
 )
+
+// operation is a cleanup function on shutting down
+type operation func(ctx context.Context) error
 
 const (
 	defaultShutdownTimeout = 10 * time.Second
@@ -23,16 +26,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// create logging and config
 	log := logger.NewLogger()
 	config.NewConfig(log)
 
-	// create new server
-	srv, err := initializeServer(ctx, log)
-	if err != nil {
-		log.Fatal("initializeServer()", zap.Error(err))
-	}
+	// init server
+	srv := initializeServer(ctx, log)
 
-	// wait for termination signal and register database & http server clean-up operations
+	// wait for termination signal and register client & http server clean-up operations
 	wait := gracefulShutdown(ctx, log, defaultShutdownTimeout, map[string]operation{
 		"server": func(ctx context.Context) error {
 			return srv.Close()
@@ -44,9 +45,6 @@ func main() {
 
 	<-wait
 }
-
-// operation is a cleanup function on shutting down
-type operation func(ctx context.Context) error
 
 func gracefulShutdown(
 	ctx context.Context, log *zap.Logger, timeout time.Duration, ops map[string]operation,
@@ -63,7 +61,7 @@ func gracefulShutdown(
 
 		// set timeout for the ops to be done to prevent system hang
 		timeoutFunc := time.AfterFunc(timeout, func() {
-			log.Fatal(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
+			log.Panic(fmt.Sprintf("timeout %d ms has been elapsed, force exit", timeout.Milliseconds()))
 		})
 
 		defer timeoutFunc.Stop()
@@ -71,11 +69,9 @@ func gracefulShutdown(
 		var wg sync.WaitGroup
 
 		// Do the operations asynchronously to save time
-		for key, op := range ops {
+		for innerKey, innerOp := range ops {
 			wg.Add(1)
-			innerOp := op
-			innerKey := key
-			go func() {
+			func() {
 				defer wg.Done()
 
 				log.Info(fmt.Sprintf("cleaning up: %s", innerKey))

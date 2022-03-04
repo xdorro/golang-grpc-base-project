@@ -2,204 +2,138 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
-	"sync"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rs/cors"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 
-	"github.com/xdorro/golang-grpc-base-project/api/ent"
-	"github.com/xdorro/golang-grpc-base-project/api/proto/auth"
-	"github.com/xdorro/golang-grpc-base-project/api/proto/permission"
-	"github.com/xdorro/golang-grpc-base-project/api/proto/role"
-	"github.com/xdorro/golang-grpc-base-project/api/proto/user"
-	"github.com/xdorro/golang-grpc-base-project/internal/common"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-// ProviderSet is server providers.
-var ProviderSet = wire.NewSet(NewServer, NewGRPCServer, NewHTTPServer, NewInterceptor)
+// ProviderServerSet is server providers.
+var ProviderServerSet = wire.NewSet(NewServer)
+var _ IServer = (*Server)(nil)
 
-// Server struct
+// IServer is the interface for the server
+type IServer interface {
+	Close() error
+
+	httpGrpcRouter() http.Handler
+	newGRPCServer(tlsCredentials credentials.TransportCredentials, service service.IService)
+	newHTTPServer(tlsCredentials credentials.TransportCredentials, appPort string)
+}
+
+// Server is server struct.
 type Server struct {
-	ctx   context.Context
-	redis redis.UniversalClient
-
-	log   *zap.Logger
-	repo  *repo.Repo
-	grpc  *grpc.Server
-	mutex *sync.Mutex
+	ctx        context.Context
+	log        *zap.Logger
+	repo       repo.IRepo
+	grpcServer *grpc.Server
+	httpServer *runtime.ServeMux
+	server     *http.Server
 }
 
+// NewServer creates a new server.
 func NewServer(
-	ctx context.Context, log *zap.Logger, repo *repo.Repo, redis redis.UniversalClient, grpc *grpc.Server,
-	mux *runtime.ServeMux, _ *service.Service,
-) (*Server, error) {
-	srv := &Server{
-		ctx:   ctx,
-		log:   log,
-		repo:  repo,
-		redis: redis,
-		grpc:  grpc,
-		mutex: &sync.Mutex{},
+	ctx context.Context, log *zap.Logger, repo repo.IRepo, service service.IService,
+) IServer {
+	s := &Server{
+		ctx:  ctx,
+		log:  log,
+		repo: repo,
 	}
 
-	grpcPort := fmt.Sprintf(":%d", viper.GetInt("GRPC_PORT"))
-	log.Info(fmt.Sprintf("Serving gRPC on http://localhost%s", grpcPort))
+	cert := viper.GetString("APP_CERT")
+	key := viper.GetString("APP_KEY")
 
-	listenGRPC, err := net.Listen("tcp", grpcPort)
+	tlsCredentials, err := loadTLSCredentials(cert, key)
 	if err != nil {
-		return nil, fmt.Errorf("net.Listen(): %w", err)
+		log.Panic("cannot load TLS credentials: ", zap.Error(err))
 	}
 
-	httpPort := fmt.Sprintf(":%d", viper.GetInt("HTTP_PORT"))
-	log.Info(fmt.Sprintf("Serving gRPC-Gateway on http://localhost%s", httpPort))
+	appPort := fmt.Sprintf(":%d", viper.GetInt("APP_PORT"))
+	log.Info(fmt.Sprintf("Serving on https://localhost%s", appPort))
 
-	listenHTTP, err := net.Listen("tcp", httpPort)
-	if err != nil {
-		return nil, fmt.Errorf("net.Listen(): %w", err)
-	}
-
-	// get UserService Info
-	if viper.GetBool("SEEDER_SERVICE") {
-		go srv.getServiceInfo()
+	s.newHTTPServer(tlsCredentials, appPort)
+	s.newGRPCServer(tlsCredentials, service)
+	s.server = &http.Server{
+		Addr:    appPort,
+		Handler: s.httpGrpcRouter(),
 	}
 
 	go func() {
-		if err = grpc.Serve(listenGRPC); err != nil {
-			srv.log.Fatal("grpc.Serve()", zap.Error(err))
+		if err = s.server.ListenAndServeTLS(cert, key); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Panic("http.ListenAndServeTLS()", zap.Error(err))
 		}
 	}()
 
-	go func() {
-		if err = srv.registerServiceHandlers(grpcPort, mux); err != nil {
-			log.Fatal("srv.registerServiceHandlers()", zap.Error(err))
-		}
-
-		// update CORS
-		c := cors.New(cors.Options{
-			AllowedOrigins:   []string{"*"},
-			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowCredentials: true,
-		})
-		if err = http.Serve(listenHTTP, c.Handler(mux)); err != nil {
-			log.Fatal("http.Serve()", zap.Error(err))
-		}
-	}()
-
-	return srv, nil
+	return s
 }
 
-func (srv *Server) Close() error {
-	if srv.grpc != nil {
-		srv.grpc.GracefulStop()
+// Close closes the server.
+func (s *Server) Close() error {
+	s.log.Info("Closing server...")
+	s.grpcServer.GracefulStop()
+
+	if err := s.server.Shutdown(s.ctx); err != nil {
+		return err
 	}
 
-	if srv.repo != nil {
-		if err := srv.repo.Close(); err != nil {
-			return err
-		}
-	}
-
-	if srv.redis != nil {
-		if err := srv.redis.Close(); err != nil {
-			return err
-		}
+	if err := s.repo.Close(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// getServiceInfo returns service info
-func (srv *Server) getServiceInfo() {
-	list := make([]string, 0)
-	for name, val := range srv.grpc.GetServiceInfo() {
-		for _, info := range val.Methods {
-			list = append(list, fmt.Sprintf("/%s/%s", name, info.Name))
-		}
-	}
-
-	if len(list) > 0 {
-		srv.mutex.Lock()
-		defer srv.mutex.Unlock()
-
-		bulk := make([]*ent.PermissionCreate, 0)
-		permissions := srv.repo.FindAllPermissionBySlugs(list)
-
-		for _, slug := range list {
-			if ok := srv.hasSlugInPermissions(permissions, slug); !ok {
-				name := slug[strings.LastIndex(slug, "/")+1:]
-				bulk = append(bulk, srv.repo.Permission.
-					Create().
-					SetName(name).
-					SetSlug(slug).
-					SetStatus(1),
-				)
-			}
+// httpGrpcRouter is http grpc router.
+func (s *Server) httpGrpcRouter() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			s.grpcServer.ServeHTTP(w, r)
+			return
 		}
 
-		if len(bulk) > 0 {
-			if err := srv.repo.CreatePermissionBulk(bulk); err != nil {
-				srv.log.Error("persist.CreatePermissionBulk()", zap.Error(err))
-			}
+		// middleware that adds CORS headers to the response.
+		h := w.Header()
+		h.Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		h.Set("Access-Control-Allow-Credentials", "true")
 
-			if err := srv.redis.Del(srv.ctx, common.KeyServiceRoles).Err(); err != nil {
-				srv.log.Error("redis.Del()", zap.Error(err))
-			}
+		if r.Method == http.MethodOptions {
+			h.Set("Access-Control-Methods", "POST, PUT, PATCH, DELETE")
+			h.Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Content-Type")
+			h.Set("Access-Control-Max-Age", "86400")
+			w.WriteHeader(http.StatusNoContent)
+			return
 		}
-	}
+
+		s.httpServer.ServeHTTP(w, r)
+	})
 }
 
-func (srv *Server) hasSlugInPermissions(permissions []*ent.Permission, slug string) bool {
-	for _, permission := range permissions {
-		if strings.EqualFold(slug, permission.Slug) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (srv *Server) registerServiceHandlers(grpcPort string, mux *runtime.ServeMux) error {
-	conn, err := grpc.DialContext(
-		srv.ctx,
-		grpcPort,
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+// loadTLSCredentials loads TLS credentials from the configuration
+func loadTLSCredentials(cert, key string) (credentials.TransportCredentials, error) {
+	// Load server's certificate and private key
+	serverCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		srv.log.Fatal("Failed to dial Server:", zap.Error(err))
+		return nil, err
 	}
 
-	// Register AuthService Handler
-	if err = auth_proto.RegisterAuthServiceHandler(srv.ctx, mux, conn); err != nil {
-		return fmt.Errorf("proto.RegisterAuthServiceHandler(): %w", err)
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates:       []tls.Certificate{serverCert},
+		ClientAuth:         tls.RequireAndVerifyClientCert,
+		InsecureSkipVerify: true,
 	}
 
-	// Register UserService Handler
-	if err = user_proto.RegisterUserServiceHandler(srv.ctx, mux, conn); err != nil {
-		return fmt.Errorf("proto.RegisterUserServiceHandler(): %w", err)
-	}
-
-	// Register RoleService Handler
-	if err = role_proto.RegisterRoleServiceHandler(srv.ctx, mux, conn); err != nil {
-		return fmt.Errorf("proto.RegisterRoleServiceHandler(): %w", err)
-	}
-
-	// Register PermissionService Handler
-	if err = permission_proto.RegisterPermissionServiceHandler(srv.ctx, mux, conn); err != nil {
-		return fmt.Errorf("proto.RegisterPermissionServiceHandler(): %w", err)
-	}
-
-	return nil
+	return credentials.NewTLS(config), nil
 }
