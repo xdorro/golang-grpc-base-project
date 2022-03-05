@@ -23,7 +23,7 @@ import (
 func (s *Service) FindAllUsers(ctx context.Context, _ *userpb.FindAllUsersRequest) (
 	*userpb.ListUsersResponse, error,
 ) {
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	opt := options.
@@ -71,7 +71,7 @@ func (s *Service) FindUserByID(ctx context.Context, req *commonpb.UUIDRequest) (
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	opt := options.
@@ -118,7 +118,7 @@ func (s *Service) CreateUser(ctx context.Context, req *userpb.CreateUserRequest)
 	}
 	data.BeforeCreate()
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	_, err = s.repo.
@@ -146,7 +146,7 @@ func (s *Service) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest)
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	filter := bson.D{{"_id", id}}
@@ -188,7 +188,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *commonpb.UUIDRequest) (
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	filter := bson.D{{"_id", id}}

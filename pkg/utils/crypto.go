@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/hex"
-	"time"
 
 	"github.com/spf13/viper"
 	"github.com/vk-rv/pvx"
@@ -12,10 +11,6 @@ import (
 var (
 	// SecretKey token secret key
 	SecretKey = []byte(viper.GetString("AUTH_SECRET_KEY"))
-	// AccessExpire access token expire time
-	AccessExpire = 1 * time.Hour // 1 hour
-	// RefreshExpire refresh token expire time
-	RefreshExpire = 1 * 24 * time.Hour // 1 day
 )
 
 // GenerateFromPassword generate hash from password
