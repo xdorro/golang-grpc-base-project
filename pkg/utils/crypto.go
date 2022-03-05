@@ -24,6 +24,7 @@ func GenerateFromPassword(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(bytes), nil
 }
 
@@ -72,7 +73,8 @@ func DecryptToken(token string) (*pvx.RegisteredClaims, error) {
 
 	pv4 := pvx.NewPV4Local()
 	cc := &pvx.RegisteredClaims{}
-	err = pv4.Decrypt(token, symK, pvx.WithAssert(SecretKey)).
+	err = pv4.
+		Decrypt(token, symK, pvx.WithAssert(SecretKey)).
 		ScanClaims(cc)
 	if err != nil {
 		return nil, err

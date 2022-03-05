@@ -16,7 +16,7 @@ require (
 	go.mongodb.org/mongo-driver v1.8.4
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
-	google.golang.org/genproto v0.0.0-20220303160752-862486edd9cc
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -30,7 +30,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/klauspost/compress v1.14.4 // indirect
+	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/magefile/mage v1.12.1 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
