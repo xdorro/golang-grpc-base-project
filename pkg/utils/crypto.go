@@ -10,7 +10,7 @@ import (
 
 var (
 	// SecretKey token secret key
-	SecretKey = []byte(viper.GetString("AUTH_SECRET_KEY"))
+	SecretKey = []byte(viper.GetString("APP_SECRET_KEY"))
 )
 
 // GenerateFromPassword generate hash from password

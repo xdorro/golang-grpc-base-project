@@ -10,10 +10,10 @@ func defaultConfig() {
 	viper.SetDefault("APP_NAME", "Golang gRPC Base Project")
 	viper.SetDefault("APP_VERSION", "0.0.0")
 	viper.SetDefault("APP_PORT", "8088")
-
-	viper.SetDefault("LOG_PAYLOAD", true)
 	viper.SetDefault("APP_KEY", "./config/cert/key.pem")
 	viper.SetDefault("APP_CERT", "./config/cert/cert.pem")
+	viper.SetDefault("APP_SECRET_KEY", "your-256-bit-secret")
+	viper.SetDefault("LOG_PAYLOAD", true)
 
 	// DATABASE
 	viper.SetDefault("MONGODB_URI", "mongodb://root:123456aA%40@localhost:27017")
