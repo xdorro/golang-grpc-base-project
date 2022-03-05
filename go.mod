@@ -11,7 +11,7 @@ require (
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/viper v1.10.1
 	github.com/vk-rv/pvx v0.0.0-20210912195928-ac00bc32f6e7
-	github.com/xdorro/base-project-proto v0.0.0-20220304031744-29d5f48b1682
+	github.com/xdorro/base-project-proto v0.0.0-20220305062830-3730cb6b2b77
 	go.elastic.co/ecszap v1.0.1
 	go.mongodb.org/mongo-driver v1.8.4
 	go.uber.org/zap v1.21.0

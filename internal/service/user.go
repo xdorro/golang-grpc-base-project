@@ -20,16 +20,24 @@ import (
 )
 
 // FindAllUsers returns all users
-func (s *Service) FindAllUsers(ctx context.Context, _ *userpb.FindAllUsersRequest) (
+func (s *Service) FindAllUsers(ctx context.Context, req *userpb.FindAllUsersRequest) (
 	*userpb.ListUsersResponse, error,
 ) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
+	limit := int64(10)
+	page := req.GetPage()
+	if page <= 0 {
+		page = 1
+	}
+
 	opt := options.
 		Find().
 		SetSort(bson.M{"created_at": -1}).
-		SetProjection(bson.M{"password": 0})
+		SetProjection(bson.M{"password": 0}).
+		SetLimit(limit).
+		SetSkip((page - 1) * limit)
 
 	filter := bson.D{}
 	cur, err := s.repo.
@@ -44,6 +52,14 @@ func (s *Service) FindAllUsers(ctx context.Context, _ *userpb.FindAllUsersReques
 		_ = cur.Close(ctx)
 	}()
 
+	total, err := s.repo.
+		UserCollection().
+		CountDocuments(ctx, filter)
+	if err != nil {
+		s.log.Error("Error find all users", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, "failed to find all users: %v", err)
+	}
+
 	var data []*userpb.User
 	for cur.Next(ctx) {
 		user := &models.User{}
@@ -56,7 +72,8 @@ func (s *Service) FindAllUsers(ctx context.Context, _ *userpb.FindAllUsersReques
 	}
 
 	result := &userpb.ListUsersResponse{
-		Data: data,
+		Data:  data,
+		Total: total,
 	}
 
 	return result, nil
