@@ -18,13 +18,6 @@ import (
 var ProviderRepoSet = wire.NewSet(NewRepo)
 var _ IRepo = (*Repo)(nil)
 
-// IRepo is the interface for all repositories
-type IRepo interface {
-	Close() error
-	Collection(collectionName string) *mongo.Collection
-	UserCollection() *mongo.Collection
-}
-
 // Repo is repository struct.
 type Repo struct {
 	ctx    context.Context
@@ -86,7 +79,7 @@ func (r *Repo) Collection(collectionName string) *mongo.Collection {
 	return r.client.Database(dbName).Collection(collectionName)
 }
 
-// UserCollection returns the mongo collection for users.
-func (r *Repo) UserCollection() *mongo.Collection {
+// userCollection returns the mongo collection for users.
+func (r *Repo) userCollection() *mongo.Collection {
 	return r.Collection(models.User{}.CollectionName())
 }

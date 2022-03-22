@@ -37,15 +37,9 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	filter := bson.D{{"email", req.GetEmail()}}
-	data := &models.User{}
-	err := s.repo.
-		UserCollection().
-		FindOne(ctx, filter).
-		Decode(data)
-
+	filter := bson.M{"email": req.GetEmail()}
+	data, err := s.repo.FindUser(filter)
 	if err != nil {
-		s.log.Error("Error find user", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "failed to find user: %v", err)
 	}
 
@@ -63,7 +57,9 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 }
 
 // generateAuthToken generates a new auth token for the user.
-func (s *Service) generateAuthToken(user *models.User) (*authpb.TokenResponse, error) {
+func (s *Service) generateAuthToken(user *models.User) (
+	*authpb.TokenResponse, error,
+) {
 	sessionID := uuid.NewString()
 	now := time.Now()
 

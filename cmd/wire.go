@@ -14,13 +14,12 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"github.com/xdorro/golang-grpc-base-project/pkg/redis"
 )
 
 func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
 	wire.Build(
 		repo.ProviderRepoSet,
-		redis.ProviderRedisSet,
+		// redis.ProviderRedisSet,
 		handler.ProviderHandlerSet,
 		service.ProviderServiceSet,
 		server.ProviderServerSet,

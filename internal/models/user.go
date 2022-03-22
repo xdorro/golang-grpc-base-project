@@ -10,8 +10,8 @@ import (
 type User struct {
 	*Common `bson:",inline"`
 
-	Name     string `json:"name,omitempty" bson:"name,omitempty" `
-	Email    string `json:"email,omitempty" bson:"email,omitempty" `
+	Name     string `json:"name,omitempty" bson:"name,omitempty"`
+	Email    string `json:"email,omitempty" bson:"email,omitempty"`
 	Password string `json:"password" bson:"password,omitempty"`
 }
 
@@ -30,8 +30,8 @@ func (m *User) BeforeCreate() {
 	m.Common.BeforeCreate()
 }
 
-// UserToProto converts a user to a proto
-func (m *User) UserToProto() *userpb.User {
+// ToProto converts a user to a proto
+func (m *User) ToProto() *userpb.User {
 	return &userpb.User{
 		Id:    m.ID.Hex(),
 		Name:  m.Name,
@@ -39,12 +39,12 @@ func (m *User) UserToProto() *userpb.User {
 	}
 }
 
-// UsersToProto converts a list of users to a list of protos
-func UsersToProto(users []*User) []*userpb.User {
+// ToUsersProto converts a slice of users to a slice of protos
+func ToUsersProto(users []*User) []*userpb.User {
 	result := make([]*userpb.User, len(users))
 
 	for index, user := range users {
-		result[index] = user.UserToProto()
+		result[index] = user.ToProto()
 	}
 
 	return result

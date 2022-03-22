@@ -5,11 +5,11 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
-	commonpb "github.com/xdorro/base-project-proto/protos/v1/common"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
+	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 )
 
 // ValidateError validate payload error if not nil
@@ -25,19 +25,6 @@ func (h *Handler) ValidateError(err error) error {
 	}
 
 	return nil
-}
-
-// ValidateCommonID validate common id
-func (h *Handler) ValidateCommonID(req *commonpb.UUIDRequest) error {
-	err := validation.ValidateStruct(req,
-		// Validate id
-		validation.Field(&req.Id,
-			validation.Required,
-			is.Int,
-		),
-	)
-
-	return h.ValidateError(err)
 }
 
 // ValidateLoginRequest validate login request
@@ -71,6 +58,7 @@ func (h *Handler) ValidateTokenRequest(req *authpb.TokenRequest) error {
 	return h.ValidateError(err)
 }
 
+// ValidateCreateUserRequest validate create user request
 func (h *Handler) ValidateCreateUserRequest(req *userpb.CreateUserRequest) error {
 	err := validation.ValidateStruct(req,
 		// Validate name
@@ -97,13 +85,9 @@ func (h *Handler) ValidateCreateUserRequest(req *userpb.CreateUserRequest) error
 	return h.ValidateError(err)
 }
 
+// ValidateUpdateUserRequest validate update user request
 func (h *Handler) ValidateUpdateUserRequest(req *userpb.UpdateUserRequest) error {
 	err := validation.ValidateStruct(req,
-		// Validate id
-		validation.Field(&req.Id,
-			validation.Required,
-			is.Int,
-		),
 		// Validate name
 		validation.Field(&req.Name,
 			validation.Required,

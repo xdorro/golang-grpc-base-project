@@ -2,11 +2,7 @@ package service
 
 import (
 	"context"
-	"strings"
-	"time"
 
-	commonpb "github.com/xdorro/base-project-proto/protos/v1/common"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,72 +11,47 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	commonpb "github.com/xdorro/base-project-proto/protos/v1/common"
+	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
 // FindAllUsers returns all users
-func (s *Service) FindAllUsers(ctx context.Context, req *userpb.FindAllUsersRequest) (
+func (s *Service) FindAllUsers(_ context.Context, req *userpb.FindAllUsersRequest) (
 	*userpb.ListUsersResponse, error,
 ) {
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
+	// count all users with filter
+	filter := bson.M{}
+	count, _ := s.repo.CountAllUsers(filter)
 	limit := int64(10)
-	page := req.GetPage()
-	if page <= 0 {
-		page = 1
-	}
+	totalPages := utils.TotalPage(count, limit)
+	page := utils.CurrentPage(req.GetPage(), totalPages)
 
+	// find all genres with filter and option
 	opt := options.
 		Find().
 		SetSort(bson.M{"created_at": -1}).
 		SetProjection(bson.M{"password": 0}).
 		SetLimit(limit).
 		SetSkip((page - 1) * limit)
-
-	filter := bson.D{}
-	cur, err := s.repo.
-		UserCollection().
-		Find(ctx, filter, opt)
+	data, err := s.repo.FindAllUsers(filter, opt)
 	if err != nil {
-		s.log.Error("Error find all users", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to find all users: %v", err)
-	}
-
-	defer func() {
-		_ = cur.Close(ctx)
-	}()
-
-	total, err := s.repo.
-		UserCollection().
-		CountDocuments(ctx, filter)
-	if err != nil {
-		s.log.Error("Error find all users", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, "failed to find all users: %v", err)
-	}
-
-	var data []*userpb.User
-	for cur.Next(ctx) {
-		user := &models.User{}
-		if err = cur.Decode(user); err != nil {
-			s.log.Error("Error find all users", zap.Error(err))
-			return nil, status.Errorf(codes.Internal, "failed to find all users: %v", err)
-		}
-
-		data = append(data, user.UserToProto())
 	}
 
 	result := &userpb.ListUsersResponse{
-		Data:  data,
-		Total: total,
+		Data:        models.ToUsersProto(data),
+		TotalPage:   totalPages,
+		CurrentPage: page,
 	}
 
 	return result, nil
 }
 
 // FindUserByID returns a user by id
-func (s *Service) FindUserByID(ctx context.Context, req *commonpb.UUIDRequest) (
+func (s *Service) FindUserByID(_ context.Context, req *commonpb.UUIDRequest) (
 	*userpb.User, error,
 ) {
 	id, err := primitive.ObjectIDFromHex(req.GetId())
@@ -88,38 +59,34 @@ func (s *Service) FindUserByID(ctx context.Context, req *commonpb.UUIDRequest) (
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
 	opt := options.
 		FindOne().
 		SetSort(bson.M{"created_at": -1}).
 		SetProjection(bson.M{"password": 0})
 	filter := bson.D{{"_id", id}}
-	result := &models.User{}
-	err = s.repo.
-		UserCollection().
-		FindOne(ctx, filter, opt).
-		Decode(result)
 
+	result, err := s.repo.FindUser(filter, opt)
 	if err != nil {
-		s.log.Error("Error find user", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to find user: %v", err)
 	}
 
-	s.log.Info("Find user by id", zap.Any("user", result))
-
-	return result.UserToProto(), nil
+	return result.ToProto(), nil
 }
 
 // CreateUser creates a user
-func (s *Service) CreateUser(ctx context.Context, req *userpb.CreateUserRequest) (
+func (s *Service) CreateUser(_ context.Context, req *userpb.CreateUserRequest) (
 	*statuspb.Status, error,
 ) {
 	// Validate request
 	if err := s.handler.ValidateCreateUserRequest(req); err != nil {
 		s.log.Error("svc.validateCreateUserRequest()", zap.Error(err))
 		return nil, err
+	}
+
+	// count all users with filter
+	count, _ := s.repo.CountAllUsers(bson.M{"email": req.GetEmail()})
+	if count > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "user email already exists")
 	}
 
 	password, err := utils.GenerateFromPassword(req.GetPassword())
@@ -135,12 +102,7 @@ func (s *Service) CreateUser(ctx context.Context, req *userpb.CreateUserRequest)
 	}
 	data.BeforeCreate()
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
-	_, err = s.repo.
-		UserCollection().InsertOne(ctx, data)
-	if err != nil {
+	if err = s.repo.CreateUser(data); err != nil {
 		s.log.Error("Error creating user", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
@@ -149,7 +111,7 @@ func (s *Service) CreateUser(ctx context.Context, req *userpb.CreateUserRequest)
 }
 
 // UpdateUser updates a user
-func (s *Service) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest) (
+func (s *Service) UpdateUser(_ context.Context, req *userpb.UpdateUserRequest) (
 	*statuspb.Status, error,
 ) {
 	// Validate request
@@ -163,33 +125,25 @@ func (s *Service) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest)
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-
 	filter := bson.D{{"_id", id}}
-	data := &models.User{}
-	err = s.repo.
-		UserCollection().
-		FindOne(ctx, filter).
-		Decode(data)
+	data, err := s.repo.FindUser(filter)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to find user: %v", err)
 	}
 
-	if strings.Compare(req.GetName(), data.Name) != 0 {
-		data.Name = req.GetName()
+	// count all users with filter
+	count, _ := s.repo.CountAllUsers(bson.M{
+		"_id":   bson.M{"$ne": id},
+		"email": req.GetEmail(),
+	})
+	if count > 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "user email already exists")
 	}
 
-	if strings.Compare(req.GetEmail(), data.Email) != 0 {
-		data.Email = req.GetEmail()
-	}
+	data.Name = utils.StringCompareOrPassValue(data.Name, req.GetName())
+	data.Email = utils.StringCompareOrPassValue(data.Email, req.GetEmail())
 
-	_, err = s.repo.
-		UserCollection().
-		UpdateOne(ctx, filter, bson.D{
-			{"$set", data},
-		})
-	if err != nil {
+	if err = s.repo.UpdateUser(filter, bson.M{"$set": data}); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update user: %v", err)
 	}
 
@@ -197,7 +151,7 @@ func (s *Service) UpdateUser(ctx context.Context, req *userpb.UpdateUserRequest)
 }
 
 // DeleteUser deletes a user
-func (s *Service) DeleteUser(ctx context.Context, req *commonpb.UUIDRequest) (
+func (s *Service) DeleteUser(_ context.Context, req *commonpb.UUIDRequest) (
 	*statuspb.Status, error,
 ) {
 	id, err := primitive.ObjectIDFromHex(req.GetId())
@@ -205,14 +159,14 @@ func (s *Service) DeleteUser(ctx context.Context, req *commonpb.UUIDRequest) (
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
+	filter := bson.M{"_id": id}
+	// count all users with filter
+	count, _ := s.repo.CountAllUsers(filter)
+	if count <= 0 {
+		return nil, status.Errorf(codes.AlreadyExists, "user does not exists")
+	}
 
-	filter := bson.D{{"_id", id}}
-	result := s.repo.
-		UserCollection().
-		FindOneAndDelete(ctx, filter)
-	if err = result.Err(); err != nil {
+	if err = s.repo.DeleteUser(filter); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to delete user: %v", err)
 	}
 
