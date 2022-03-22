@@ -18,6 +18,8 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
+var _ authpb.AuthServiceServer = (*Service)(nil)
+
 var (
 	// accessExpire access token expire time
 	accessExpire = 1 * time.Hour // 1 hour
