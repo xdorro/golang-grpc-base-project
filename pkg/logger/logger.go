@@ -19,6 +19,10 @@ func NewLogger() *zap.Logger {
 	encoder.EncodeDuration = zapcore.MillisDurationEncoder
 	encoder.EncodeCaller = ecszap.ShortCallerEncoder
 
+	if err := utils.MakeDir("./logs/"); err != nil {
+		panic(fmt.Sprintf("Failed to create logs directory: %s", err))
+	}
+
 	core := ecszap.NewCore(
 		encoder,
 		zapcore.NewMultiWriteSyncer(os.Stdout, getLogWriter()),
@@ -30,10 +34,6 @@ func NewLogger() *zap.Logger {
 
 // getLogWriter add a lumberjack.Logger to the zap.Logger
 func getLogWriter() zapcore.WriteSyncer {
-	if err := utils.MakeDir("./logs/"); err != nil {
-		panic(fmt.Sprintf("Failed to create logs directory: %s", err))
-	}
-
 	lumberJackLogger := &lumberjack.Logger{
 		Filename:   "./logs/logs.log",
 		MaxSize:    10, // MB
