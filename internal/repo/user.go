@@ -20,7 +20,6 @@ func (r *Repo) FindAllUsers(filter any, opt ...*options.FindOptions) ([]*models.
 	cur, err := r.
 		userCollection().
 		Find(ctx, filter, opt...)
-
 	if err != nil {
 		r.log.Error("Error find all users", zap.Error(err))
 		return nil, err
@@ -52,7 +51,6 @@ func (r *Repo) CountAllUsers(filter any) (int64, error) {
 	total, err := r.
 		userCollection().
 		CountDocuments(ctx, filter)
-
 	if err != nil {
 		r.log.Error("Error count all users", zap.Error(err))
 		return 0, err
@@ -71,7 +69,6 @@ func (r *Repo) FindUser(filter any, opt ...*options.FindOneOptions) (*models.Use
 		userCollection().
 		FindOne(ctx, filter, opt...).
 		Decode(result)
-
 	if err != nil {
 		r.log.Error("Error find user", zap.Error(err))
 		return nil, err
@@ -88,7 +85,6 @@ func (r *Repo) CreateUser(data any, opt ...*options.InsertOneOptions) error {
 	_, err := r.
 		userCollection().
 		InsertOne(ctx, data, opt...)
-
 	if err != nil {
 		r.log.Error("Error creating user", zap.Error(err))
 		return err
@@ -105,7 +101,6 @@ func (r *Repo) UpdateUser(filter, data any, opt ...*options.UpdateOptions) error
 	_, err := r.
 		userCollection().
 		UpdateOne(ctx, filter, data, opt...)
-
 	if err != nil {
 		r.log.Error("Error updating user", zap.Error(err))
 		return err
@@ -122,7 +117,6 @@ func (r *Repo) DeleteUser(filter any, opt ...*options.DeleteOptions) error {
 	_, err := r.
 		userCollection().
 		DeleteOne(ctx, filter, opt...)
-
 	if err != nil {
 		r.log.Error("Error deleting user", zap.Error(err))
 		return err

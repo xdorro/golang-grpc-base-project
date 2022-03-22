@@ -8,10 +8,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	// SecretKey token secret key
-	SecretKey = []byte(viper.GetString("APP_SECRET_KEY"))
-)
+// SecretKey token secret key
+var SecretKey = []byte(viper.GetString("APP_SECRET_KEY"))
 
 // GenerateFromPassword generate hash from password
 func GenerateFromPassword(password string) (string, error) {
