@@ -2,10 +2,11 @@ package service
 
 import (
 	"github.com/google/wire"
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+
+	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
+	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/handler"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
@@ -14,11 +15,6 @@ import (
 // ProviderServiceSet is service providers.
 var ProviderServiceSet = wire.NewSet(NewService)
 var _ IService = (*Service)(nil)
-
-// IService is the interface for the service
-type IService interface {
-	RegisterServiceServer(grpcServer *grpc.Server)
-}
 
 // Service is service struct.
 type Service struct {

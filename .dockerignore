@@ -1,14 +1,39 @@
-.run/
-.idea/
 .github/
 tests/
 *.md
-**/*.log
 *_test.go
 .env
 .env.example
 .golangci.yml
 Makefile
-buf.gen.yaml
-buf.yaml
-buf.lock
+
+.logs/
+*.log.gz
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+*.log
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+.idea/
+.run/
+
+.env
+/coverage.out
+/coverage.html
+/report.json
+/tests/
+
+.logs/
+*.log.gz

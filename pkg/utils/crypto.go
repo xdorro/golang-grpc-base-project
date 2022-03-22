@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/hex"
-	"time"
 
 	"github.com/spf13/viper"
 	"github.com/vk-rv/pvx"
@@ -11,11 +10,7 @@ import (
 
 var (
 	// SecretKey token secret key
-	SecretKey = []byte(viper.GetString("AUTH_SECRET_KEY"))
-	// AccessExpire access token expire time
-	AccessExpire = 1 * time.Hour // 1 hour
-	// RefreshExpire refresh token expire time
-	RefreshExpire = 1 * 24 * time.Hour // 1 day
+	SecretKey = []byte(viper.GetString("APP_SECRET_KEY"))
 )
 
 // GenerateFromPassword generate hash from password
@@ -24,6 +19,7 @@ func GenerateFromPassword(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(bytes), nil
 }
 
@@ -72,7 +68,8 @@ func DecryptToken(token string) (*pvx.RegisteredClaims, error) {
 
 	pv4 := pvx.NewPV4Local()
 	cc := &pvx.RegisteredClaims{}
-	err = pv4.Decrypt(token, symK, pvx.WithAssert(SecretKey)).
+	err = pv4.
+		Decrypt(token, symK, pvx.WithAssert(SecretKey)).
 		ScanClaims(cc)
 	if err != nil {
 		return nil, err

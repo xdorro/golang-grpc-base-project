@@ -19,6 +19,7 @@ import (
 func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
 	wire.Build(
 		repo.ProviderRepoSet,
+		// redis.ProviderRedisSet,
 		handler.ProviderHandlerSet,
 		service.ProviderServiceSet,
 		server.ProviderServerSet,

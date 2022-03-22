@@ -38,13 +38,13 @@ go.lint: lint.run
 
 cert.gen:
 	mkcert -install
-	mkcert -key-file ./config/key.pem -cert-file ./config/cert.pem localhost 127.0.0.1 ::1
+	mkcert -key-file ./config/cert/key.pem -cert-file ./config/cert/cert.pem localhost 127.0.0.1 ::1
 
 go.get:
 	go get -u ./...
 
 go.tidy:
-	go mod tidy -compat=1.17
+	go mod tidy
 
 go.test:
 	go test ./...

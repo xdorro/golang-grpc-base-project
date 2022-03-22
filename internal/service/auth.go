@@ -17,6 +17,13 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
+var (
+	// accessExpire access token expire time
+	accessExpire = 1 * time.Hour // 1 hour
+	// refreshExpire refresh token expire time
+	refreshExpire = 1 * 24 * time.Hour // 1 day
+)
+
 // Login is a gRPC handler for the Login method.
 func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 	*authpb.TokenResponse, error,
@@ -27,18 +34,12 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
-	filter := bson.D{{"email", req.GetEmail()}}
-	data := &models.User{}
-	err := s.repo.
-		UserCollection().
-		FindOne(ctx, filter).
-		Decode(data)
-
+	filter := bson.M{"email": req.GetEmail()}
+	data, err := s.repo.FindUser(filter)
 	if err != nil {
-		s.log.Error("Error find user", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "failed to find user: %v", err)
 	}
 
@@ -56,13 +57,15 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 }
 
 // generateAuthToken generates a new auth token for the user.
-func (s *Service) generateAuthToken(user *models.User) (*authpb.TokenResponse, error) {
+func (s *Service) generateAuthToken(user *models.User) (
+	*authpb.TokenResponse, error,
+) {
 	sessionID := uuid.NewString()
 	now := time.Now()
 
 	// Create a new accessToken
 	accessClaims := &pvx.RegisteredClaims{
-		Expiration: pvx.TimePtr(now.Add(utils.AccessExpire)),
+		Expiration: pvx.TimePtr(now.Add(accessExpire)),
 		Subject:    cast.ToString(user.ID),
 		TokenID:    sessionID,
 	}
@@ -73,7 +76,7 @@ func (s *Service) generateAuthToken(user *models.User) (*authpb.TokenResponse, e
 
 	// Create a new refreshToken
 	refreshClaims := &pvx.RegisteredClaims{
-		Expiration: pvx.TimePtr(now.Add(utils.RefreshExpire)),
+		Expiration: pvx.TimePtr(now.Add(refreshExpire)),
 		Subject:    cast.ToString(user.ID),
 		TokenID:    sessionID,
 	}

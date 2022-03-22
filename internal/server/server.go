@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"strings"
 
 	"github.com/google/wire"
@@ -22,15 +23,6 @@ import (
 // ProviderServerSet is server providers.
 var ProviderServerSet = wire.NewSet(NewServer)
 var _ IServer = (*Server)(nil)
-
-// IServer is the interface for the server
-type IServer interface {
-	Close() error
-
-	httpGrpcRouter() http.Handler
-	newGRPCServer(tlsCredentials credentials.TransportCredentials, service service.IService)
-	newHTTPServer(tlsCredentials credentials.TransportCredentials, appPort string)
-}
 
 // Server is server struct.
 type Server struct {
@@ -75,6 +67,15 @@ func NewServer(
 			log.Panic("http.ListenAndServeTLS()", zap.Error(err))
 		}
 	}()
+
+	// pprof debug mode
+	if viper.GetBool("APP_DEBUG") {
+		go func() {
+			if err = http.ListenAndServe("localhost:6060", nil); err != nil {
+				log.Panic("http.ListenAndServeTLS()", zap.Error(err))
+			}
+		}()
+	}
 
 	return s
 }
@@ -121,7 +122,9 @@ func (s *Server) httpGrpcRouter() http.Handler {
 }
 
 // loadTLSCredentials loads TLS credentials from the configuration
-func loadTLSCredentials(cert, key string) (credentials.TransportCredentials, error) {
+func loadTLSCredentials(cert, key string) (
+	credentials.TransportCredentials, error,
+) {
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
