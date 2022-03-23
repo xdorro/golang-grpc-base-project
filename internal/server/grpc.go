@@ -16,6 +16,9 @@ import (
 
 // newGRPCServer creates a new grpc server
 func (s *Server) newGRPCServer(tlsCredentials credentials.TransportCredentials, service service.IService) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	// log gRPC library internals with log
 	grpc_zap.ReplaceGrpcLoggerV2(s.log)
 

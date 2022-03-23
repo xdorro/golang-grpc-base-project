@@ -14,6 +14,9 @@ import (
 
 // newHTTPServer create Gateway server
 func (s *Server) newHTTPServer(tlsCredentials credentials.TransportCredentials, appPort string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	// Create HTTP Server
 	s.httpServer = runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
