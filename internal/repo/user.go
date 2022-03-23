@@ -10,8 +10,6 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
 )
 
-var _ IUserRepo = (*Repo)(nil)
-
 // FindAllUsers returns all users
 func (r *Repo) FindAllUsers(filter any, opt ...*options.FindOptions) ([]*models.User, error) {
 	ctx, cancel := context.WithTimeout(r.ctx, 1*time.Minute)

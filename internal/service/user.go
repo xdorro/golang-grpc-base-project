@@ -18,8 +18,6 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
-var _ userpb.UserServiceServer = (*Service)(nil)
-
 // FindAllUsers returns all users
 func (s *Service) FindAllUsers(_ context.Context, req *userpb.FindAllUsersRequest) (
 	*userpb.ListUsersResponse, error,

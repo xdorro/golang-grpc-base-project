@@ -50,7 +50,7 @@ func NewServer(
 	if viper.GetBool("APP_DEBUG") {
 		go func() {
 			if err := http.ListenAndServe("localhost:6060", nil); err != nil {
-				log.Panic("http.ListenAndServeTLS()", zap.Error(err))
+				log.Panic("http.ListenAndServe()", zap.Error(err))
 			}
 		}()
 	}
@@ -98,7 +98,7 @@ func (s *Server) httpGrpcRouter(
 	s.newGRPCServer(tlsCredentials, service)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
 			s.grpcServer.ServeHTTP(w, r)
 			return
 		}
@@ -108,7 +108,7 @@ func (s *Server) httpGrpcRouter(
 		h.Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		h.Set("Access-Control-Allow-Credentials", "true")
 
-		if r.Method == http.MethodOptions {
+		if strings.EqualFold(r.Method, http.MethodOptions) {
 			h.Set("Access-Control-Methods", "POST, PUT, PATCH, DELETE")
 			h.Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Content-Type")
 			h.Set("Access-Control-Max-Age", "86400")
