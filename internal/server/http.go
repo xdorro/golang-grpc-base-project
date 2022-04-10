@@ -10,6 +10,8 @@ import (
 
 	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
 	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // newHTTPServer create Gateway server
@@ -38,7 +40,7 @@ func (s *Server) newHTTPServer(tlsCredentials credentials.TransportCredentials, 
 
 	conn, err := grpc.Dial(appPort, opts...)
 	if err != nil {
-		s.log.Panic("Failed to dial", zap.Error(err))
+		log.Panic("Failed to dial", zap.Error(err))
 	}
 	defer func() {
 		if err != nil {
@@ -57,11 +59,11 @@ func (s *Server) newHTTPServer(tlsCredentials credentials.TransportCredentials, 
 
 	// Register UserService Handler
 	if err = userpb.RegisterUserServiceHandler(s.ctx, s.httpServer, conn); err != nil {
-		s.log.Panic("proto.RegisterUserServiceHandler(): %w", zap.Error(err))
+		log.Panic("proto.RegisterUserServiceHandler(): %w", zap.Error(err))
 	}
 
 	// Register AuthService Handler
 	if err = authpb.RegisterAuthServiceHandler(s.ctx, s.httpServer, conn); err != nil {
-		s.log.Panic("proto.RegisterAuthServiceHandler(): %w", zap.Error(err))
+		log.Panic("proto.RegisterAuthServiceHandler(): %w", zap.Error(err))
 	}
 }

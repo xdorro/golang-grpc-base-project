@@ -7,10 +7,12 @@ import (
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // NewConfig create new config
-func NewConfig(log *zap.Logger) {
+func NewConfig() {
 	// SetConfigFile explicitly defines the path, name and extension of the config file.
 	// Viper will use this and not check any of the config paths.
 	// .env - It will search for the .env file in the current directory

@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
@@ -30,7 +31,7 @@ func (s *Service) Login(ctx context.Context, req *authpb.LoginRequest) (
 ) {
 	// Validate request
 	if err := s.handler.ValidateLoginRequest(req); err != nil {
-		s.log.Error("svc.validateLoginRequest()", zap.Error(err))
+		log.Error("svc.validateLoginRequest()", zap.Error(err))
 		return nil, err
 	}
 

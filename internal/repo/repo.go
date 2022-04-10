@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // ProviderRepoSet is repository providers.
@@ -26,7 +27,7 @@ type Repo struct {
 }
 
 // NewRepo creates new repository.
-func NewRepo(ctx context.Context, log *zap.Logger) IRepo {
+func NewRepo(ctx context.Context) IRepo {
 	uri := viper.GetString("MONGODB_URI")
 
 	log.Info("Connecting to MongoDB", zap.String("uri", uri))
@@ -57,7 +58,6 @@ func NewRepo(ctx context.Context, log *zap.Logger) IRepo {
 
 	return &Repo{
 		ctx:    ctx,
-		log:    log,
 		client: client,
 	}
 }

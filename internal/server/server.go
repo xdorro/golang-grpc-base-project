@@ -19,6 +19,7 @@ import (
 
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // ProviderServerSet is server providers.
@@ -28,7 +29,6 @@ var _ IServer = (*Server)(nil)
 // Server is server struct.
 type Server struct {
 	ctx        context.Context
-	log        *zap.Logger
 	repo       repo.IRepo
 	grpcServer *grpc.Server
 	httpServer *runtime.ServeMux
@@ -36,12 +36,9 @@ type Server struct {
 }
 
 // NewServer creates a new server.
-func NewServer(
-	ctx context.Context, log *zap.Logger, repo repo.IRepo, service service.IService,
-) IServer {
+func NewServer(ctx context.Context, repo repo.IRepo, service service.IService) IServer {
 	s := &Server{
 		ctx:  ctx,
-		log:  log,
 		repo: repo,
 		mu:   &sync.RWMutex{},
 	}
@@ -80,7 +77,7 @@ func (s *Server) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.log.Info("Closing server...")
+	log.Info("Closing server...")
 	s.grpcServer.GracefulStop()
 
 	if err := s.repo.Close(); err != nil {
