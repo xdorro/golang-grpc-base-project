@@ -21,17 +21,17 @@ func (s *Server) newGRPCServer(tlsCredentials credentials.TransportCredentials, 
 	defer s.mu.Unlock()
 
 	// log gRPC library internals with log
-	grpc_zap.ReplaceGrpcLoggerV2(log.L())
+	grpc_zap.ReplaceGrpcLoggerV2(log.NewLogger())
 
 	streamChain := []grpc.StreamServerInterceptor{
 		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_zap.StreamServerInterceptor(log.L()),
+		grpc_zap.StreamServerInterceptor(log.NewLogger()),
 		grpc_recovery.StreamServerInterceptor(),
 	}
 
 	unaryChain := []grpc.UnaryServerInterceptor{
 		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		grpc_zap.UnaryServerInterceptor(log.L()),
+		grpc_zap.UnaryServerInterceptor(log.NewLogger()),
 		grpc_recovery.UnaryServerInterceptor(),
 	}
 
@@ -41,8 +41,8 @@ func (s *Server) newGRPCServer(tlsCredentials credentials.TransportCredentials, 
 			return true
 		}
 
-		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(log.L(), alwaysLoggingDeciderServer))
-		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(log.L(), alwaysLoggingDeciderServer))
+		streamChain = append(streamChain, grpc_zap.PayloadStreamServerInterceptor(log.NewLogger(), alwaysLoggingDeciderServer))
+		unaryChain = append(unaryChain, grpc_zap.PayloadUnaryServerInterceptor(log.NewLogger(), alwaysLoggingDeciderServer))
 	}
 
 	// register grpc service Server
