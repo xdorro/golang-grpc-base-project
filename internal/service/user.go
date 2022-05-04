@@ -15,6 +15,7 @@ import (
 	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
@@ -79,7 +80,7 @@ func (s *Service) CreateUser(_ context.Context, req *userpb.CreateUserRequest) (
 ) {
 	// Validate request
 	if err := s.handler.ValidateCreateUserRequest(req); err != nil {
-		s.log.Error("svc.validateCreateUserRequest()", zap.Error(err))
+		log.Error("svc.validateCreateUserRequest()", zap.Error(err))
 		return nil, err
 	}
 
@@ -91,7 +92,7 @@ func (s *Service) CreateUser(_ context.Context, req *userpb.CreateUserRequest) (
 
 	password, err := utils.GenerateFromPassword(req.GetPassword())
 	if err != nil {
-		s.log.Error("Error create user", zap.Error(err))
+		log.Error("Error create user", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create user: %v", err)
 	}
 
@@ -103,7 +104,7 @@ func (s *Service) CreateUser(_ context.Context, req *userpb.CreateUserRequest) (
 	data.BeforeCreate()
 
 	if err = s.repo.CreateUser(data); err != nil {
-		s.log.Error("Error creating user", zap.Error(err))
+		log.Error("Error creating user", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
 
@@ -116,7 +117,7 @@ func (s *Service) UpdateUser(_ context.Context, req *userpb.UpdateUserRequest) (
 ) {
 	// Validate request
 	if err := s.handler.ValidateUpdateUserRequest(req); err != nil {
-		s.log.Error("svc.validateUpdateUserRequest()", zap.Error(err))
+		log.Error("svc.validateUpdateUserRequest()", zap.Error(err))
 		return nil, err
 	}
 

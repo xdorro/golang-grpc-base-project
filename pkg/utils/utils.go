@@ -21,7 +21,7 @@ func Exists(name string) bool {
 func MakeDir(dir string) error {
 	dirConvert := filepath.Dir(dir)
 	if !Exists(dirConvert) {
-		err := os.Mkdir(dirConvert, 0775)
+		err := os.Mkdir(dirConvert, 0o775)
 		if err != nil {
 			return err
 		}

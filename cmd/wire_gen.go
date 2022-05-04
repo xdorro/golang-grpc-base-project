@@ -12,15 +12,14 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
-	"go.uber.org/zap"
 )
 
 // Injectors from wire.go:
 
-func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
-	iRepo := repo.NewRepo(ctx, log)
-	iHandler := handler.NewHandler(ctx, log, iRepo)
-	iService := service.NewService(log, iRepo, iHandler)
-	iServer := server.NewServer(ctx, log, iRepo, iService)
+func initializeServer(ctx context.Context) server.IServer {
+	iRepo := repo.NewRepo(ctx)
+	iHandler := handler.NewHandler(ctx, iRepo)
+	iService := service.NewService(iRepo, iHandler)
+	iServer := server.NewServer(ctx, iRepo, iService)
 	return iServer
 }

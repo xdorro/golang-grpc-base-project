@@ -9,10 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/xdorro/golang-grpc-base-project/config"
-	"github.com/xdorro/golang-grpc-base-project/pkg/logger"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // operation is a cleanup function on shutting down
@@ -26,19 +24,18 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// create logging and config
-	log := logger.NewLogger()
-	config.NewConfig(log)
+	// create config
+	config.NewConfig()
 
 	// init server
-	srv := initializeServer(ctx, log)
+	srv := initializeServer(ctx)
 
 	// wait for termination signal and register client & http server clean-up operations
-	wait := gracefulShutdown(ctx, log, defaultShutdownTimeout, map[string]operation{
+	wait := gracefulShutdown(ctx, defaultShutdownTimeout, map[string]operation{
 		"server": func(ctx context.Context) error {
 			return srv.Close()
 		},
-		"logger": func(ctx context.Context) error {
+		"log": func(ctx context.Context) error {
 			return log.Sync()
 		},
 	})
@@ -47,7 +44,7 @@ func main() {
 }
 
 func gracefulShutdown(
-	ctx context.Context, log *zap.Logger, timeout time.Duration, ops map[string]operation,
+	ctx context.Context, timeout time.Duration, ops map[string]operation,
 ) <-chan struct{} {
 	wait := make(chan struct{})
 	go func() {

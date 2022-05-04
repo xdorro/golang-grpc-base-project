@@ -1,19 +1,19 @@
-package logger
+package log
 
 import (
-	"fmt"
 	"os"
 
 	"go.elastic.co/ecszap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-
-	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
-// NewLogger is a wrapper for zap.Logger
-func NewLogger() *zap.Logger {
+var (
+	logger *zap.Logger
+)
+
+func init() {
 	encoder := ecszap.NewDefaultEncoderConfig()
 	encoder.EncodeLevel = zapcore.CapitalLevelEncoder
 	encoder.EncodeDuration = zapcore.MillisDurationEncoder
@@ -24,18 +24,25 @@ func NewLogger() *zap.Logger {
 		zapcore.NewMultiWriteSyncer(os.Stdout, getLogWriter()),
 		zap.DebugLevel,
 	)
-
-	return zap.New(core, zap.AddCaller())
+	logger = zap.New(
+		core,
+		zap.AddCaller(),
+		// zap.Hooks(func(entry zapcore.Entry) error {
+		// fmt.Println("test hooks test hooks")
+		// 	return nil
+		// }),
+	)
 }
 
-// getLogWriter add a lumberjack.Logger to the zap.Logger
-func getLogWriter() zapcore.WriteSyncer {
-	if err := utils.MakeDir("./logs/"); err != nil {
-		panic(fmt.Sprintf("Failed to create logs directory: %s", err))
-	}
+// NewLogger is a wrapper for zap.Logger
+func NewLogger() *zap.Logger {
+	return logger
+}
 
+// getLogWriter returns a lumberjack.Logger
+func getLogWriter() zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./logs/logs.log",
+		Filename:   "./logs.log",
 		MaxSize:    10, // MB
 		MaxBackups: 5,  // Files
 		MaxAge:     30,
@@ -43,4 +50,9 @@ func getLogWriter() zapcore.WriteSyncer {
 	}
 
 	return zapcore.AddSync(lumberJackLogger)
+}
+
+// Sync is a wrapper for zap.Sync
+func Sync() error {
+	return logger.Sync()
 }

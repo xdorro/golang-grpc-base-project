@@ -9,13 +9,15 @@ import (
 	"github.com/google/wire"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // ProviderRedisSet is redis providers.
 var ProviderRedisSet = wire.NewSet(NewRedis)
 
 // NewRedis is new redis.
-func NewRedis(ctx context.Context, log *zap.Logger) redis.UniversalClient {
+func NewRedis(ctx context.Context) redis.UniversalClient {
 	log.Info("Connecting to redis...")
 
 	redisURL := strings.Split(strings.Trim(viper.GetString("REDIS_URL"), " "), ",")

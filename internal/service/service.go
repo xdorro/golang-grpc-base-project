@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/google/wire"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
 	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
@@ -18,7 +17,6 @@ var _ IService = (*Service)(nil)
 
 // Service is service struct.
 type Service struct {
-	log     *zap.Logger
 	repo    repo.IRepo
 	handler handler.IHandler
 
@@ -27,9 +25,8 @@ type Service struct {
 }
 
 // NewService creates a new service.
-func NewService(log *zap.Logger, repo repo.IRepo, handler handler.IHandler) IService {
+func NewService(repo repo.IRepo, handler handler.IHandler) IService {
 	return &Service{
-		log:     log,
 		repo:    repo,
 		handler: handler,
 	}

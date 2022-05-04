@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/google/wire"
-	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/handler"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"
@@ -16,7 +15,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-func initializeServer(ctx context.Context, log *zap.Logger) server.IServer {
+func initializeServer(ctx context.Context) server.IServer {
 	wire.Build(
 		repo.ProviderRepoSet,
 		// redis.ProviderRedisSet,
