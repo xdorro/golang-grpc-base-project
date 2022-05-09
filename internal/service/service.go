@@ -4,8 +4,8 @@ import (
 	"github.com/google/wire"
 	"google.golang.org/grpc"
 
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/handler"
 	"github.com/xdorro/golang-grpc-base-project/internal/repo"

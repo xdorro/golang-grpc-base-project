@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/vk-rv/pvx"
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
+	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

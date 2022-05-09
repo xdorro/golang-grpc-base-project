@@ -3,7 +3,7 @@ package models
 import (
 	"reflect"
 
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 )
 
 // User is a struct that represents a user

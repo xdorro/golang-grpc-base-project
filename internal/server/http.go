@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	commonpb "github.com/xdorro/base-project-proto/protos/v1/common"
+	commonpb "github.com/xdorro/proto-base-project/protos/v1/common"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -16,8 +16,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
@@ -87,7 +87,7 @@ func CustomErrorHandler(
 	if !ok {
 		log.Error("runtime.RPCMethod(): %w", zap.Error(err))
 	}
-	log.Info("CustomHTTPResponse", zap.String("method", val))
+	log.Info("CustomErrorHandler", zap.String("method", val))
 
 	// return Internal when Marshal failed
 	const fallback = `{"error": true, "message": "failed to marshal error message"}`

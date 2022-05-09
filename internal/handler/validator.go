@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	authpb "github.com/xdorro/base-project-proto/protos/v1/auth"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 )
 
 // ValidateError validate payload error if not nil
