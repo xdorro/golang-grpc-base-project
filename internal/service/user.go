@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	commonpb "github.com/xdorro/base-project-proto/protos/v1/common"
-	userpb "github.com/xdorro/base-project-proto/protos/v1/user"
+	commonpb "github.com/xdorro/proto-base-project/protos/v1/common"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/models"
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
