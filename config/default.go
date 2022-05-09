@@ -16,8 +16,8 @@ func defaultConfig() {
 	viper.SetDefault("LOG_PAYLOAD", true)
 
 	// DATABASE
-	viper.SetDefault("MONGODB_URI", "mongodb://root:123456aA%40@localhost:27017")
-	viper.SetDefault("MONGODB_DBNAME", "base")
+	viper.SetDefault("DB_URL", "mongodb://localhost:27017")
+	viper.SetDefault("DB_NAME", "base")
 
 	// REDIS
 	viper.SetDefault("REDIS_URL", "localhost:6379")

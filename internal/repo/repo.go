@@ -28,7 +28,7 @@ type Repo struct {
 
 // NewRepo creates new repository.
 func NewRepo(ctx context.Context) IRepo {
-	uri := viper.GetString("MONGODB_URI")
+	uri := viper.GetString("DB_URL")
 
 	log.Info("Connecting to MongoDB", zap.String("uri", uri))
 
@@ -74,7 +74,7 @@ func (r *Repo) Close() error {
 
 // Collection returns the mongo collection by Name.
 func (r *Repo) Collection(collectionName string) *mongo.Collection {
-	dbName := viper.GetString("MONGODB_DBNAME")
+	dbName := viper.GetString("DB_NAME")
 
 	return r.client.Database(dbName).Collection(collectionName)
 }
