@@ -42,7 +42,7 @@ func NewLogger() *zap.Logger {
 // getLogWriter returns a lumberjack.Logger
 func getLogWriter() zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./logs.log",
+		Filename:   "./logs/data.log",
 		MaxSize:    10, // MB
 		MaxBackups: 5,  // Files
 		MaxAge:     30,
