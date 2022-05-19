@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -17,11 +16,6 @@ func InitLogger() {
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 		NoColor:    false,
-	}
-
-	// Format Message
-	consoleWriter.FormatMessage = func(i interface{}) string {
-		return fmt.Sprintf("msg=\"%s\"", i)
 	}
 
 	// Multi Writer

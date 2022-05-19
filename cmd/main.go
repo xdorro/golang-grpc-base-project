@@ -7,8 +7,7 @@ import (
 )
 
 func main() {
-	// UNIX Time is faster and smaller than most timestamps
-	config.InitLogger()
+	config.InitConfig()
 
 	log.Info().
 		Msg("hello world")
