@@ -3,7 +3,7 @@ package grpc
 import (
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-micro-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
 // RegisterFn defines the method to register a server.

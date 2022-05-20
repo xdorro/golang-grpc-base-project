@@ -7,17 +7,17 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/elastic/gmux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
 	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/xdorro/golang-micro-base-project/internal/log"
-	grpcS "github.com/xdorro/golang-micro-base-project/internal/server/grpc"
-	httpS "github.com/xdorro/golang-micro-base-project/internal/server/http"
-	"github.com/xdorro/golang-micro-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/internal/log"
+	grpcS "github.com/xdorro/golang-grpc-base-project/internal/server/grpc"
+	httpS "github.com/xdorro/golang-grpc-base-project/internal/server/http"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
 type Server interface {
@@ -45,12 +45,12 @@ func NewServer(address string) Server {
 func (s *server) Run() error {
 	cert := viper.GetString("APP_CERT")
 	key := viper.GetString("APP_KEY")
-	tlsCredentials, err := s.LoadTLSCredentials(cert, key)
+	tlsCredentials, err := LoadTLSCredentials(cert, key)
 	if err != nil {
-		log.Panic("cannot load TLS credentials: ", zap.Error(err))
+		log.Panicf("cannot load TLS credentials: %s", err)
 	}
 
-	grpcS := grpcS.NewGrpcServer(tlsCredentials)
+	grpcS := grpcS.NewGrpcServer()
 	s.grpc = grpcS.Start(func(srv *grpc.Server, svc service.Service) {
 		userpb.RegisterUserServiceServer(srv, svc)
 	})
@@ -58,12 +58,32 @@ func (s *server) Run() error {
 	httpS := httpS.NewHttpServer(s.address, tlsCredentials)
 	s.http = httpS.Start(func(srv *runtime.ServeMux, conn *grpc.ClientConn) {
 		if err = userpb.RegisterUserServiceHandler(s.ctx, srv, conn); err != nil {
-			log.Panic("proto.RegisterUserServiceHandler(): %w", zap.Error(err))
+			log.Panicf("proto.RegisterUserServiceHandler(): %w", err)
 		}
 	})
 
-	mixed := s.MixedHandler()
-	return http.ListenAndServeTLS(s.address, cert, key, mixed)
+	// mixed := s.MixedHandler()
+	// return http.ListenAndServeTLS(s.address, cert, key, mixed)
+
+	srv := &http.Server{
+		Addr:    s.address,
+		Handler: s.http,
+	}
+
+	// Configure the server with gmux. The returned net.Listener will receive gRPC connections,
+	// while all other requests will be handled by s.Handler.
+	grpcListener, err := gmux.ConfigureServer(srv, nil)
+	if err != nil {
+		log.Fatalf("error configuring server: %", err)
+	}
+
+	go func() {
+		if err = s.grpc.Serve(grpcListener); err != nil {
+			log.Fatalf("grpc server error: %v", err)
+		}
+	}()
+
+	return srv.ListenAndServeTLS(cert, key)
 }
 
 // MixedHandler returns a handler that runs both http and grpc handlers.
@@ -79,7 +99,7 @@ func (s *server) MixedHandler() http.Handler {
 }
 
 // LoadTLSCredentials loads TLS credentials from the configuration
-func (s *server) LoadTLSCredentials(cert, key string) (
+func LoadTLSCredentials(cert, key string) (
 	credentials.TransportCredentials, error,
 ) {
 	// Load server's certificate and private key

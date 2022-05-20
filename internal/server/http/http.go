@@ -2,18 +2,17 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"go.uber.org/zap"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/xdorro/golang-micro-base-project/internal/log"
+	"github.com/xdorro/golang-grpc-base-project/internal/log"
 )
 
 type server struct {
@@ -56,24 +55,27 @@ func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 
 	conn, err := grpc.Dial(s.address, opts...)
 	if err != nil {
-		log.Panic("Failed to dial", zap.Error(err))
+		log.Panicf("Failed to dial: %s", err)
 	}
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				log.Error(fmt.Sprintf("Failed to close conn to %s: %v", s.address, cerr))
+				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
 			}
 			return
 		}
 		go func() {
 			<-s.ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				log.Error(fmt.Sprintf("Failed to close conn to %s: %v", s.address, cerr))
+				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
 			}
 		}()
 	}()
 
-	register(srv, conn)
+	// register(srv, conn)
+	if err = userpb.RegisterUserServiceHandler(s.ctx, srv, conn); err != nil {
+		log.Panicf("proto.RegisterUserServiceHandler(): %w", err)
+	}
 
 	return srv
 }
