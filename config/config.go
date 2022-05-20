@@ -5,12 +5,18 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+
+	"github.com/xdorro/golang-grpc-base-project/internal/log"
 )
 
 // InitConfig create new config
 func InitConfig() {
+	log.Info().
+		Str("goarch", runtime.GOARCH).
+		Str("goos", runtime.GOOS).
+		Str("version", runtime.Version()).
+		Msg("Runtime information")
 
 	// SetConfigFile explicitly defines the path, name and extension of the config file.
 	// Viper will use this and not check any of the config paths.
@@ -18,9 +24,6 @@ func InitConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
-
-	// init logger
-	InitLogger()
 
 	// Set default values
 	defaultConfig()
@@ -40,10 +43,8 @@ func InitConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	log.Info().
-		Str("app_name", viper.GetString("APP_NAME")).
-		Str("app_version", viper.GetString("APP_VERSION")).
-		Str("goarch", runtime.GOARCH).
-		Str("goos", runtime.GOOS).
-		Str("version", runtime.Version()).
+		Str("app-name", viper.GetString("APP_NAME")).
+		Str("app-version", viper.GetString("APP_VERSION")).
+		Str("app-port", viper.GetString("APP_PORT")).
 		Msg("Config loaded")
 }

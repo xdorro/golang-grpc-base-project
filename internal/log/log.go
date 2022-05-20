@@ -1,4 +1,4 @@
-package config
+package log
 
 import (
 	"os"
@@ -6,11 +6,12 @@ import (
 
 	"github.com/natefinch/lumberjack/v3"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
-// InitLogger initializes the logger
-func InitLogger() {
+var Logger zerolog.Logger
+
+// init initializes the logger
+func init() {
 	// UNIX Time is faster and smaller than most timestamps
 	consoleWriter := &zerolog.ConsoleWriter{
 		Out:        os.Stdout,
@@ -20,7 +21,7 @@ func InitLogger() {
 
 	// Multi Writer
 	mw := zerolog.MultiLevelWriter(consoleWriter, getLogWriter())
-	log.Logger = zerolog.New(mw).With().
+	Logger = zerolog.New(mw).With().
 		Timestamp().
 		Caller().
 		Logger()
