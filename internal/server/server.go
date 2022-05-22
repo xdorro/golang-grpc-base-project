@@ -3,122 +3,75 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
-	"strings"
 	"sync"
 
-	"github.com/google/wire"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/repo"
-	"github.com/xdorro/golang-grpc-base-project/internal/service"
+	grpcS "github.com/xdorro/golang-grpc-base-project/internal/server/grpc"
+	httpS "github.com/xdorro/golang-grpc-base-project/internal/server/http"
+	"github.com/xdorro/golang-grpc-base-project/pkg/gmux"
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
-// ProviderServerSet is server providers.
-var ProviderServerSet = wire.NewSet(NewServer)
-var _ IServer = (*Server)(nil)
-
-// Server is server struct.
-type Server struct {
-	ctx        context.Context
-	repo       repo.IRepo
-	grpcServer *grpc.Server
-	httpServer *runtime.ServeMux
-	mu         *sync.RWMutex
+type Server interface {
+	// Run the server
+	Run() error
+	Close() error
 }
 
-// NewServer creates a new server.
-func NewServer(ctx context.Context, repo repo.IRepo, service service.IService) IServer {
-	s := &Server{
-		ctx:  ctx,
-		repo: repo,
-		mu:   &sync.RWMutex{},
+type server struct {
+	sync.Mutex
+	grpc grpcS.Server
+	ctx  context.Context
+}
+
+func NewServer(ctx context.Context) Server {
+	s := &server{
+		ctx: ctx,
 	}
-
-	// pprof debug mode
-	if viper.GetBool("APP_DEBUG") {
-		go func() {
-			if err := http.ListenAndServe("localhost:6060", nil); err != nil {
-				log.Panic("http.ListenAndServe()", zap.Error(err))
-			}
-		}()
-	}
-
-	cert := viper.GetString("APP_CERT")
-	key := viper.GetString("APP_KEY")
-	tlsCredentials, err := loadTLSCredentials(cert, key)
-	if err != nil {
-		log.Panic("cannot load TLS credentials: ", zap.Error(err))
-	}
-
-	appPort := fmt.Sprintf(":%d", viper.GetInt("APP_PORT"))
-	log.Info(fmt.Sprintf("Serving on https://localhost%s", appPort))
-	handler := s.httpGrpcRouter(tlsCredentials, appPort, service)
-
-	go func() {
-		if err = http.ListenAndServeTLS(appPort, cert, key, handler); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Panic("http.ListenAndServeTLS()", zap.Error(err))
-		}
-	}()
 
 	return s
 }
 
-// Close closes the server.
-func (s *Server) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	log.Info("Closing server...")
-	s.grpcServer.GracefulStop()
-
-	if err := s.repo.Close(); err != nil {
-		return err
+func (s *server) Run() error {
+	cert := viper.GetString("APP_CERT")
+	key := viper.GetString("APP_KEY")
+	tlsCredentials, err := LoadTLSCredentials(cert, key)
+	if err != nil {
+		log.Panicf("cannot load TLS credentials: %s", err)
 	}
 
-	return nil
+	s.grpc = grpcS.NewGrpcServer(grpcS.RegisterGRPC)
+	host := fmt.Sprintf("localhost:%s", viper.GetString("APP_PORT"))
+	log.Infof("Starting https://%s", host)
+
+	newHttp := httpS.NewHttpServer(host, tlsCredentials)
+	srv := &http.Server{
+		Addr:    host,
+		Handler: newHttp.Start(httpS.RegisterHTTP),
+	}
+
+	// Configure the server with gmux. The returned net.Listener will receive gRPC connections,
+	// while all other requests will be handled by s.Handler.
+	grpcListener, err := gmux.ConfigureServer(srv, nil)
+	if err != nil {
+		log.Fatalf("error configuring server: %v", err)
+	}
+
+	go func() {
+		if err = s.grpc.Server().Serve(grpcListener); err != nil {
+			log.Fatalf("grpc server error: %v", err)
+		}
+	}()
+
+	return srv.ListenAndServeTLS(cert, key)
 }
 
-// httpGrpcRouter is http grpc router.
-func (s *Server) httpGrpcRouter(
-	tlsCredentials credentials.TransportCredentials, appPort string, service service.IService,
-) http.Handler {
-	s.newHTTPServer(tlsCredentials, appPort)
-	s.newGRPCServer(tlsCredentials, service)
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
-			s.grpcServer.ServeHTTP(w, r)
-			return
-		}
-
-		// middleware that adds CORS headers to the response.
-		h := w.Header()
-		h.Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		h.Set("Access-Control-Allow-Credentials", "true")
-
-		if strings.EqualFold(r.Method, http.MethodOptions) {
-			h.Set("Access-Control-Methods", "POST, PUT, PATCH, DELETE")
-			h.Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Content-Type")
-			h.Set("Access-Control-Max-Age", "86400")
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		s.httpServer.ServeHTTP(w, r)
-	})
-}
-
-// loadTLSCredentials loads TLS credentials from the configuration
-func loadTLSCredentials(cert, key string) (
+// LoadTLSCredentials loads TLS credentials from the configuration
+func LoadTLSCredentials(cert, key string) (
 	credentials.TransportCredentials, error,
 ) {
 	// Load server's certificate and private key
@@ -135,4 +88,10 @@ func loadTLSCredentials(cert, key string) (
 	}
 
 	return credentials.NewTLS(config), nil
+}
+
+func (s *server) Close() error {
+	s.grpc.Close()
+
+	return nil
 }
