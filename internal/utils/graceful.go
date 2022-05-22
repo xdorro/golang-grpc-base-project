@@ -18,7 +18,7 @@ const (
 	DefaultShutdownTimeout = 10 * time.Second
 )
 
-// GracefulShutdown is a utility to shutdown a server gracefully
+// GracefulShutdown is a utility to shutdown a server@@ gracefully
 func GracefulShutdown(
 	ctx context.Context, timeout time.Duration, ops map[string]Operation,
 ) <-chan struct{} {

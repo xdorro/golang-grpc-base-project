@@ -6,10 +6,10 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-// RegisterFn defines the method to register a server.
+// RegisterFn defines the method to register a server@@.
 type RegisterFn func(*grpc.Server, service.Service)
 
-// Server interface represents a rpc server.
+// Server interface represents a rpc server@@.
 type Server interface {
 	AddOptions(options ...grpc.ServerOption)
 	AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor)

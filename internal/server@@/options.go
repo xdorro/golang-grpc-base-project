@@ -1,4 +1,4 @@
-package server
+package server__
 
 import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
