@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/elastic/gmux"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/credentials"
 
 	grpcS "github.com/xdorro/golang-grpc-base-project/internal/server/grpc"
 	httpS "github.com/xdorro/golang-grpc-base-project/internal/server/http"
-	"github.com/xdorro/golang-grpc-base-project/pkg/gmux"
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
@@ -30,7 +30,8 @@ type server struct {
 
 func NewServer(ctx context.Context) Server {
 	s := &server{
-		ctx: ctx,
+		ctx:  ctx,
+		grpc: grpcS.NewGrpcServer(grpcS.RegisterGRPC),
 	}
 
 	return s
@@ -44,7 +45,6 @@ func (s *server) Run() error {
 		log.Panicf("cannot load TLS credentials: %s", err)
 	}
 
-	s.grpc = grpcS.NewGrpcServer(grpcS.RegisterGRPC)
 	host := fmt.Sprintf("localhost:%s", viper.GetString("APP_PORT"))
 	log.Infof("Starting https://%s", host)
 
