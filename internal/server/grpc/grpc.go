@@ -3,11 +3,14 @@ package grpc
 import (
 	"context"
 	"sync"
+	"time"
 
+	metrics "github.com/grpc-ecosystem/go-grpc-middleware/providers/openmetrics/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/providers/opentracing/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tracing"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
@@ -29,28 +32,33 @@ func NewGrpcServer() Server {
 
 func (s *server) Start(register RegisterFn) *grpc.Server {
 	logger := zerolog.InterceptorLogger(log.Logger)
+	optracing := opentracing.InterceptorTracer()
+	srvmetrics := metrics.NewServerMetrics()
 
 	s.AddStreamInterceptors(
-		tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		// tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		tracing.StreamServerInterceptor(optracing),
+		metrics.StreamServerInterceptor(srvmetrics),
 		logging.StreamServerInterceptor(logger),
 		recovery.StreamServerInterceptor(),
 	)
 
 	s.AddUnaryInterceptors(
-		tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		// tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		tracing.UnaryServerInterceptor(optracing),
+		metrics.UnaryServerInterceptor(srvmetrics),
 		logging.UnaryServerInterceptor(logger),
 		recovery.UnaryServerInterceptor(),
 	)
 
 	// log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
-		alwaysLoggingDeciderServer := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
-			return true
+		alwaysLoggingDeciderServer := func(context.Context, string, interface{}) logging.PayloadDecision {
+			return logging.LogPayloadRequestAndResponse
 		}
 
-		s.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer))
-
-		s.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer))
+		s.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
+		s.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
 
 	}
 
