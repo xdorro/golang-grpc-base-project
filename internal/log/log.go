@@ -2,6 +2,7 @@ package log
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/natefinch/lumberjack/v3"
@@ -21,6 +22,20 @@ func init() {
 
 	// Multi Writer
 	mw := zerolog.MultiLevelWriter(consoleWriter, getLogWriter())
+
+	// Caller Marshal Function
+	zerolog.CallerMarshalFunc = func(file string, line int) string {
+		short := file
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				short = file[i+1:]
+				break
+			}
+		}
+		file = short
+		return file + ":" + strconv.Itoa(line)
+	}
+
 	Logger = zerolog.New(mw).With().
 		Timestamp().
 		Caller().

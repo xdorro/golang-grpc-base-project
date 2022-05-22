@@ -101,7 +101,7 @@ func Error() *zerolog.Event {
 //
 // You must call Msg on the returned event in order to send the event.
 func Errorf(format string, v ...interface{}) {
-	Logger.Error().CallerSkipFrame(1).Msgf(format, v...)
+	Logger.Error().CallerSkipFrame(1).Err(fmt.Errorf(format, v...)).Msg("")
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function

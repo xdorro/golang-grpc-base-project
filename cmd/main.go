@@ -17,8 +17,6 @@ func main() {
 	defer cancel()
 	config.InitConfig()
 
-	log.Infof("hello world")
-
 	host := fmt.Sprintf("localhost:%s", viper.GetString("APP_PORT"))
 	log.Infof("Starting https://%s", host)
 	srv := server.NewServer(host)
@@ -31,6 +29,5 @@ func main() {
 
 	// wait for termination signal and register client & http server clean-up operations
 	wait := utils.GracefulShutdown(ctx, utils.DefaultShutdownTimeout, map[string]utils.Operation{})
-
 	<-wait
 }

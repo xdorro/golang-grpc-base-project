@@ -1,13 +1,17 @@
 package grpc
 
 import (
+	"context"
 	"sync"
 
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
 	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 	"google.golang.org/grpc"
 
+	"github.com/xdorro/golang-grpc-base-project/internal/log"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
@@ -24,19 +28,24 @@ func NewGrpcServer() Server {
 }
 
 func (s *server) Start(register RegisterFn) *grpc.Server {
-	// log gRPC library internals with log
-	// grpc_zap.ReplaceGrpcLoggerV2(log.Logger())
+	logger := zerolog.InterceptorLogger(log.Logger)
+
+	serverPayloadDecider := func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {
+		return true
+	}
 
 	s.AddStreamInterceptors(
-		grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		// grpc_zap.StreamServerInterceptor(log.Logger()),
-		grpc_recovery.StreamServerInterceptor(),
+		tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		logging.StreamServerInterceptor(logger),
+		logging.PayloadStreamServerInterceptor(logger, serverPayloadDecider),
+		recovery.StreamServerInterceptor(),
 	)
 
 	s.AddUnaryInterceptors(
-		grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-		// grpc_zap.UnaryServerInterceptor(log.Logger()),
-		grpc_recovery.UnaryServerInterceptor(),
+		tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
+		logging.UnaryServerInterceptor(logger),
+		logging.PayloadUnaryServerInterceptor(logger, serverPayloadDecider),
+		recovery.UnaryServerInterceptor(),
 	)
 
 	s.AddOptions(
