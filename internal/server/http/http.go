@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/log"
+	log2 "github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 type server struct {
@@ -56,7 +56,7 @@ func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 
 	// log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
-		logger := zerolog.InterceptorLogger(log.Logger)
+		logger := zerolog.InterceptorLogger(log2.Logger)
 		alwaysLoggingDeciderClient := func(context.Context, string) logging.PayloadDecision {
 			return logging.LogPayloadRequestAndResponse
 		}
@@ -69,19 +69,19 @@ func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 
 	conn, err := grpc.Dial(s.address, opts...)
 	if err != nil {
-		log.Panicf("Failed to dial: %s", err)
+		log2.Panicf("Failed to dial: %s", err)
 	}
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
+				log2.Errorf("Failed to close conn to %s: %v", s.address, cerr)
 			}
 			return
 		}
 		go func() {
 			<-s.ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
+				log2.Errorf("Failed to close conn to %s: %v", s.address, cerr)
 			}
 		}()
 	}()

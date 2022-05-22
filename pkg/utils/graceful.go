@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/log"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // Operation is a cleanup function on shutting down

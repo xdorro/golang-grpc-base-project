@@ -3,18 +3,17 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"sync"
 
-	"github.com/elastic/gmux"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/log"
 	grpcS "github.com/xdorro/golang-grpc-base-project/internal/server/grpc"
 	httpS "github.com/xdorro/golang-grpc-base-project/internal/server/http"
+	"github.com/xdorro/golang-grpc-base-project/pkg/gmux"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 type Server interface {
@@ -24,17 +23,14 @@ type Server interface {
 }
 
 type server struct {
-	mu      sync.Mutex
-	address string
-	grpc    *grpc.Server
-	http    *runtime.ServeMux
-	ctx     context.Context
+	sync.Mutex
+	grpc grpcS.Server
+	ctx  context.Context
 }
 
-func NewServer(address string) Server {
+func NewServer(ctx context.Context) Server {
 	s := &server{
-		ctx:     context.Background(),
-		address: address,
+		ctx: ctx,
 	}
 
 	return s
@@ -48,26 +44,25 @@ func (s *server) Run() error {
 		log.Panicf("cannot load TLS credentials: %s", err)
 	}
 
-	newGrpc := grpcS.NewGrpcServer()
-	s.grpc = newGrpc.Start(grpcS.RegisterGRPC)
+	s.grpc = grpcS.NewGrpcServer(grpcS.RegisterGRPC)
+	host := fmt.Sprintf("localhost:%s", viper.GetString("APP_PORT"))
+	log.Infof("Starting https://%s", host)
 
-	newHttp := httpS.NewHttpServer(s.address, tlsCredentials)
-	s.http = newHttp.Start(httpS.RegisterHTTP)
-
+	newHttp := httpS.NewHttpServer(host, tlsCredentials)
 	srv := &http.Server{
-		Addr:    s.address,
-		Handler: s.http,
+		Addr:    host,
+		Handler: newHttp.Start(httpS.RegisterHTTP),
 	}
 
 	// Configure the server with gmux. The returned net.Listener will receive gRPC connections,
 	// while all other requests will be handled by s.Handler.
 	grpcListener, err := gmux.ConfigureServer(srv, nil)
 	if err != nil {
-		log.Fatalf("error configuring server: %", err)
+		log.Fatalf("error configuring server: %v", err)
 	}
 
 	go func() {
-		if err = s.grpc.Serve(grpcListener); err != nil {
+		if err = s.grpc.Server().Serve(grpcListener); err != nil {
 			log.Fatalf("grpc server error: %v", err)
 		}
 	}()
@@ -96,7 +91,7 @@ func LoadTLSCredentials(cert, key string) (
 }
 
 func (s *server) Close() error {
-	s.grpc.GracefulStop()
+	s.grpc.Close()
 
 	return nil
 }

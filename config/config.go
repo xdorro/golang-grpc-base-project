@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/log"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 // InitConfig create new config

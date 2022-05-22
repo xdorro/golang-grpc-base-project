@@ -14,28 +14,27 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
-	"github.com/xdorro/golang-grpc-base-project/internal/log"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
+	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
 type server struct {
 	sync.Mutex
+	grpc               *grpc.Server
 	options            []grpc.ServerOption
 	streamInterceptors []grpc.StreamServerInterceptor
 	unaryInterceptors  []grpc.UnaryServerInterceptor
 }
 
 // NewGrpcServer returns a Server.
-func NewGrpcServer() Server {
-	return &server{}
-}
+func NewGrpcServer(register RegisterFn) Server {
+	srv := &server{}
 
-func (s *server) Start(register RegisterFn) *grpc.Server {
 	logger := zerolog.InterceptorLogger(log.Logger)
 	optracing := opentracing.InterceptorTracer()
 	srvmetrics := metrics.NewServerMetrics()
 
-	s.AddStreamInterceptors(
+	srv.AddStreamInterceptors(
 		// tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
 		tracing.StreamServerInterceptor(optracing),
 		metrics.StreamServerInterceptor(srvmetrics),
@@ -43,7 +42,7 @@ func (s *server) Start(register RegisterFn) *grpc.Server {
 		recovery.StreamServerInterceptor(),
 	)
 
-	s.AddUnaryInterceptors(
+	srv.AddUnaryInterceptors(
 		// tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
 		tracing.UnaryServerInterceptor(optracing),
 		metrics.UnaryServerInterceptor(srvmetrics),
@@ -57,25 +56,34 @@ func (s *server) Start(register RegisterFn) *grpc.Server {
 			return logging.LogPayloadRequestAndResponse
 		}
 
-		s.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
-		s.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
+		srv.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
+		srv.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
 
 	}
 
-	s.AddOptions(
-		WithUnaryServerInterceptors(s.unaryInterceptors...),
-		WithStreamServerInterceptors(s.streamInterceptors...),
+	srv.AddOptions(
+		WithUnaryServerInterceptors(srv.unaryInterceptors...),
+		WithStreamServerInterceptors(srv.streamInterceptors...),
 	)
 
-	srv := grpc.NewServer(s.options...)
+	srv.Lock()
+	defer srv.Unlock()
+
+	srv.grpc = grpc.NewServer(srv.options...)
 	svc := service.NewService()
-	s.Lock()
-	register(srv, svc)
-	s.Unlock()
+
+	register(srv.grpc, svc)
 
 	return srv
 }
 
-func (s *server) Stop() error {
-	return nil
+func (s *server) Server() *grpc.Server {
+	return s.grpc
+}
+
+func (s *server) Close() {
+	s.Lock()
+	defer s.Unlock()
+
+	s.grpc.GracefulStop()
 }
