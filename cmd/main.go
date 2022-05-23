@@ -17,10 +17,10 @@ func main() {
 	config.InitConfig()
 
 	// New server
-	srv := server.NewServer(ctx)
+	srv := initServer(ctx)
 
 	// Run server
-	go func(srv server.Server) {
+	go func(srv server.IServer) {
 		if err := srv.Run(); err != nil {
 			log.Panicf("error running app: %v", err)
 		}
