@@ -10,10 +10,12 @@ import (
 	"github.com/google/wire"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
 func initServer(ctx context.Context) server.IServer {
 	wire.Build(
+		service.ProviderServiceSet,
 		server.ProviderServerSet,
 	)
 

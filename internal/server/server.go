@@ -8,34 +8,25 @@ import (
 	"sync"
 
 	"github.com/elastic/gmux"
-	"github.com/google/wire"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/credentials"
 
 	grpcS "github.com/xdorro/golang-grpc-base-project/internal/server/grpc"
 	httpS "github.com/xdorro/golang-grpc-base-project/internal/server/http"
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
-// ProviderServerSet is Server providers.
-var ProviderServerSet = wire.NewSet(NewServer)
-
-type IServer interface {
-	// Run the Server
-	Run() error
-	Close() error
-}
-
 type Server struct {
 	sync.Mutex
-	grpc grpcS.Server
 	ctx  context.Context
+	grpc grpcS.Server
 }
 
-func NewServer(ctx context.Context) IServer {
+func NewServer(ctx context.Context, service service.IService) IServer {
 	s := &Server{
 		ctx:  ctx,
-		grpc: grpcS.NewGrpcServer(grpcS.RegisterGRPC),
+		grpc: grpcS.NewGrpcServer(service, grpcS.RegisterGRPC),
 	}
 
 	return s

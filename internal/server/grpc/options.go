@@ -7,7 +7,7 @@ import (
 )
 
 // RegisterFn defines the method to register a server.
-type RegisterFn func(*grpc.Server, service.Service)
+type RegisterFn func(*grpc.Server, service.IService)
 
 // Server interface represents a rpc server.
 type Server interface {
