@@ -8,7 +8,7 @@ import (
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-func RegisterGRPC(srv *grpc.Server, svc service.Service) {
+func RegisterGRPC(srv *grpc.Server, svc service.IService) {
 	userpb.RegisterUserServiceServer(srv, svc)
 	authpb.RegisterAuthServiceServer(srv, svc)
 }

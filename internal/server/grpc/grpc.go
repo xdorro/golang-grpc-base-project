@@ -27,7 +27,7 @@ type server struct {
 }
 
 // NewGrpcServer returns a Server.
-func NewGrpcServer(register RegisterFn) Server {
+func NewGrpcServer(service service.IService, register RegisterFn) Server {
 	srv := &server{}
 
 	logger := zerolog.InterceptorLogger(log.Logger)
@@ -70,9 +70,8 @@ func NewGrpcServer(register RegisterFn) Server {
 	defer srv.Unlock()
 
 	srv.grpc = grpc.NewServer(srv.options...)
-	svc := service.NewService()
 
-	register(srv.grpc, svc)
+	register(srv.grpc, service)
 
 	return srv
 }

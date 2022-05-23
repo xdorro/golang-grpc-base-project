@@ -5,11 +5,6 @@ import (
 	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 )
 
-type Service interface {
-	userpb.UserServiceServer
-	authpb.AuthServiceServer
-}
-
 // service is service struct.
 type service struct {
 	userpb.UnimplementedUserServiceServer
@@ -17,6 +12,6 @@ type service struct {
 }
 
 // NewService creates a new service.
-func NewService() Service {
+func NewService() IService {
 	return &service{}
 }
