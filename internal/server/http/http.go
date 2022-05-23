@@ -25,8 +25,8 @@ type server struct {
 	ctx            context.Context
 }
 
-// NewHttpServer returns a Server.
-func NewHttpServer(address string, tlsCredentials credentials.TransportCredentials) Server {
+// NewHttpServer returns a IServer.
+func NewHttpServer(address string, tlsCredentials credentials.TransportCredentials) IServer {
 	return &server{
 		ctx:            context.Background(),
 		tlsCredentials: tlsCredentials,

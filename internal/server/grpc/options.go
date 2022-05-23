@@ -9,8 +9,8 @@ import (
 // RegisterFn defines the method to register a server.
 type RegisterFn func(*grpc.Server, service.IService)
 
-// Server interface represents a rpc server.
-type Server interface {
+// IServer interface represents a rpc server.
+type IServer interface {
 	AddOptions(options ...grpc.ServerOption)
 	AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor)
 	AddUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor)

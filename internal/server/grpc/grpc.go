@@ -26,8 +26,8 @@ type server struct {
 	unaryInterceptors  []grpc.UnaryServerInterceptor
 }
 
-// NewGrpcServer returns a Server.
-func NewGrpcServer(service service.IService, register RegisterFn) Server {
+// NewGrpcServer returns a IServer.
+func NewGrpcServer(service service.IService, register RegisterFn) IServer {
 	srv := &server{}
 
 	logger := zerolog.InterceptorLogger(log.Logger)

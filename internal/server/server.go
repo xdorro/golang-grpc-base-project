@@ -20,7 +20,7 @@ import (
 type Server struct {
 	sync.Mutex
 	ctx  context.Context
-	grpc grpcS.Server
+	grpc grpcS.IServer
 }
 
 func NewServer(ctx context.Context, service service.IService) IServer {
@@ -49,16 +49,16 @@ func (s *Server) Run() error {
 		Handler: newHttp.Start(httpS.RegisterHTTP),
 	}
 
-	// Configure the Server with gmux. The returned net.Listener will receive gRPC connections,
+	// Configure the IServer with gmux. The returned net.Listener will receive gRPC connections,
 	// while all other requests will be handled by s.Handler.
 	grpcListener, err := gmux.ConfigureServer(srv, nil)
 	if err != nil {
-		log.Fatalf("error configuring Server: %v", err)
+		log.Fatalf("error configuring IServer: %v", err)
 	}
 
 	go func() {
 		if err = s.grpc.Server().Serve(grpcListener); err != nil {
-			log.Fatalf("grpc Server error: %v", err)
+			log.Fatalf("grpc IServer error: %v", err)
 		}
 	}()
 
@@ -69,7 +69,7 @@ func (s *Server) Run() error {
 func LoadTLSCredentials(cert, key string) (
 	credentials.TransportCredentials, error,
 ) {
-	// Load Server's certificate and private key
+	// Load IServer's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
 		return nil, err
