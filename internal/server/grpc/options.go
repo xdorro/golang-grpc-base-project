@@ -1,6 +1,8 @@
 package grpc
 
 import (
+	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
+	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
 	"google.golang.org/grpc"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
@@ -11,23 +13,10 @@ type RegisterFn func(*grpc.Server, service.IService)
 
 // IServer interface represents a rpc server.
 type IServer interface {
-	AddOptions(options ...grpc.ServerOption)
 	AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor)
 	AddUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor)
 	Server() *grpc.Server
 	Close()
-}
-
-func (s *server) AddGrpc(grpc *grpc.Server) {
-	s.Lock()
-	s.grpc = grpc
-	s.Unlock()
-}
-
-func (s *server) AddOptions(options ...grpc.ServerOption) {
-	s.Lock()
-	s.options = append(s.options, options...)
-	s.Unlock()
 }
 
 func (s *server) AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor) {
@@ -40,4 +29,9 @@ func (s *server) AddUnaryInterceptors(interceptors ...grpc.UnaryServerIntercepto
 	s.Lock()
 	s.unaryInterceptors = append(s.unaryInterceptors, interceptors...)
 	s.Unlock()
+}
+
+func RegisterGRPC(srv *grpc.Server, svc service.IService) {
+	userpb.RegisterUserServiceServer(srv, svc)
+	authpb.RegisterAuthServiceServer(srv, svc)
 }

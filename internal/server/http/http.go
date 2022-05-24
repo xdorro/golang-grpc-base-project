@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -10,8 +12,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/viper"
+	commonpb "github.com/xdorro/proto-base-project/protos/v1/common"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -20,21 +25,15 @@ import (
 
 type server struct {
 	sync.Mutex
-	address        string
-	tlsCredentials credentials.TransportCredentials
-	ctx            context.Context
+	ctx context.Context
 }
 
 // NewHttpServer returns a IServer.
-func NewHttpServer(address string, tlsCredentials credentials.TransportCredentials) IServer {
-	return &server{
-		ctx:            context.Background(),
-		tlsCredentials: tlsCredentials,
-		address:        address,
+func NewHttpServer(address string, register RegisterFn) *runtime.ServeMux {
+	s := &server{
+		ctx: context.Background(),
 	}
-}
 
-func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 	srv := runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
@@ -47,11 +46,12 @@ func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 				Resolver:        nil,
 			},
 		}),
-		runtime.WithForwardResponseOption(s.CustomForwardResponse),
+		runtime.WithForwardResponseOption(CustomForwardResponse),
+		runtime.WithErrorHandler(CustomErrorResponse),
 	)
 
 	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(s.tlsCredentials),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
 	// log payload if enabled
@@ -67,34 +67,20 @@ func (s *server) Start(register RegisterFn) *runtime.ServeMux {
 		)
 	}
 
-	conn, err := grpc.Dial(s.address, opts...)
+	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		log.Panicf("Failed to dial: %s", err)
 	}
-	defer func() {
-		if err != nil {
-			if cerr := conn.Close(); cerr != nil {
-				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
-			}
-			return
-		}
-		go func() {
-			<-s.ctx.Done()
-			if cerr := conn.Close(); cerr != nil {
-				log.Errorf("Failed to close conn to %s: %v", s.address, cerr)
-			}
-		}()
-	}()
 
 	s.Lock()
+	defer s.Unlock()
 	register(srv, conn)
-	s.Unlock()
 
 	return srv
 }
 
 // CustomForwardResponse forwards the response from the backend to the client.
-func (s *server) CustomForwardResponse(_ context.Context, w http.ResponseWriter, _ proto.Message) error {
+func CustomForwardResponse(_ context.Context, w http.ResponseWriter, _ proto.Message) error {
 	headers := w.Header()
 	if location, ok := headers["Grpc-Metadata-Location"]; ok {
 		w.Header().Set("Location", location[0])
@@ -102,4 +88,49 @@ func (s *server) CustomForwardResponse(_ context.Context, w http.ResponseWriter,
 	}
 
 	return nil
+}
+
+// CustomErrorResponse custom error response
+func CustomErrorResponse(
+	ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request,
+	err error,
+) {
+	val, ok := runtime.RPCMethod(ctx)
+	if !ok {
+		log.Errorf("runtime.RPCMethod(): %v", err)
+	}
+	log.Infof("CustomErrorResponse method: %s", val)
+
+	// return Internal when Marshal failed
+	const fallback = `{"error": true, "message": "failed to marshal error message"}`
+
+	var customStatus *runtime.HTTPStatusError
+	if errors.As(err, &customStatus) {
+		err = customStatus.Err
+	}
+
+	s := status.Convert(err)
+	pb := s.Proto()
+
+	w.Header().Del("Trailer")
+	w.Header().Del("Transfer-Encoding")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	encryptedResponse := &commonpb.CommonResponse{
+		Error:   true,
+		Message: pb.GetMessage(),
+	}
+	responseBody, merr := marshaler.Marshal(encryptedResponse)
+	if merr != nil {
+		grpclog.Infof("Failed to marshal error message %q: %v", s, merr)
+		if _, err = io.WriteString(w, fallback); err != nil {
+			grpclog.Infof("Failed to write response: %v", err)
+		}
+		return
+	}
+
+	if _, err = w.Write(responseBody); err != nil {
+		grpclog.Infof("Failed to write response: %v", err)
+	}
 }

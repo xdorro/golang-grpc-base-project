@@ -19,7 +19,7 @@ func main() {
 	// New server
 	srv := initServer(ctx)
 
-	// Run server
+	// Graceful Stop
 	go func(srv server.IServer) {
 		if err := srv.Run(); err != nil {
 			log.Panicf("error running app: %v", err)

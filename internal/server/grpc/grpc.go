@@ -20,21 +20,18 @@ import (
 
 type server struct {
 	sync.Mutex
-	grpc               *grpc.Server
-	options            []grpc.ServerOption
 	streamInterceptors []grpc.StreamServerInterceptor
 	unaryInterceptors  []grpc.UnaryServerInterceptor
 }
 
 // NewGrpcServer returns a IServer.
-func NewGrpcServer(service service.IService, register RegisterFn) IServer {
-	srv := &server{}
-
+func NewGrpcServer(service service.IService, register RegisterFn) *grpc.Server {
 	logger := zerolog.InterceptorLogger(log.Logger())
 	optracing := opentracing.InterceptorTracer()
 	srvmetrics := metrics.NewServerMetrics()
 
-	srv.AddStreamInterceptors(
+	s := &server{}
+	s.AddStreamInterceptors(
 		// tags.StreamServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
 		tracing.StreamServerInterceptor(optracing),
 		metrics.StreamServerInterceptor(srvmetrics),
@@ -42,7 +39,7 @@ func NewGrpcServer(service service.IService, register RegisterFn) IServer {
 		recovery.StreamServerInterceptor(),
 	)
 
-	srv.AddUnaryInterceptors(
+	s.AddUnaryInterceptors(
 		// tags.UnaryServerInterceptor(tags.WithFieldExtractor(tags.CodeGenRequestFieldExtractor)),
 		tracing.UnaryServerInterceptor(optracing),
 		metrics.UnaryServerInterceptor(srvmetrics),
@@ -56,32 +53,19 @@ func NewGrpcServer(service service.IService, register RegisterFn) IServer {
 			return logging.LogPayloadRequestAndResponse
 		}
 
-		srv.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
-		srv.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
+		s.AddStreamInterceptors(logging.PayloadStreamServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
+		s.AddUnaryInterceptors(logging.PayloadUnaryServerInterceptor(logger, alwaysLoggingDeciderServer, time.RFC3339))
 
 	}
 
-	srv.AddOptions(
-		WithUnaryServerInterceptors(srv.unaryInterceptors...),
-		WithStreamServerInterceptors(srv.streamInterceptors...),
+	g := grpc.NewServer(
+		WithUnaryServerInterceptors(s.unaryInterceptors...),
+		WithStreamServerInterceptors(s.streamInterceptors...),
 	)
 
-	srv.AddGrpc(grpc.NewServer(srv.options...))
-
-	srv.Lock()
-	defer srv.Unlock()
-	register(srv.grpc, service)
-
-	return srv
-}
-
-func (s *server) Server() *grpc.Server {
-	return s.grpc
-}
-
-func (s *server) Close() {
 	s.Lock()
 	defer s.Unlock()
+	register(g, service)
 
-	s.grpc.GracefulStop()
+	return g
 }
