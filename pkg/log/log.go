@@ -2,57 +2,69 @@ package log
 
 import (
 	"os"
+	"strconv"
+	"time"
 
-	"go.elastic.co/ecszap"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
+	"github.com/natefinch/lumberjack/v3"
+	"github.com/rs/zerolog"
 )
 
-var (
-	logger *zap.Logger
-)
+var logger *zerolog.Logger
 
+// init initializes the logger
 func init() {
-	encoder := ecszap.NewDefaultEncoderConfig()
-	encoder.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoder.EncodeDuration = zapcore.MillisDurationEncoder
-	encoder.EncodeCaller = ecszap.ShortCallerEncoder
+	// UNIX Time is faster and smaller than most timestamps
+	consoleWriter := &zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: time.RFC3339,
+		NoColor:    false,
+	}
 
-	core := ecszap.NewCore(
-		encoder,
-		zapcore.NewMultiWriteSyncer(os.Stdout, getLogWriter()),
-		zap.DebugLevel,
-	)
-	logger = zap.New(
-		core,
-		zap.AddCaller(),
-		// zap.Hooks(func(entry zapcore.Entry) error {
-		// fmt.Println("test hooks test hooks")
-		// 	return nil
-		// }),
-	)
+	// Multi Writer
+	mw := zerolog.MultiLevelWriter(consoleWriter, getLogWriter())
+
+	// Caller Marshal Function
+	zerolog.CallerMarshalFunc = func(file string, line int) string {
+		short := file
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				short = file[i+1:]
+				break
+			}
+		}
+		file = short
+		return file + ":" + strconv.Itoa(line)
+	}
+
+	l := zerolog.New(mw).With().
+		Timestamp().
+		Caller().
+		Logger()
+
+	logger = &l
 }
 
-// NewLogger is a wrapper for zap.Logger
-func NewLogger() *zap.Logger {
-	return logger
+func Logger() zerolog.Logger {
+	return *logger
 }
 
-// getLogWriter returns a lumberjack.Logger
-func getLogWriter() zapcore.WriteSyncer {
-	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./logs/data.log",
-		MaxSize:    10, // MB
+// getLogWriter returns a lumberjack.logger
+func getLogWriter() *lumberjack.Roller {
+	options := &lumberjack.Options{
 		MaxBackups: 5,  // Files
-		MaxAge:     30,
+		MaxAge:     30, // 30 days
 		Compress:   false,
 	}
 
-	return zapcore.AddSync(lumberJackLogger)
-}
+	roller, err := lumberjack.NewRoller(
+		"./logs/data.log",
+		500*1024*1024, // 500 MB
+		options,
+	)
 
-// Sync is a wrapper for zap.Sync
-func Sync() error {
-	return logger.Sync()
+	if err != nil {
+		panic(err)
+	}
+
+	return roller
 }

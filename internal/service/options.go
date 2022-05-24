@@ -1,15 +1,15 @@
 package service
 
 import (
+	"github.com/google/wire"
 	authpb "github.com/xdorro/proto-base-project/protos/v1/auth"
 	userpb "github.com/xdorro/proto-base-project/protos/v1/user"
-	"google.golang.org/grpc"
 )
 
-// IService is the interface for the service
-type IService interface {
-	RegisterServiceServer(grpcServer *grpc.Server)
+// ProviderServiceSet is Server providers.
+var ProviderServiceSet = wire.NewSet(NewService)
 
-	authpb.AuthServiceServer
+type IService interface {
 	userpb.UserServiceServer
+	authpb.AuthServiceServer
 }
