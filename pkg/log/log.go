@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var Logger zerolog.Logger
+var logger *zerolog.Logger
 
 // init initializes the logger
 func init() {
@@ -36,13 +36,19 @@ func init() {
 		return file + ":" + strconv.Itoa(line)
 	}
 
-	Logger = zerolog.New(mw).With().
+	l := zerolog.New(mw).With().
 		Timestamp().
 		Caller().
 		Logger()
+
+	logger = &l
 }
 
-// getLogWriter returns a lumberjack.Logger
+func Logger() zerolog.Logger {
+	return *logger
+}
+
+// getLogWriter returns a lumberjack.logger
 func getLogWriter() *lumberjack.Roller {
 	options := &lumberjack.Options{
 		MaxBackups: 5,  // Files

@@ -18,6 +18,12 @@ type IServer interface {
 	Close()
 }
 
+func (s *server) AddGrpc(grpc *grpc.Server) {
+	s.Lock()
+	s.grpc = grpc
+	s.Unlock()
+}
+
 func (s *server) AddOptions(options ...grpc.ServerOption) {
 	s.Lock()
 	s.options = append(s.options, options...)

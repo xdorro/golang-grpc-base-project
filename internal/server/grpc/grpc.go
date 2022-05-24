@@ -30,7 +30,7 @@ type server struct {
 func NewGrpcServer(service service.IService, register RegisterFn) IServer {
 	srv := &server{}
 
-	logger := zerolog.InterceptorLogger(log.Logger)
+	logger := zerolog.InterceptorLogger(log.Logger())
 	optracing := opentracing.InterceptorTracer()
 	srvmetrics := metrics.NewServerMetrics()
 
@@ -66,11 +66,10 @@ func NewGrpcServer(service service.IService, register RegisterFn) IServer {
 		WithStreamServerInterceptors(srv.streamInterceptors...),
 	)
 
+	srv.AddGrpc(grpc.NewServer(srv.options...))
+
 	srv.Lock()
 	defer srv.Unlock()
-
-	srv.grpc = grpc.NewServer(srv.options...)
-
 	register(srv.grpc, service)
 
 	return srv
