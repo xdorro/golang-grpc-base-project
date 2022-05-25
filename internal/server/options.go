@@ -8,7 +8,5 @@ import (
 var ProviderServerSet = wire.NewSet(NewServer)
 
 type IServer interface {
-	// Run the Server
-	Run() error
 	Close() error
 }

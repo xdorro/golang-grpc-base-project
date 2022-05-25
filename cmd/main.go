@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/xdorro/golang-grpc-base-project/config"
-	"github.com/xdorro/golang-grpc-base-project/internal/server"
-	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 	"github.com/xdorro/golang-grpc-base-project/pkg/utils"
 )
 
@@ -17,14 +15,7 @@ func main() {
 	config.InitConfig()
 
 	// New server
-	srv := initServer(ctx)
-
-	// Graceful Stop
-	go func(srv server.IServer) {
-		if err := srv.Run(); err != nil {
-			log.Panicf("error running app: %v", err)
-		}
-	}(srv)
+	srv := initServer()
 
 	// wait for termination signal and register client & http server clean-up operations
 	wait := utils.GracefulShutdown(ctx, utils.DefaultShutdownTimeout, map[string]utils.Operation{

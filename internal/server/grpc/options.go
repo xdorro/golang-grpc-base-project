@@ -19,18 +19,21 @@ type IServer interface {
 	Close()
 }
 
+// AddStreamInterceptors adds stream interceptors to the server.
 func (s *server) AddStreamInterceptors(interceptors ...grpc.StreamServerInterceptor) {
 	s.Lock()
+	defer s.Unlock()
 	s.streamInterceptors = append(s.streamInterceptors, interceptors...)
-	s.Unlock()
 }
 
+// AddUnaryInterceptors adds unary interceptors to the server.
 func (s *server) AddUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor) {
 	s.Lock()
+	defer s.Unlock()
 	s.unaryInterceptors = append(s.unaryInterceptors, interceptors...)
-	s.Unlock()
 }
 
+// RegisterGRPC registers the server with the given service.
 func RegisterGRPC(srv *grpc.Server, svc service.IService) {
 	userpb.RegisterUserServiceServer(srv, svc)
 	authpb.RegisterAuthServiceServer(srv, svc)
