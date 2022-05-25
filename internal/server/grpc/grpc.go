@@ -26,7 +26,7 @@ type server struct {
 
 // NewGrpcServer returns a IServer.
 func NewGrpcServer(service service.IService, register RegisterFn) *grpc.Server {
-	logger := zerolog.InterceptorLogger(log.Logger())
+	logger := zerolog.InterceptorLogger(log.Logger)
 	optracing := opentracing.InterceptorTracer()
 	srvmetrics := metrics.NewServerMetrics()
 

@@ -39,7 +39,7 @@ func NewHttpServer(address string, register RegisterFn) *runtime.ServeMux {
 
 	// log payload if enabled
 	if viper.GetBool("LOG_PAYLOAD") {
-		logger := zerolog.InterceptorLogger(log.Logger())
+		logger := zerolog.InterceptorLogger(log.Logger)
 		alwaysLoggingDeciderClient := func(context.Context, string) logging.PayloadDecision {
 			return logging.LogPayloadRequestAndResponse
 		}
