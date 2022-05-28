@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/elastic/gmux"
 	"github.com/spf13/viper"
@@ -22,7 +23,7 @@ type Server struct {
 // NewServer creates a new server
 func NewServer(service service.IService) IServer {
 	host := fmt.Sprintf(":%s", viper.GetString("APP_PORT"))
-	log.Infof("Starting http://localhost%s", host)
+	log.Infof("Starting application http://localhost%s", host)
 
 	s := &Server{
 		grpc: grpcS.NewGrpcServer(service, grpcS.RegisterGRPC),
@@ -52,6 +53,17 @@ func NewServer(service service.IService) IServer {
 			log.Fatalf("http serve error: %v", err)
 		}
 	}()
+
+	// we need a webserver to get the pprof webserver
+	if viper.GetBool("APP_DEBUG") {
+		go func() {
+			log.Infof("Starting pprof http://localhost:6060")
+
+			if err = http.ListenAndServe("localhost:6060", nil); err != nil {
+				log.Fatalf("http serve error: %v", err)
+			}
+		}()
+	}
 
 	return s
 }
