@@ -7,15 +7,14 @@
 package main
 
 import (
-	"context"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
 	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
 // Injectors from wire.go:
 
-func initServer(ctx context.Context) server.IServer {
+func initServer() server.IServer {
 	iService := service.NewService()
-	iServer := server.NewServer(ctx, iService)
+	iServer := server.NewServer(iService)
 	return iServer
 }
