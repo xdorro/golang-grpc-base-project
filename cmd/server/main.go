@@ -15,13 +15,13 @@ func main() {
 	config.InitConfig()
 
 	// New server
-	srv := initServer()
+	// srv := initServer()
 
 	// wait for termination signal and register client & http server clean-up operations
 	wait := utils.GracefulShutdown(ctx, utils.DefaultShutdownTimeout, map[string]utils.Operation{
-		"server": func(ctx context.Context) error {
-			return srv.Close()
-		},
+		// "server": func(ctx context.Context) error {
+		// 	return srv.Close()
+		// },
 	})
 	<-wait
 }
