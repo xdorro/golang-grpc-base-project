@@ -8,12 +8,10 @@ import (
 	"github.com/google/wire"
 
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
-	"github.com/xdorro/golang-grpc-base-project/internal/service"
 )
 
-func initServer() server.IServer {
+func initServer(opts ...server.Option) server.IServer {
 	wire.Build(
-		service.ProviderServiceSet,
 		server.ProviderServerSet,
 	)
 
