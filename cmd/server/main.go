@@ -26,10 +26,12 @@ func main() {
 		server.WithPort(viper.GetInt("APP_PORT")),
 	)
 
-	if err := srv.Run(); err != nil {
-		log.Fatalf("server.Run() error : %v", err)
-		return
-	}
+	go func(srv server.IServer) {
+		if err := srv.Run(); err != nil {
+			log.Fatalf("server.Run() error : %v", err)
+			return
+		}
+	}(srv)
 
 	// wait for termination signal and register client & http server clean-up operations
 	wait := utils.GracefulShutdown(ctx, utils.DefaultShutdownTimeout, map[string]utils.Operation{

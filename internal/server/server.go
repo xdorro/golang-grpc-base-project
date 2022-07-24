@@ -3,9 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/google/wire"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 
+	"github.com/xdorro/golang-grpc-base-project/internal/service"
 	"github.com/xdorro/golang-grpc-base-project/pkg/log"
 )
 
@@ -24,6 +28,8 @@ type Server struct {
 	name    string
 	version string
 	port    int
+
+	http *http.Server
 }
 
 // NewServer creates a new server.
@@ -38,6 +44,9 @@ func NewServer(opts ...Option) IServer {
 	return s
 }
 
+type UserService struct {
+}
+
 // Run runs the server.
 func (s Server) Run() error {
 	log.Info().
@@ -49,10 +58,22 @@ func (s Server) Run() error {
 	host := fmt.Sprintf(":%d", s.port)
 	log.Infof("Starting application http://localhost%s", host)
 
-	return nil
+	// create new mux server
+	mux := http.NewServeMux()
+
+	// create new service handler
+	service.NewService(mux)
+
+	s.http = &http.Server{
+		Addr: host,
+		// Use h2c so we can serve HTTP/2 without TLS.
+		Handler: h2c.NewHandler(mux, &http2.Server{}),
+	}
+
+	return s.http.ListenAndServe()
 }
 
 // Close closes the server.
 func (s Server) Close() error {
-	return nil
+	return s.http.Close()
 }
