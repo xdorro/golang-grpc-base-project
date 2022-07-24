@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/wire"
+	"github.com/spf13/viper"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -34,21 +35,23 @@ type Server struct {
 
 // NewServer creates a new server.
 func NewServer(opts ...Option) IServer {
-	s := Server{}
+	s := &Server{
+		ctx:     context.Background(),
+		name:    viper.GetString("APP_NAME"),
+		version: viper.GetString("APP_VERSION"),
+		port:    viper.GetInt("APP_PORT"),
+	}
 
 	// Loop through each option
 	for _, opt := range opts {
-		opt(&s)
+		opt(s)
 	}
 
 	return s
 }
 
-type UserService struct {
-}
-
 // Run runs the server.
-func (s Server) Run() error {
+func (s *Server) Run() error {
 	log.Info().
 		Str("app-name", s.name).
 		Str("app-version", s.version).
@@ -70,10 +73,11 @@ func (s Server) Run() error {
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
 	}
 
+	// Serve the http server on the http listener.
 	return s.http.ListenAndServe()
 }
 
 // Close closes the server.
-func (s Server) Close() error {
-	return s.http.Close()
+func (s *Server) Close() error {
+	return s.http.Shutdown(s.ctx)
 }

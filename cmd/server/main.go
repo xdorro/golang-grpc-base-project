@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-
-	"github.com/spf13/viper"
+	"net/http"
 
 	"github.com/xdorro/golang-grpc-base-project/config"
 	"github.com/xdorro/golang-grpc-base-project/internal/server"
@@ -21,13 +20,11 @@ func main() {
 	// New server
 	srv := initServer(
 		server.WithContext(ctx),
-		server.WithName(viper.GetString("APP_NAME")),
-		server.WithVersion(viper.GetString("APP_VERSION")),
-		server.WithPort(viper.GetInt("APP_PORT")),
 	)
 
+	// Run server
 	go func(srv server.IServer) {
-		if err := srv.Run(); err != nil {
+		if err := srv.Run(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server.Run() error : %v", err)
 			return
 		}
