@@ -6,11 +6,16 @@ import (
 	"github.com/bufbuild/connect-go"
 	grpchealth "github.com/bufbuild/connect-grpchealth-go"
 	grpcreflect "github.com/bufbuild/connect-grpcreflect-go"
-	"github.com/xdorro/base-project-proto/proto-gen-go/user/v1/userv1connect"
+	"github.com/xdorro/base-project-proto/proto-gen-go/ping/v1/pingv1connect"
+
+	"github.com/xdorro/golang-grpc-base-project/internal/interceptor"
 )
 
+var _ IService = &Service{}
+
+// IService is the interface that must be implemented by a service.
 type IService interface {
-	userv1connect.UserServiceHandler
+	pingv1connect.PingServiceHandler
 }
 
 // Service is a service struct.
@@ -19,21 +24,24 @@ type Service struct {
 	services []string
 
 	// Services
-	userv1connect.UnimplementedUserServiceHandler
+	pingv1connect.UnimplementedPingServiceHandler
 }
 
 // NewService creates a new service.
-func NewService(mux *http.ServeMux) IService {
+func NewService(mux *http.ServeMux) {
 	s := &Service{
 		mux: mux,
 		services: []string{
-			userv1connect.UserServiceName,
+			pingv1connect.PingServiceName,
 		},
 	}
 
 	// Add connect options
 	opts := connect.WithOptions(
 		connect.WithCompressMinBytes(1024),
+		connect.WithInterceptors(
+			interceptor.NewInterceptor(),
+		),
 	)
 
 	// The generated constructors return a path and a plain net/http
@@ -45,13 +53,11 @@ func NewService(mux *http.ServeMux) IService {
 
 	// GRPC Reflect
 	s.Reflect(opts)
-
-	return s
 }
 
 // Handler is a handler.
 func (s *Service) Handler(opts connect.Option) {
-	s.mux.Handle(userv1connect.NewUserServiceHandler(s, opts))
+	s.mux.Handle(pingv1connect.NewPingServiceHandler(s, opts))
 }
 
 // Health is a health handler.

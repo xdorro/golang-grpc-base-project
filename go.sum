@@ -189,8 +189,10 @@ github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
 github.com/subosito/gotenv v1.4.0 h1:yAzM1+SmVcz5R4tXGsNMu1jUl2aOJXoiWUCEwwnGrvs=
 github.com/subosito/gotenv v1.4.0/go.mod h1:mZd6rFysKEcUhUHXJk0C/08wAgyDBFuwEYL7vWWGaGo=
-github.com/xdorro/base-project-proto v0.0.0-20220724060728-563e5bf50372 h1:JiTOhnu1mwHKwkT1JWYJvEf4jOqzx+YT/jcVxN7s+B4=
-github.com/xdorro/base-project-proto v0.0.0-20220724060728-563e5bf50372/go.mod h1:CowOA05k6RHaVyv+aBtKjhktwsGClB/LTCfxYosjp9Y=
+github.com/xdorro/base-project-proto v0.0.0-20220724121325-8199ab04149c h1:ftDy6SxlnSbIK/68sCqNiWVqkiOhWZtFzwY2QH/9ecs=
+github.com/xdorro/base-project-proto v0.0.0-20220724121325-8199ab04149c/go.mod h1:CowOA05k6RHaVyv+aBtKjhktwsGClB/LTCfxYosjp9Y=
+github.com/xdorro/base-project-proto v0.0.0-20220724121720-f7539876c2de h1:GjKnmj4JKaeX8vU/3D/J/rHAYsvu7cq+4OUU4Ui+bAg=
+github.com/xdorro/base-project-proto v0.0.0-20220724121720-f7539876c2de/go.mod h1:CowOA05k6RHaVyv+aBtKjhktwsGClB/LTCfxYosjp9Y=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

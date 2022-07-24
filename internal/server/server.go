@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"sync"
 	"time"
 
 	"github.com/google/wire"
-	"github.com/rs/cors"
 	"github.com/spf13/viper"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -29,6 +29,7 @@ type IServer interface {
 
 // Server is a server struct.
 type Server struct {
+	mu      sync.Mutex
 	ctx     context.Context
 	name    string
 	version string
@@ -71,7 +72,9 @@ func (s *Server) Run() error {
 	mux := http.NewServeMux()
 
 	// create new service handler
+	s.mu.Lock()
 	service.NewService(mux)
+	s.mu.Unlock()
 
 	// we need a webserver to get the pprof webserver
 	if s.debug {
@@ -108,39 +111,4 @@ func (s *Server) Close() error {
 	defer cancel()
 
 	return s.http.Shutdown(ctx)
-}
-
-// newCORS creates a new cors.
-func newCORS() *cors.Cors {
-	// To let web developers play with the demo service from browsers, we need a
-	// very permissive CORS setup.
-	return cors.New(cors.Options{
-		AllowedMethods: []string{
-			http.MethodHead,
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-		},
-		AllowOriginFunc: func(origin string) bool {
-			// Allow all origins, which effectively disables CORS.
-			return true
-		},
-		AllowedHeaders: []string{"*"},
-		ExposedHeaders: []string{
-			// Content-Type is in the default safelist.
-			"Accept",
-			"Accept-Encoding",
-			"Accept-Post",
-			"Connect-Accept-Encoding",
-			"Connect-Content-Encoding",
-			"Content-Encoding",
-			"Grpc-Accept-Encoding",
-			"Grpc-Encoding",
-			"Grpc-Message",
-			"Grpc-Status",
-			"Grpc-Status-Details-Bin",
-		},
-	})
 }
