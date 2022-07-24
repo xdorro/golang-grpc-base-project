@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/xdorro/golang-grpc-base-project/config"
@@ -24,7 +25,7 @@ func main() {
 
 	// Run server
 	go func(srv server.IServer) {
-		if err := srv.Run(); err != nil && err != http.ErrServerClosed {
+		if err := srv.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("server.Run() error : %v", err)
 			return
 		}

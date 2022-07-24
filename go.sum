@@ -40,6 +40,10 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/bufbuild/connect-go v0.2.0 h1:WuMI/jLiJIhysHWvLWlxRozV67mGjCOUuDSl/lkDVic=
 github.com/bufbuild/connect-go v0.2.0/go.mod h1:4efZ2eXFENwd4p7tuLaL9m0qtTsCOzuBvrohvRGevDM=
+github.com/bufbuild/connect-grpchealth-go v0.1.0 h1:r3HMBCXkqocR7z1ET98kteRE5K4B84lP9XMCRQXIGmw=
+github.com/bufbuild/connect-grpchealth-go v0.1.0/go.mod h1:Vm0Mk9/DurVa0pThTknZTXTzzfNio6EDpU64SP4JONc=
+github.com/bufbuild/connect-grpcreflect-go v0.1.0 h1:HBXdqivMVMDaG+CjMogGwhDS8pAY/k5UQMX8TRPB+0A=
+github.com/bufbuild/connect-grpcreflect-go v0.1.0/go.mod h1:QJMUStjH/yZvhvaRI0Kn5JfQWAM19l/NbA0wxWkSfp0=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
@@ -161,6 +165,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBOAvL+k=
+github.com/rs/cors v1.8.2 h1:KCooALfAYGs415Cwu5ABvv9n9509fSiG5SQJn/AQo4U=
+github.com/rs/cors v1.8.2/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
 github.com/rs/xid v1.3.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.27.0 h1:1T7qCieN22GVc8S4Q2yuexzBb1EqjbgjSH9RohbMjKs=
 github.com/rs/zerolog v1.27.0/go.mod h1:7frBqO0oezxmnO7GF86FY++uy8I0Tk/If5ni1G9Qc0U=
