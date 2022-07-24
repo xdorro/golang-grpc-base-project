@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/google/wire"
 	"github.com/spf13/viper"
@@ -29,6 +30,7 @@ type Server struct {
 	name    string
 	version string
 	port    int
+	debug   bool
 
 	http *http.Server
 }
@@ -40,6 +42,7 @@ func NewServer(opts ...Option) IServer {
 		name:    viper.GetString("APP_NAME"),
 		version: viper.GetString("APP_VERSION"),
 		port:    viper.GetInt("APP_PORT"),
+		debug:   viper.GetBool("APP_DEBUG"),
 	}
 
 	// Loop through each option
@@ -67,9 +70,21 @@ func (s *Server) Run() error {
 	// create new service handler
 	service.NewService(mux)
 
+	// we need a webserver to get the pprof webserver
+	if s.debug {
+		go func() {
+			log.Infof("Starting pprof http://localhost:6060")
+
+			if err := http.ListenAndServe("localhost:6060", nil); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("http serve error: %v", err)
+			}
+		}()
+	}
+
+	// create new http server
 	s.http = &http.Server{
 		Addr: host,
-		// Use h2c so we can serve HTTP/2 without TLS.
+		// Use h2c, so we can serve HTTP/2 without TLS.
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
 	}
 

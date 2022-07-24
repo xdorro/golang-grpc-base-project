@@ -34,3 +34,10 @@ func WithPort(port int) Option {
 		s.port = port
 	}
 }
+
+// WithDebug sets the debug on the Server.
+func WithDebug(debug bool) Option {
+	return func(s *Server) {
+		s.debug = debug
+	}
+}
