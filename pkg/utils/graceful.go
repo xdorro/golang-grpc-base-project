@@ -43,8 +43,8 @@ func GracefulShutdown(
 
 		// Do the operations asynchronously to save time
 		for innerKey, innerOp := range ops {
-			wg.Add(1)
-			func() {
+			func(wg *sync.WaitGroup) {
+				wg.Add(1)
 				defer wg.Done()
 
 				log.Infof("cleaning up: %s", innerKey)
@@ -54,7 +54,7 @@ func GracefulShutdown(
 				}
 
 				log.Infof("%s was shutdown gracefully", innerKey)
-			}()
+			}(&wg)
 		}
 
 		wg.Wait()

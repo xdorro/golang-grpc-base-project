@@ -41,10 +41,4 @@ func InitConfig() {
 
 	// Replace env key
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	log.Info().
-		Str("app-name", viper.GetString("APP_NAME")).
-		Str("app-version", viper.GetString("APP_VERSION")).
-		Str("app-port", viper.GetString("APP_PORT")).
-		Msg("Config loaded")
 }
